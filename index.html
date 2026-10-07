@@ -3,70 +3,253 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>8-Ball Billard</title>
+<title>8 Ball Pool Premium</title>
 <style>
+:root {
+--bg-color: #1a1a1a;
+--panel-bg: #2d2d2d;
+--accent: #00b4d8;
+--text: #ffffff;
+}
+
 body {
-background-color: #222;
-color: white;
-font-family: Arial, sans-serif;
+background-color: var(--bg-color);
+color: var(--text);
+font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 display: flex;
 flex-direction: column;
 align-items: center;
 justify-content: center;
-height: 100vh;
+min-height: 100vh;
 margin: 0;
+overflow: hidden;
+user-select: none;
 }
-h1 {
-margin-bottom: 10px;
+
+/* Seriöses Dashboard-Interface */
+.game-container {
+display: flex;
+flex-direction: column;
+align-items: center;
+background: var(--panel-bg);
+padding: 24px;
+border-radius: 16px;
+box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+border: 1px solid #444;
 }
+
+.scoreboard {
+display: flex;
+justify-content: space-between;
+width: 100%;
+max-width: 800px;
+margin-bottom: 20px;
+background: #151515;
+padding: 12px 24px;
+border-radius: 8px;
+box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
+font-weight: 600;
+letter-spacing: 1px;
+}
+
+.player {
+display: flex;
+align-items: center;
+gap: 10px;
+}
+
+.player.active {
+color: var(--accent);
+text-shadow: 0 0 10px rgba(0, 180, 216, 0.5);
+}
+
+.status-msg {
+color: #888;
+font-size: 0.9rem;
+}
+
+/* Der Billardtisch-Rahmen */
+.table-wrapper {
+position: relative;
+background: #4a2c11; /* Edles Wurzelholz-Design */
+padding: 22px;
+border-radius: 12px;
+box-shadow: 0 15px 35px rgba(0,0,0,0.7), inset 0 2px 4px rgba(255,255,255,0.2);
+border: 2px solid #36200c;
+}
+
 canvas {
-background-color: #076324; /* Billard-Grün */
-border: 15px solid #5c3a21; /* Holzrahmen */
-border-radius: 5px;
-box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+background-color: #0d5c3a; /* Deep Tournament Green */
+border-radius: 4px;
+display: block;
 cursor: crosshair;
 }
-p {
+
+.controls-hint {
 margin-top: 15px;
-color: #aaa;
+font-size: 0.85rem;
+color: #777;
+text-align: center;
+}
+
+.controls-hint strong {
+color: #bbb;
 }
 </style>
 </head>
 <body>
 
-<h1>8-Ball Billard</h1>
-<canvas id="billardCanvas" width="800" height="400"></canvas>
-<p>Steuerung: <strong>Maus bewegen</strong> zum Zielen, <strong>Klicken und Ziehen</strong> für die Stoßkraft.</p>
+<div class="game-container">
+<!-- Professionelle Scoreboard-Leiste -->
+<div class="scoreboard">
+<div class="player active" id="player1">SPIELER 1</div>
+<div class="status-msg" id="statusDisplay">Zielen & Schießen</div>
+<div class="player" id="player2">SPIELER 2</div>
+</div>
+
+<!-- Billardtisch -->
+<div class="table-wrapper">
+<canvas id="poolCanvas" width="800" height="400"></canvas>
+</div>
+
+<div class="controls-hint">
+Steuerung: <strong>Maus bewegen</strong> zum Zielen | <strong>Klicken & Ziehen</strong> nach hinten für Power | <strong>Loslassen</strong> zum Stoßen
+</div>
+</div>
 
 <script>
-const canvas = document.getElementById("billardCanvas");
+const canvas = document.getElementById("poolCanvas");
 const ctx = canvas.getContext("2d");
 
-// Spiel-Physik und Objekte
-const BALL_RADIUS = 12;
-let isAiming = false;
-let power = 0;
+// Spielkonstanten
+const BALL_RADIUS = 11;
+const POCKET_RADIUS = 20;
+const FRICTION = 0.988; // Realistisches Ausrollen
 
-// Die weiße Kugel
-let cueBall = {
-x: 200,
-y: 200,
-vx: 0,
-vy: 0,
-color: "#ffffff"
-};
-
-// Beispielhaft ein paar farbige Kugeln (Zielkugeln)
-let balls = [
-cueBall,
-{ x: 550, y: 200, vx: 0, vy: 0, color: "#f1c40f" }, // Gelb
-{ x: 575, y: 185, vx: 0, vy: 0, color: "#2980b9" }, // Blau
-{ x: 575, y: 215, vx: 0, vy: 0, color: "#e74c3c" }, // Rot
-{ x: 600, y: 200, vx: 0, vy: 0, color: "#111111" } // Schwarze 8
+// Definition der 6 Taschen (Löcher)
+const pockets = [
+{ x: 6, y: 6 }, // Oben links
+{ x: canvas.width / 2, y: 4 }, // Oben Mitte
+{ x: canvas.width - 6, y: 6 }, // Oben rechts
+{ x: 6, y: canvas.height - 6 }, // Unten links
+{ x: canvas.width / 2, y: canvas.height - 4 }, // Unten Mitte
+{ x: canvas.width - 6, y: canvas.height - 6 } // Unten rechts
 ];
 
-// Maus-Interaktion für den Queue (Billard-Queue)
+// Strukturierte Kugel-Klasse für Premium-Rendering
+class Ball {
+constructor(x, y, color, number, isCue = false) {
+this.x = x;
+this.y = y;
+this.vx = 0;
+this.vy = 0;
+this.color = color;
+this.number = number;
+this.isCue = isCue;
+this.isActive = true;
+}
+
+update() {
+if (!this.isActive) return;
+
+this.x += this.vx;
+this.y += this.vy;
+this.vx *= FRICTION;
+this.vy *= FRICTION;
+
+// Bei minimaler Bewegung Kugel stoppen
+if (Math.abs(this.vx) < 0.005) this.vx = 0;
+if (Math.abs(this.vy) < 0.005) this.vy = 0;
+
+// Banden-Kollision (unter Berücksichtigung des Tischinnenraums)
+const margin = BALL_RADIUS;
+if (this.x < margin) { this.x = margin; this.vx *= -1; }
+if (this.x > canvas.width - margin) { this.x = canvas.width - margin; this.vx *= -1; }
+if (this.y < margin) { this.y = margin; this.vy *= -1; }
+if (this.y > canvas.height - margin) { this.y = canvas.height - margin; this.vy *= -1; }
+}
+
+draw() {
+if (!this.isActive) return;
+
+ctx.save();
+
+// 1. Kugel-Schatten für Tiefenwirkung (3D-Look)
+ctx.beginPath();
+ctx.arc(this.x + 3, this.y + 3, BALL_RADIUS, 0, Math.PI * 2);
+ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
+ctx.fill();
+
+// 2. Kugel-Grundfarbe
+ctx.beginPath();
+ctx.arc(this.x, this.y, BALL_RADIUS, 0, Math.PI * 2);
+ctx.fillStyle = this.color;
+ctx.fill();
+
+// 3. Weißer Nummernkreis (wenn es nicht die weiße Kugel ist)
+if (!this.isCue) {
+ctx.beginPath();
+ctx.arc(this.x, this.y, BALL_RADIUS * 0.45, 0, Math.PI * 2);
+ctx.fillStyle = "#ffffff";
+ctx.fill();
+
+// Ziffer schreiben
+ctx.fillStyle = "#000000";
+ctx.font = "bold 8px sans-serif";
+ctx.textAlign = "center";
+ctx.textBaseline = "middle";
+ctx.fillText(this.number, this.x, this.y + 0.5);
+}
+
+// 4. Premium 3D-Lichtreflex (Glossy/Glanz-Effekt)
+let gradient = ctx.createRadialGradient(
+this.x - BALL_RADIUS * 0.3, this.y - BALL_RADIUS * 0.3, BALL_RADIUS * 0.1,
+this.x, this.y, BALL_RADIUS
+);
+gradient.addColorStop(0, "rgba(255, 255, 255, 0.6)");
+gradient.addColorStop(0.4, "rgba(255, 255, 255, 0.0)");
+gradient.addColorStop(1, "rgba(0, 0, 0, 0.4)");
+
+ctx.beginPath();
+ctx.arc(this.x, this.y, BALL_RADIUS, 0, Math.PI * 2);
+ctx.fillStyle = gradient;
+ctx.fill();
+
+ctx.restore();
+}
+}
+
+// Kugeln initialisieren (Klassisches Dreieck / Rack)
+let balls = [];
+let cueBall = new Ball(200, 200, "#ffffff", 0, true);
+balls.push(cueBall);
+
+// Rack-Positionen berechnen
+const startX = 560;
+const startY = 200;
+const rowSpacing = BALL_RADIUS * 1.732;
+let ballData = [
+{ c: "#f1c40f", n: 1 }, // Reihe 1
+{ c: "#2980b9", n: 2 }, { c: "#e74c3c", n: 3 }, // Reihe 2
+{ c: "#9b59b6", n: 4 }, { c: "#111111", n: 8 }, { c: "#e67e22", n: 5 }, // Reihe 3 (Schwarz in der Mitte)
+{ c: "#2ecc71", n: 6 }, { c: "#7f8c8d", n: 7 }, { c: "#f1c40f", n: 9 }, { c: "#2980b9", n: 10 }
+];
+
+let dataIdx = 0;
+for (let col = 0; col < 4; col++) {
+for (let row = 0; row <= col; row++) {
+if(dataIdx >= ballData.length) break;
+let x = startX + col * rowSpacing;
+let y = startY + (row - col / 2) * (BALL_RADIUS * 2.1);
+balls.push(new Ball(x, y, ballData[dataIdx].c, ballData[dataIdx].n));
+dataIdx++;
+}
+}
+
+// Interaktions-Variablen
 let mouse = { x: 0, y: 0 };
+let isDragging = false;
+let dragStart = { x: 0, y: 0 };
 
 canvas.addEventListener("mousemove", (e) => {
 const rect = canvas.getBoundingClientRect();
@@ -75,127 +258,33 @@ mouse.y = e.clientY - rect.top;
 });
 
 canvas.addEventListener("mousedown", () => {
-if (cueBall.vx === 0 && cueBall.vy === 0) {
-isAiming = true;
+// Nur stoßen erlauben, wenn alle Kugeln komplett stillstehen
+let allStill = balls.every(b => b.vx === 0 && b.vy === 0);
+if (allStill && cueBall.isActive) {
+isDragging = true;
+dragStart.x = mouse.x;
+dragStart.y = mouse.y;
 }
 });
 
 canvas.addEventListener("mouseup", () => {
-if (isAiming) {
-// Berechne Stoßrichtung basierend auf Mausposition
-let dx = cueBall.x - mouse.x;
-let dy = cueBall.y - mouse.y;
+if (isDragging) {
+let dx = dragStart.x - mouse.x;
+let dy = dragStart.y - mouse.y;
 
-// Stoßkraft (skaliert)
-cueBall.vx = dx * 0.08;
-cueBall.vy = dy * 0.08;
+// Impuls auf weiße Kugel übertragen
+cueBall.vx = dx * 0.06;
+cueBall.vy = dy * 0.06;
 
-isAiming = false;
+isDragging = false;
 }
 });
 
-// Haupt-Spielschleife (Game Loop)
-function update() {
-// Reibung (Verlangsamung der Kugeln)
-const friction = 0.985;
-
+// Kollisions- und Lochprüfung
+function checkPhysics() {
+// 1. Loch-Erkennung (Kugel versenkt?)
 balls.forEach(ball => {
-ball.x += ball.vx;
-ball.y += ball.vy;
-ball.vx *= friction;
-ball.vy *= friction;
-
-// Stop, wenn die Bewegung minimal ist
-if (Math.abs(ball.vx) < 0.01) ball.vx = 0;
-if (Math.abs(ball.vy) < 0.01) ball.vy = 0;
-
-// Kollision mit den Banden (Rahmen)
-if (ball.x - BALL_RADIUS < 0) {
-ball.x = BALL_RADIUS;
-ball.vx *= -1;
-}
-if (ball.x + BALL_RADIUS > canvas.width) {
-ball.x = canvas.width - BALL_RADIUS;
-ball.vx *= -1;
-}
-if (ball.y - BALL_RADIUS < 0) {
-ball.y = BALL_RADIUS;
-ball.vy *= -1;
-}
-if (ball.y + BALL_RADIUS > canvas.height) {
-ball.y = canvas.height - BALL_RADIUS;
-ball.vy *= -1;
-}
-});
-
-// Einfache Kollisionserkennung zwischen Kugeln
-for (let i = 0; i < balls.length; i++) {
-for (let j = i + 1; j < balls.length; j++) {
-let b1 = balls[i];
-let b2 = balls[j];
-
-let dx = b2.x - b1.x;
-let dy = b2.y - b1.y;
-let distance = Math.sqrt(dx * dx + dy * dy);
-
-if (distance < BALL_RADIUS * 2) {
-// Einfacher elastischer Impulsaustausch bei Kollision
-let tempVx = b1.vx;
-let tempVy = b1.vy;
-b1.vx = b2.vx;
-b1.vy = b2.vy;
-b2.vx = tempVx;
-b2.vy = tempVy;
-
-// Kugeln leicht auseinanderschieben, um Überlappung zu verhindern
-let overlap = (BALL_RADIUS * 2) - distance;
-let nx = dx / distance;
-let ny = dy / distance;
-b1.x -= nx * overlap / 2;
-b1.y -= ny * overlap / 2;
-b2.x += nx * overlap / 2;
-b2.y += ny * overlap / 2;
-}
-}
-}
-}
-
-function draw() {
-// Hintergrund leeren
-ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-// Kugeln zeichnen
-balls.forEach(ball => {
-ctx.beginPath();
-ctx.arc(ball.x, ball.y, BALL_RADIUS, 0, Math.PI * 2);
-ctx.fillStyle = ball.color;
-ctx.fill();
-ctx.closePath();
-});
-
-// Ziel-Linie zeichnen (wenn die Kugel stillsteht und gezielt wird)
-if (isAiming) {
-ctx.beginPath();
-ctx.moveTo(cueBall.x, cueBall.y);
-ctx.lineTo(mouse.x, mouse.y);
-ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
-ctx.lineWidth = 2;
-ctx.stroke();
-}
-}
-
-function gameLoop() {
-update();
-draw();
-requestAnimationFrame(gameLoop);
-}
-
-// Spiel starten
-gameLoop();
-</script>
-</body>
-</html>
-
-
+if (!ball.isActive) return;
+pockets.forEach(pocket => {
 
 
