@@ -1,70 +1,209 @@
-
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CueVerse Prototype</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CueVerse – Play Beyond Luxury</title>
+
 <style>
-body{margin:0;font-family:Arial,sans-serif;background:#0d0d0d;color:#fff}
-.screen{display:none;padding:24px}
-.active{display:block}
-h1{color:#d4af37}
-.btn{display:block;background:#d4af37;color:#111;text-decoration:none;
-padding:14px;border-radius:10px;margin:12px 0;font-weight:bold;text-align:center}
-.card{background:#1b1b1b;padding:16px;border-radius:12px;margin:12px 0}
-</style>
-<script>
-function show(id){
- document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
- document.getElementById(id).classList.add('active');
+* {
+box-sizing: border-box;
 }
-window.onload=()=>show('splash');
-</script>
+
+body {
+margin: 0;
+background: #050505;
+color: white;
+font-family: Arial, sans-serif;
+text-align: center;
+}
+
+.screen {
+display: none;
+min-height: 100vh;
+padding: 50px 20px;
+}
+
+.active {
+display: block;
+}
+
+h1 {
+color: #d4af37;
+font-size: 38px;
+margin-top: 60px;
+}
+
+h2 {
+color: #d4af37;
+}
+
+.subtitle {
+color: #aaa;
+margin-bottom: 40px;
+}
+
+button,
+.card {
+width: 90%;
+max-width: 420px;
+margin: 12px auto;
+padding: 18px;
+border-radius: 12px;
+border: 1px solid #d4af37;
+background: #111;
+color: white;
+font-size: 18px;
+display: block;
+cursor: pointer;
+}
+
+button {
+background: #d4af37;
+color: #050505;
+font-weight: bold;
+}
+
+.card:hover,
+button:hover {
+transform: scale(1.02);
+}
+
+.coins {
+color: #d4af37;
+margin-bottom: 30px;
+}
+
+.room {
+font-size: 20px;
+}
+
+.back {
+background: #222;
+color: white;
+border-color: #555;
+}
+
+.gold {
+color: #d4af37;
+font-size: 28px;
+}
+</style>
 </head>
+
 <body>
+
+<!-- START -->
 <div id="splash" class="screen active">
 <h1>CueVerse</h1>
-<p>Play Beyond Luxury</p>
-<a class="btn" href="#" onclick="show('home')">Enter Club</a>
+<div class="subtitle">Play Beyond Luxury</div>
+<button onclick="show('home')">Enter Club</button>
 </div>
 
+<!-- HOME -->
 <div id="home" class="screen">
 <h1>Royal Lounge</h1>
-<div class="card">👤 Orhan &nbsp; 🪙 10.000 Coins</div>
-<a class="btn" href="#" onclick="show('play')">🎱 Play</a>
-<a class="btn" href="#" onclick="show('shop')">🛒 Shop</a>
-<a class="btn" href="#" onclick="show('profile')">👤 Profil</a>
+<div class="coins">👤 Orhan &nbsp; 🪙 10.000 Coins</div>
+
+<button onclick="show('play')">Play</button>
+<button onclick="show('shop')">Shop</button>
+<button onclick="show('profile')">Profil</button>
 </div>
 
+<!-- PLAY -->
 <div id="play" class="screen">
-<h1>Spiel wählen</h1>
-<div class="card">100 Coins Room</div>
-<div class="card">500 Coins Room</div>
-<div class="card">2500 Coins Room</div>
-<a class="btn" href="#" onclick="show('home')">Zurück</a>
+<h2>Spiel wählen</h2>
+
+<div class="card room" onclick="joinRoom(100)">
+🪙 100 Coins Room
 </div>
 
+<div class="card room" onclick="joinRoom(500)">
+🪙 500 Coins Room
+</div>
+
+<div class="card room" onclick="joinRoom(2500)">
+🪙 2.500 Coins Room
+</div>
+
+<button class="back" onclick="show('home')">Zurück</button>
+</div>
+
+<!-- MATCH -->
+<div id="match" class="screen">
+<h1>Royal Match</h1>
+
+<div class="gold">🎱</div>
+
+<h2 id="matchTitle">Gegner wird gesucht...</h2>
+
+<p id="matchText">
+Bitte warten. CueVerse sucht einen passenden Gegner.
+</p>
+
+<div class="coins">
+Einsatz: <span id="stake">100</span> Coins
+</div>
+
+<button onclick="show('play')">Abbrechen</button>
+</div>
+
+<!-- SHOP -->
 <div id="shop" class="screen">
-<h1>Shop</h1>
-<div class="card">10.000 Coins – 9,99 €</div>
-<div class="card">VIP Royal</div>
-<a class="btn" href="#" onclick="show('home')">Zurück</a>
+<h2>CueVerse Shop</h2>
+
+<div class="card">
+🪙 10.000 Coins – 9,99 €
 </div>
 
-<div id="profile" class="screen">
-<h1>Profil</h1>
-<div class="card">Level 1<br>Siege: 0<br>Niederlagen: 0</div>
- <script>
-document.querySelectorAll('.card').forEach(card => {
-if (card.textContent.includes('100 Coins Room')) {
-card.onclick = function() {
-alert('🎱 Gegner wird gesucht...\n\n100 Coins Einsatz\n\nBitte warten...');
-};
-}
-});
-</script>
-<a class="btn" href="#" onclick="show('home')">Zurück</a>
+<div class="card">
+👑 VIP Royal
 </div>
+
+<button class="back" onclick="show('home')">Zurück</button>
+</div>
+
+<!-- PROFILE -->
+<div id="profile" class="screen">
+<h2>Profil</h2>
+
+<div class="card">
+Level 1
+</div>
+
+<div class="card">
+Siege 0
+</div>
+
+<div class="card">
+Niederlagen 0
+</div>
+
+<button class="back" onclick="show('home')">Zurück</button>
+</div>
+
+<script>
+function show(id) {
+document.querySelectorAll('.screen').forEach(function(screen) {
+screen.classList.remove('active');
+});
+
+document.getElementById(id).classList.add('active');
+}
+
+function joinRoom(coins) {
+document.getElementById('stake').textContent =
+coins.toLocaleString('de-DE');
+
+document.getElementById('matchTitle').textContent =
+'Gegner wird gesucht...';
+
+document.getElementById('matchText').textContent =
+'Bitte warten. CueVerse sucht einen passenden Gegner.';
+
+show('match');
+}
+</script>
+
 </body>
 </html>
