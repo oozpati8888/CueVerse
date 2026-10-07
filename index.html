@@ -2,273 +2,244 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>CueVerse — Royal Pool</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CueVerse – Royal Table</title>
 
 <style>
-*{
-box-sizing:border-box;
-}
-
-html,body{
-margin:0;
-padding:0;
-background:
-radial-gradient(circle at 50% -20%,#3b3935 0,#171717 42%,#030303 100%);
-color:#fff;
-font-family:Arial,Helvetica,sans-serif;
-}
+*{box-sizing:border-box}
 
 body{
+margin:0;
+background:#080808;
+color:white;
+font-family:Arial,Helvetica,sans-serif;
 overflow-x:hidden;
 }
 
-.topbar{
-width:96%;
-max-width:1400px;
+.game{
+max-width:900px;
 margin:auto;
-height:82px;
-display:grid;
-grid-template-columns:1fr auto 1fr;
+min-height:100vh;
+background:
+radial-gradient(circle at 50% 20%,#292929 0,#101010 35%,#050505 75%);
+padding:18px;
+}
+
+.top{
+display:flex;
+justify-content:space-between;
 align-items:center;
+margin-bottom:12px;
 }
 
 .player{
 font-size:14px;
-line-height:1.5;
-color:#c9c9c9;
-}
-
-.player.right{
-text-align:right;
+color:#ddd;
 }
 
 .player strong{
-color:#e8c768;
-font-size:17px;
-}
-
-.logo{
-color:#e7c05b;
-font-size:28px;
-font-weight:800;
-letter-spacing:6px;
-text-shadow:
-0 0 15px rgba(230,190,85,.28);
-}
-
-.stake{
-text-align:center;
-margin-bottom:12px;
-color:#dfbc5a;
-font-size:13px;
-font-weight:bold;
+display:block;
+color:#e2bd55;
+font-size:18px;
 letter-spacing:1px;
 }
 
-.game{
-width:97%;
-max-width:1400px;
-margin:auto;
+.logo{
+color:#e5bd55;
+font-weight:bold;
+font-size:22px;
+letter-spacing:5px;
 }
 
-.frame{
-padding:21px;
-border-radius:25px;
+.title{
+text-align:center;
+color:#e4bd55;
+font-weight:bold;
+letter-spacing:2px;
+margin:12px 0 18px;
+}
 
+.table-frame{
+background:linear-gradient(135deg,#9a6b16,#e5bd55,#8b5c12);
+padding:10px;
+border-radius:28px;
+box-shadow:0 8px 35px #000;
+}
+
+.table{
+position:relative;
+width:100%;
+aspect-ratio:2/1;
 background:
-linear-gradient(
-135deg,
-#050403,
-#241507 14%,
-#704315 30%,
-#1b0e05 47%,
-#6d4317 72%,
-#050302
-);
-
-border:1px solid #c79a37;
-
+radial-gradient(circle at center,#07825d,#006b4c 55%,#004b37);
+border:10px solid #191919;
+border-radius:8px;
+overflow:hidden;
 box-shadow:
-0 30px 70px rgba(0,0,0,.9),
-inset 0 0 35px rgba(0,0,0,.9);
+inset 0 0 25px #002d21,
+inset 0 0 0 3px #765016;
 }
+
+.pocket{
+position:absolute;
+width:38px;
+height:38px;
+background:#000;
+border-radius:50%;
+box-shadow:inset 0 3px 5px #222;
+z-index:5;
+}
+
+.p1{left:-8px;top:-8px}
+.p2{left:calc(50% - 19px);top:-8px}
+.p3{right:-8px;top:-8px}
+.p4{left:-8px;bottom:-8px}
+.p5{left:calc(50% - 19px);bottom:-8px}
+.p6{right:-8px;bottom:-8px}
 
 canvas{
-display:block;
+position:absolute;
+left:0;
+top:0;
 width:100%;
-height:auto;
-border-radius:11px;
-cursor:crosshair;
-touch-action:none;
-
-box-shadow:
-0 12px 40px rgba(0,0,0,.9);
+height:100%;
 }
 
 .controls{
-width:96%;
-max-width:950px;
-margin:18px auto 30px;
+margin-top:20px;
 }
 
-.powerRow{
-display:flex;
-align-items:center;
-gap:13px;
-}
-
-.powerTitle{
-color:#e5c15d;
-font-size:12px;
+label{
+color:#e2bd55;
 font-weight:bold;
 letter-spacing:2px;
 }
 
-#power{
-flex:1;
-accent-color:#d7ad42;
+.power-row{
+display:flex;
+align-items:center;
+gap:15px;
 }
 
-#powerValue{
-width:50px;
-color:#e5c15d;
+input[type=range]{
+flex:1;
+accent-color:#e2bd55;
+}
+
+.power-value{
+width:55px;
+text-align:right;
+color:#e2bd55;
+font-size:20px;
 font-weight:bold;
+}
+
+.buttons{
+display:flex;
+gap:18px;
+margin-top:20px;
 }
 
 button{
-padding:13px 27px;
-margin:10px 5px;
-border-radius:9px;
-border:1px solid #d5ae47;
-
-background:
-linear-gradient(
-#f2d477,
-#b98520
-);
-
-color:#100d07;
+flex:1;
+padding:17px;
+border:0;
+border-radius:15px;
+background:linear-gradient(#f0cf69,#b98218);
+color:#111;
+font-size:16px;
 font-weight:bold;
 cursor:pointer;
-
-box-shadow:
-0 5px 14px rgba(0,0,0,.45);
+box-shadow:0 5px 15px #000;
 }
 
-button:disabled{
-opacity:.4;
-cursor:not-allowed;
+button:active{
+transform:scale(.98);
 }
 
 .status{
-min-height:23px;
-color:#c5c5c5;
+margin-top:18px;
+color:#ccc;
+font-size:16px;
+}
+
+.hint{
+color:#777;
+margin-top:10px;
 font-size:13px;
 }
 
-.help{
-color:#666;
-font-size:11px;
-}
-
-@media(max-width:700px){
-
-.topbar{
-height:65px;
-}
-
-.player{
-font-size:10px;
-}
-
-.player strong{
-font-size:12px;
-}
-
-.logo{
-font-size:17px;
-letter-spacing:3px;
-}
-
-.frame{
-padding:7px;
-}
+@media(max-width:600px){
+.game{padding:10px}
+.logo{font-size:17px}
+.player strong{font-size:15px}
+.table-frame{padding:7px}
+.table{border-width:7px}
+.pocket{width:30px;height:30px}
+.p2,.p5{margin-left:-15px}
+.buttons{gap:10px}
+button{font-size:14px;padding:15px 8px}
 }
 </style>
 </head>
 
 <body>
 
-<div class="topbar">
+<div class="game">
 
+<div class="top">
 <div class="player">
-<strong>ORHAN</strong><br>
+<strong>ORHAN</strong>
 Level 1 · 🪙 10.000
 </div>
 
-<div class="logo">
-CUEVERSE
-</div>
+<div class="logo">CUEVERSE</div>
 
-<div class="player right">
-<strong>OOZ PLAYER</strong><br>
+<div class="player" style="text-align:right">
+<strong>OOZ PLAYER</strong>
 Level 12 · 🪙 10.000
 </div>
-
 </div>
 
-<div class="stake">
-ROYAL TABLE · 100 COINS
+<div class="title">ROYAL TABLE · 100 COINS</div>
+
+<div class="table-frame">
+<div class="table">
+
+<div class="pocket p1"></div>
+<div class="pocket p2"></div>
+<div class="pocket p3"></div>
+<div class="pocket p4"></div>
+<div class="pocket p5"></div>
+<div class="pocket p6"></div>
+
+<canvas id="pool"></canvas>
+
 </div>
-
-<div class="game">
-
-<div class="frame">
-
-<canvas
-id="table"
-width="1400"
-height="700">
-</canvas>
-
 </div>
 
 <div class="controls">
 
-<div class="powerRow">
+<label>SHOT POWER</label>
 
-<span class="powerTitle">
-SHOT POWER
-</span>
-
-<input
-id="power"
-type="range"
-min="1"
-max="100"
-value="65">
-
-<span id="powerValue">
-65%
-</span>
-
+<div class="power-row">
+<input id="power" type="range" min="10" max="100" value="65">
+<div class="power-value">
+<span id="powerText">65</span>%
+</div>
 </div>
 
-<button id="shoot">
-STOSS AUSFÜHREN
-</button>
+<div class="buttons">
+<button id="shoot">STOSS AUSFÜHREN</button>
+<button id="restart">NEUSTART</button>
+</div>
 
-<button id="reset">
-NEUSTART
-</button>
-
-<div id="status" class="status">
+<div class="status" id="status">
 Break bereit – ziele und stoße.
 </div>
 
-<div class="help">
-Maus bewegen = zielen · Power einstellen · Stoß ausführen
+<div class="hint">
+Auf dem Tisch ziehen = zielen · Power einstellen · Stoß ausführen
 </div>
 
 </div>
@@ -276,1903 +247,346 @@ Maus bewegen = zielen · Power einstellen · Stoß ausführen
 </div>
 
 <script>
+const canvas = document.getElementById("pool");
+const ctx = canvas.getContext("2d");
 
-/* =====================================================
-CUEVERSE ROYAL POOL
-Neue Physikstruktur
-===================================================== */
+let W,H;
+let balls=[];
+let aiming=true;
+let angle=0;
 
-const canvas =
-document.getElementById("table");
+const friction=0.985;
+const stopSpeed=0.045;
+const wallBounce=0.82;
+const ballBounce=0.92;
 
-const ctx =
-canvas.getContext("2d");
+const powerSlider=document.getElementById("power");
+const powerText=document.getElementById("powerText");
+const statusText=document.getElementById("status");
 
-const powerSlider =
-document.getElementById("power");
-
-const powerValue =
-document.getElementById("powerValue");
-
-const shootButton =
-document.getElementById("shoot");
-
-const resetButton =
-document.getElementById("reset");
-
-const statusText =
-document.getElementById("status");
-
-
-const W = 1400;
-const H = 700;
-
-
-/* =====================================================
-TISCH
-===================================================== */
-
-const RAIL = 74;
-
-const PLAY_LEFT = RAIL + 19;
-const PLAY_RIGHT = W - RAIL - 19;
-
-const PLAY_TOP = RAIL + 19;
-const PLAY_BOTTOM = H - RAIL - 19;
-
-const BALL_RADIUS = 18;
-
-const BALL_DIAMETER =
-BALL_RADIUS * 2;
-
-
-/* =====================================================
-TASCHEN
-===================================================== */
-
-const pockets = [
-
-{x:RAIL, y:RAIL},
-{x:W/2, y:RAIL},
-{x:W-RAIL, y:RAIL},
-
-{x:RAIL, y:H-RAIL},
-{x:W/2, y:H-RAIL},
-{x:W-RAIL, y:H-RAIL}
-
-];
-
-
-/* =====================================================
-PHYSIK
-===================================================== */
-
-/*
-Meterähnliche interne Einheit:
-Geschwindigkeit = Pixel pro Sekunde.
-
-Dadurch ist ein starker Stoß wirklich schnell
-und unabhängig davon, wie schnell der Browser
-einzelne Bilder zeichnet.
-*/
-
-const MAX_SHOT_SPEED = 1750;
-
-const FRICTION_PER_SECOND = 0.78;
-
-const BALL_RESTITUTION = 0.97;
-
-const CUSHION_RESTITUTION = 0.91;
-
-
-/*
-Fester Physikschritt.
-*/
-
-const PHYSICS_STEP = 1 / 120;
-
-let accumulator = 0;
-
-let previousTime = performance.now();
-
-
-/* =====================================================
-SPIELZUSTAND
-===================================================== */
-
-let balls = [];
-
-let aiming = true;
-
-let shotInProgress = false;
-
-let mouseX = 300;
-
-let mouseY = H / 2;
-
-
-/* =====================================================
-KUGELFARBEN
-===================================================== */
-
-const colors = [
-
-"#e7bd2d",
-"#286fd0",
-"#d93242",
-"#8645c5",
-"#ec8422",
-"#1a9b6b",
-"#ae3829",
-"#080808",
-
-"#e7bd2d",
-"#286fd0",
-"#d93242",
-"#8645c5",
-"#ec8422",
-"#1a9b6b",
-"#d93242"
-
-];
-
-
-/* =====================================================
-KUGEL ERSTELLEN
-===================================================== */
-
-function createBall(
-x,
-y,
-number
-){
-
-balls.push({
-
-x:x,
-y:y,
-
-vx:0,
-vy:0,
-
-number:number,
-
-color:
-number === 0
-? "#ffffff"
-: colors[number-1],
-
-active:true
-
+powerSlider.addEventListener("input",()=>{
+powerText.textContent=powerSlider.value;
 });
 
+function resize(){
+const rect=canvas.getBoundingClientRect();
+W=canvas.width=rect.width;
+H=canvas.height=rect.height;
+resetGame();
 }
 
-
-/* =====================================================
-NEUES SPIEL
-===================================================== */
-
-function newGame(){
-
-balls = [];
-
-/*
-Weiße Kugel.
-Sie wird exakt auf eine Position gesetzt
-und bleibt dort komplett stehen.
-*/
-
-createBall(
-285,
-H / 2,
-0
-);
-
-
-/*
-Dreieck.
-Kein Überlappen der Kugeln.
-*/
-
-const startX = 1015;
-
-const centerY = H / 2;
-
-const spacing =
-BALL_DIAMETER + 0.35;
-
-let number = 1;
-
-for(
-let row = 0;
-row < 5;
-row++
-){
-
-for(
-let col = 0;
-col <= row;
-col++
-){
-
-const x =
-startX +
-row * spacing * 0.866;
-
-const y =
-centerY +
-(col - row / 2) *
-spacing;
-
-createBall(
-x,
-y,
-number
-);
-
-number++;
-
-}
-}
-
-
-aiming = true;
-
-shotInProgress = false;
-
-shootButton.disabled = false;
-
-statusText.textContent =
-"Break bereit – ziele und stoße.";
-}
-
-
-/* =====================================================
-TISCH
-===================================================== */
-
-function drawTable(){
-
-ctx.clearRect(
-0,
-0,
-W,
-H
-);
-
-
-/*
-MASSIVER HOLZRAHMEN
-*/
-
-const wood =
-ctx.createLinearGradient(
-0,
-0,
-W,
-H
-);
-
-wood.addColorStop(
-0,
-"#080402"
-);
-
-wood.addColorStop(
-.13,
-"#44260e"
-);
-
-wood.addColorStop(
-.26,
-"#89571d"
-);
-
-wood.addColorStop(
-.40,
-"#241205"
-);
-
-wood.addColorStop(
-.62,
-"#704415"
-);
-
-wood.addColorStop(
-.82,
-"#2a1607"
-);
-
-wood.addColorStop(
-1,
-"#050302"
-);
-
-ctx.fillStyle = wood;
-
-ctx.fillRect(
-0,
-0,
-W,
-H
-);
-
-
-/*
-Holzmaserung
-*/
-
-ctx.save();
-
-ctx.globalAlpha = .15;
-
-for(
-let i = 0;
-i < 30;
-i++
-){
-
-const y =
-15 + i * 25;
-
-ctx.strokeStyle =
-i % 2
-? "#e0a74c"
-: "#160903";
-
-ctx.lineWidth = 1;
-
-ctx.beginPath();
-
-ctx.moveTo(
-0,
-y
-);
-
-ctx.bezierCurveTo(
-300,
-y - 18,
-800,
-y + 22,
-W,
-y - 8
-);
-
-ctx.stroke();
-}
-
-ctx.restore();
-
-
-/*
-GOLD-INLAY
-*/
-
-ctx.strokeStyle =
-"#d2a746";
-
-ctx.lineWidth = 3;
-
-ctx.strokeRect(
-25,
-25,
-W - 50,
-H - 50
-);
-
-
-/*
-BILLARDTUCH
-*/
-
-const cloth =
-ctx.createRadialGradient(
-W/2,
-H/2,
-50,
-W/2,
-H/2,
-800
-);
-
-cloth.addColorStop(
-0,
-"#12815a"
-);
-
-cloth.addColorStop(
-.35,
-"#08704d"
-);
-
-cloth.addColorStop(
-.7,
-"#05543b"
-);
-
-cloth.addColorStop(
-1,
-"#022c1f"
-);
-
-ctx.fillStyle = cloth;
-
-ctx.fillRect(
-RAIL,
-RAIL,
-W - RAIL*2,
-H - RAIL*2
-);
-
-
-/*
-Tuchfaser
-*/
-
-ctx.save();
-
-ctx.globalAlpha = .045;
-
-for(
-let y = PLAY_TOP;
-y < PLAY_BOTTOM;
-y += 4
-){
-
-ctx.strokeStyle =
-y % 8 === 0
-? "#ffffff"
-: "#001b12";
-
-ctx.beginPath();
-
-ctx.moveTo(
-PLAY_LEFT,
-y
-);
-
-ctx.lineTo(
-PLAY_RIGHT,
-y
-);
-
-ctx.stroke();
-}
-
-ctx.restore();
-
-
-/*
-Banden
-*/
-
-const cushion =
-ctx.createLinearGradient(
-0,
-RAIL,
-0,
-RAIL + 55
-);
-
-cushion.addColorStop(
-0,
-"#1b503c"
-);
-
-cushion.addColorStop(
-.45,
-"#0b382a"
-);
-
-cushion.addColorStop(
-1,
-"#041d15"
-);
-
-ctx.strokeStyle =
-cushion;
-
-ctx.lineWidth = 44;
-
-ctx.strokeRect(
-RAIL,
-RAIL,
-W - RAIL*2,
-H - RAIL*2
-);
-
-
-/*
-Goldene Innenkante
-*/
-
-ctx.strokeStyle =
-"#b99137";
-
-ctx.lineWidth = 2;
-
-ctx.strokeRect(
-RAIL + 19,
-RAIL + 19,
-W - (RAIL+19)*2,
-H - (RAIL+19)*2
-);
-
-
-/*
-Tischmitte
-*/
-
-ctx.strokeStyle =
-"rgba(255,255,255,.07)";
-
-ctx.lineWidth = 2;
-
-ctx.beginPath();
-
-ctx.moveTo(
-W/2,
-PLAY_TOP
-);
-
-ctx.lineTo(
-W/2,
-PLAY_BOTTOM
-);
-
-ctx.stroke();
-
-
-/*
-Taschen
-*/
-
-pockets.forEach(
-drawPocket
-);
-
-
-/*
-Diamanten
-*/
-
-drawDiamonds();
-}
-
-
-/* =====================================================
-TASCHEN
-===================================================== */
-
-function drawPocket(p){
-
-const g =
-ctx.createRadialGradient(
-p.x - 7,
-p.y - 7,
-2,
-p.x,
-p.y,
-39
-);
-
-g.addColorStop(
-0,
-"#292929"
-);
-
-g.addColorStop(
-.35,
-"#050505"
-);
-
-g.addColorStop(
-.75,
-"#000000"
-);
-
-g.addColorStop(
-1,
-"#080808"
-);
-
-ctx.fillStyle = g;
-
-ctx.beginPath();
-
-ctx.arc(
-p.x,
-p.y,
-36,
-0,
-Math.PI*2
-);
-
-ctx.fill();
-
-ctx.strokeStyle =
-"#16100a";
-
-ctx.lineWidth = 5;
-
-ctx.stroke();
-}
-
-
-/* =====================================================
-DIAMANTEN
-===================================================== */
-
-function diamond(x,y){
-
-ctx.fillStyle =
-"#dfc77d";
-
-ctx.beginPath();
-
-ctx.moveTo(
-x,
-y - 5
-);
-
-ctx.lineTo(
-x + 5,
-y
-);
-
-ctx.lineTo(
-x,
-y + 5
-);
-
-ctx.lineTo(
-x - 5,
-y
-);
-
-ctx.closePath();
-
-ctx.fill();
-}
-
-
-function drawDiamonds(){
-
-for(
-let p = .15;
-p <= .85;
-p += .175
-){
-
-const x =
-RAIL +
-(W - RAIL*2) * p;
-
-diamond(
-x,
-35
-);
-
-diamond(
-x,
-H - 35
-);
-}
-
-
-for(
-let p = .25;
-p <= .75;
-p += .25
-){
-
-const y =
-RAIL +
-(H - RAIL*2) * p;
-
-diamond(
-35,
-y
-);
-
-diamond(
-W - 35,
-y
-);
-}
-}
-
-
-/* =====================================================
-REALISTISCHERE KUGEL
-===================================================== */
-
-function drawBall(ball){
-
-if(!ball.active){
-return;
-}
-
-
-/*
-Kontakt-/Bodenschatten
-*/
-
-ctx.save();
-
-ctx.globalAlpha = .36;
-
-ctx.fillStyle = "#000";
-
-ctx.beginPath();
-
-ctx.ellipse(
-ball.x + 6,
-ball.y + 9,
-BALL_RADIUS * 1.08,
-BALL_RADIUS * .52,
-0,
-0,
-Math.PI*2
-);
-
-ctx.fill();
-
-ctx.restore();
-
-
-/*
-3D-Hauptkörper
-*/
-
-const g =
-ctx.createRadialGradient(
-ball.x - 7,
-ball.y - 8,
-1,
-ball.x,
-ball.y,
-BALL_RADIUS
-);
-
-
-if(ball.number === 0){
-
-g.addColorStop(
-0,
-"#ffffff"
-);
-
-g.addColorStop(
-.3,
-"#ffffff"
-);
-
-g.addColorStop(
-.7,
-"#e8e8e8"
-);
-
-g.addColorStop(
-1,
-"#858585"
-);
-
-}else{
-
-g.addColorStop(
-0,
-"#ffffff"
-);
-
-g.addColorStop(
-.09,
-ball.color
-);
-
-g.addColorStop(
-.48,
-ball.color
-);
-
-g.addColorStop(
-.82,
-ball.color
-);
-
-g.addColorStop(
-1,
-"#080808"
-);
-}
-
-
-ctx.fillStyle = g;
-
-ctx.beginPath();
-
-ctx.arc(
-ball.x,
-ball.y,
-BALL_RADIUS,
-0,
-Math.PI*2
-);
-
-ctx.fill();
-
-
-/*
-Streifen bei 9–15
-*/
-
-if(
-ball.number >= 9 &&
-ball.number <= 15
-){
-
-ctx.save();
-
-ctx.beginPath();
-
-ctx.arc(
-ball.x,
-ball.y,
-BALL_RADIUS - .5,
-0,
-Math.PI*2
-);
-
-ctx.clip();
-
-ctx.fillStyle =
-"rgba(250,250,250,.92)";
-
-ctx.fillRect(
-ball.x - BALL_RADIUS,
-ball.y - 6,
-BALL_RADIUS*2,
-12
-);
-
-ctx.restore();
-}
-
-
-/*
-Nummernkreis
-*/
-
-if(ball.number > 0){
-
-ctx.fillStyle =
-"#fafafa";
-
-ctx.beginPath();
-
-ctx.arc(
-ball.x,
-ball.y,
-6.7,
-0,
-Math.PI*2
-);
-
-ctx.fill();
-
-ctx.fillStyle =
-"#111";
-
-ctx.font =
-"bold 8px Arial";
-
-ctx.textAlign =
-"center";
-
-ctx.textBaseline =
-"middle";
-
-ctx.fillText(
-ball.number,
-ball.x,
-ball.y
-);
-}
-
-
-/*
-Lichtreflexion
-*/
-
-ctx.fillStyle =
-"rgba(255,255,255,.86)";
-
-ctx.beginPath();
-
-ctx.ellipse(
-ball.x - 6,
-ball.y - 7,
-4,
-2.6,
--.45,
-0,
-Math.PI*2
-);
-
-ctx.fill();
-
-
-/*
-zweiter Reflex
-*/
-
-ctx.fillStyle =
-"rgba(255,255,255,.22)";
-
-ctx.beginPath();
-
-ctx.arc(
-ball.x + 6,
-ball.y + 5,
-2,
-0,
-Math.PI*2
-);
-
-ctx.fill();
-
-
-/*
-Kontur
-*/
-
-ctx.strokeStyle =
-"rgba(0,0,0,.45)";
-
-ctx.lineWidth = 1;
-
-ctx.beginPath();
-
-ctx.arc(
-ball.x,
-ball.y,
-BALL_RADIUS,
-0,
-Math.PI*2
-);
-
-ctx.stroke();
-}
-
-
-/* =====================================================
-AIM
-===================================================== */
-
-function getAim(){
-
-const cue =
-balls[0];
-
-if(!cue){
-return null;
-}
-
-const dx =
-mouseX - cue.x;
-
-const dy =
-mouseY - cue.y;
-
-const distance =
-Math.hypot(
-dx,
-dy
-);
-
-if(distance < 1){
-return null;
-}
-
-return {
-x:dx/distance,
-y:dy/distance
+function createBall(x,y,color,number){
+return{
+x,y,
+vx:0,
+vy:0,
+r:Math.min(W,H)*0.027,
+color,
+number,
+active:true
 };
 }
 
+function resetGame(){
+balls=[];
 
-/* =====================================================
-PREMIUM CUE
-===================================================== */
+const r=Math.min(W,H)*0.027;
 
-function drawCue(nx,ny){
+const cue=createBall(W*.18,H*.5,"white",0);
+cue.r=r;
+balls.push(cue);
 
-const cue =
-balls[0];
+const colors=[
+"#f4c400","#174fba","#df2525","#7b3fb4",
+"#f28c18","#17864b","#87251c","#111"
+];
 
-if(!cue){
-return;
+let startX=W*.73;
+let startY=H*.5;
+let n=1;
+
+for(let row=0;row<5;row++){
+for(let col=0;col<=row;col++){
+let x=startX+row*r*1.75;
+let y=startY+(col-row/2)*r*2.05;
+
+let color=colors[(n-1)%colors.length];
+
+balls.push(createBall(x,y,color,n));
+n++;
+}
 }
 
-const length = 420;
+aiming=true;
+statusText.textContent="Break bereit – ziele und stoße.";
+draw();
+}
 
-ctx.save();
-
-ctx.translate(
-cue.x - nx*length,
-cue.y - ny*length
-);
-
-ctx.rotate(
-Math.atan2(
-ny,
-nx
-)
-);
-
-
-/*
-Helles Ahorn-Schaft
-*/
-
-const shaft =
-ctx.createLinearGradient(
-0,
--4,
-0,
-4
-);
-
-shaft.addColorStop(
-0,
-"#fff3d5"
-);
-
-shaft.addColorStop(
-.45,
-"#dfc18b"
-);
-
-shaft.addColorStop(
-1,
-"#8d5927"
-);
-
-ctx.fillStyle =
-shaft;
-
-ctx.fillRect(
-44,
--4,
-285,
-8
-);
-
-
-/*
-Metallringe
-*/
-
-ctx.fillStyle =
-"#d9ad45";
-
-ctx.fillRect(
-302,
--7,
-5,
-14
-);
-
-ctx.fillRect(
-312,
--7,
-4,
-14
-);
-
-
-/*
-Ebenholz-Griff
-*/
-
-const grip =
-ctx.createLinearGradient(
-0,
--8,
-0,
-8
-);
-
-grip.addColorStop(
-0,
-"#030303"
-);
-
-grip.addColorStop(
-.45,
-"#351b0b"
-);
-
-grip.addColorStop(
-1,
-"#020202"
-);
-
-ctx.fillStyle =
-grip;
-
-ctx.fillRect(
-316,
--8,
-75,
-16
-);
-
-
-/*
-Lederwicklung
-*/
-
-ctx.strokeStyle =
-"rgba(211,169,83,.7)";
-
-ctx.lineWidth = 1;
-
-for(
-let x = 322;
-x < 385;
-x += 7
-){
+function drawBall(b){
+if(!b.active)return;
 
 ctx.beginPath();
+ctx.arc(b.x,b.y,b.r,0,Math.PI*2);
 
-ctx.moveTo(
-x,
--8
+const grad=ctx.createRadialGradient(
+b.x-b.r*.35,
+b.y-b.r*.35,
+b.r*.1,
+b.x,
+b.y,
+b.r
 );
 
-ctx.lineTo(
-x-4,
-8
-);
+if(b.number===0){
+grad.addColorStop(0,"#ffffff");
+grad.addColorStop(.7,"#eeeeee");
+grad.addColorStop(1,"#aaa");
+}else{
+grad.addColorStop(0,"#ffffff");
+grad.addColorStop(.18,b.color);
+grad.addColorStop(1,b.color);
+}
 
+ctx.fillStyle=grad;
+ctx.fill();
+
+ctx.strokeStyle="#111";
+ctx.lineWidth=1;
 ctx.stroke();
+
+if(b.number>0){
+ctx.fillStyle="white";
+ctx.beginPath();
+ctx.arc(b.x,b.y,b.r*.42,0,Math.PI*2);
+ctx.fill();
+
+ctx.fillStyle="#111";
+ctx.font=`bold ${Math.max(8,b.r*.75)}px Arial`;
+ctx.textAlign="center";
+ctx.textBaseline="middle";
+ctx.fillText(b.number,b.x,b.y);
 }
-
-
-/*
-Butt Cap
-*/
-
-ctx.fillStyle =
-"#d8ad43";
-
-ctx.fillRect(
-392,
--9,
-8,
-18
-);
-
-
-/*
-Ferrule
-*/
-
-ctx.fillStyle =
-"#f4f0e5";
-
-ctx.fillRect(
-34,
--4,
-10,
-8
-);
-
-
-/*
-Leder-/Leder-Spitze
-*/
-
-ctx.fillStyle =
-"#b9a17b";
-
-ctx.fillRect(
-26,
--3,
-9,
-6
-);
-
-ctx.restore();
 }
-
-
-/* =====================================================
-AIM-LINIE
-===================================================== */
 
 function drawAim(){
+const cue=balls[0];
 
-if(!aiming){
-return;
-}
-
-const cue =
-balls[0];
-
-if(
-!cue ||
-!cue.active
-){
-return;
-}
-
-const aim =
-getAim();
-
-if(!aim){
-return;
-}
-
-
-/*
-präzise Ziel-Linie
-*/
+if(!cue.active)return;
 
 ctx.save();
 
-ctx.setLineDash([
-11,
-9
-]);
+ctx.strokeStyle="rgba(255,255,255,.7)";
+ctx.lineWidth=1.5;
+ctx.setLineDash([7,6]);
 
-ctx.strokeStyle =
-"rgba(255,255,255,.78)";
-
-ctx.lineWidth = 2;
+const length=180;
 
 ctx.beginPath();
-
-ctx.moveTo(
-cue.x,
-cue.y
-);
-
+ctx.moveTo(cue.x,cue.y);
 ctx.lineTo(
-cue.x + aim.x*650,
-cue.y + aim.y*650
+cue.x+Math.cos(angle)*length,
+cue.y+Math.sin(angle)*length
 );
-
 ctx.stroke();
 
 ctx.restore();
-
-
-drawCue(
-aim.x,
-aim.y
-);
 }
 
+function draw(){
+ctx.clearRect(0,0,W,H);
 
-/* =====================================================
-KOLLISION
-===================================================== */
+balls.forEach(drawBall);
 
-function collideBalls(a,b){
-
-const dx =
-b.x - a.x;
-
-const dy =
-b.y - a.y;
-
-const distance =
-Math.hypot(
-dx,
-dy
-);
-
-const minDistance =
-BALL_DIAMETER;
-
-
-/*
-Ganz wichtig:
-
-Ruhende Kugeln werden NICHT
-ständig auseinander gedrückt.
-
-Nur bei tatsächlichem Kontakt
-wird eine Kollision berechnet.
-*/
-
-if(
-distance <= 0 ||
-distance >= minDistance
-){
-return;
-}
-
-
-const nx =
-dx / distance;
-
-const ny =
-dy / distance;
-
-
-const rvx =
-b.vx - a.vx;
-
-const rvy =
-b.vy - a.vy;
-
-
-const relativeVelocity =
-rvx*nx +
-rvy*ny;
-
-
-/*
-Wenn sie sich nicht aufeinander
-zubewegen, KEIN Impuls.
-*/
-
-if(
-relativeVelocity >= 0
-){
-return;
-}
-
-
-/*
-Kleine Überlappung korrigieren,
-aber nur bei Bewegung.
-*/
-
-const overlap =
-minDistance - distance;
-
-const correction =
-overlap * .5;
-
-a.x -=
-nx * correction;
-
-a.y -=
-ny * correction;
-
-b.x +=
-nx * correction;
-
-b.y +=
-ny * correction;
-
-
-/*
-Impulsübertragung
-*/
-
-const impulse =
--(1 + BALL_RESTITUTION) *
-relativeVelocity /
-2;
-
-
-a.vx -=
-impulse * nx;
-
-a.vy -=
-impulse * ny;
-
-b.vx +=
-impulse * nx;
-
-b.vy +=
-impulse * ny;
-}
-
-
-/* =====================================================
-TASCHEN
-===================================================== */
-
-function checkPocket(ball){
-
-for(
-const pocket of pockets
-){
-
-const distance =
-Math.hypot(
-ball.x - pocket.x,
-ball.y - pocket.y
-);
-
-if(
-distance < 29
-){
-
-ball.active = false;
-
-ball.vx = 0;
-ball.vy = 0;
-
-return;
-}
-}
-}
-
-
-/* =====================================================
-EIN PHYSIKSCHRITT
-===================================================== */
-
-function physicsStep(){
-
-let moving = false;
-
-
-/*
-Kugeln bewegen
-*/
-
-for(
-const ball of balls
-){
-
-if(!ball.active){
-continue;
-}
-
-
-ball.x +=
-ball.vx *
-PHYSICS_STEP;
-
-ball.y +=
-ball.vy *
-PHYSICS_STEP;
-
-
-/*
-Reibung.
-Bei v=0 bleibt exakt v=0.
-*/
-
-const friction =
-Math.pow(
-FRICTION_PER_SECOND,
-PHYSICS_STEP
-);
-
-ball.vx *= friction;
-ball.vy *= friction;
-
-
-/*
-Sehr kleine Geschwindigkeiten
-auf exakt 0 setzen.
-*/
-
-const speed =
-Math.hypot(
-ball.vx,
-ball.vy
-);
-
-if(
-speed < 4
-){
-
-ball.vx = 0;
-ball.vy = 0;
-
-}else{
-
-moving = true;
-}
-
-
-/*
-Linke Bande
-*/
-
-if(
-ball.x - BALL_RADIUS <
-PLAY_LEFT
-){
-
-ball.x =
-PLAY_LEFT +
-BALL_RADIUS;
-
-ball.vx =
-Math.abs(ball.vx) *
-CUSHION_RESTITUTION;
-}
-
-
-/*
-Rechte Bande
-*/
-
-if(
-ball.x + BALL_RADIUS >
-PLAY_RIGHT
-){
-
-ball.x =
-PLAY_RIGHT -
-BALL_RADIUS;
-
-ball.vx =
--Math.abs(ball.vx) *
-CUSHION_RESTITUTION;
-}
-
-
-/*
-Obere Bande
-*/
-
-if(
-ball.y - BALL_RADIUS <
-PLAY_TOP
-){
-
-ball.y =
-PLAY_TOP +
-BALL_RADIUS;
-
-ball.vy =
-Math.abs(ball.vy) *
-CUSHION_RESTITUTION;
-}
-
-
-/*
-Untere Bande
-*/
-
-if(
-ball.y + BALL_RADIUS >
-PLAY_BOTTOM
-){
-
-ball.y =
-PLAY_BOTTOM -
-BALL_RADIUS;
-
-ball.vy =
--Math.abs(ball.vy) *
-CUSHION_RESTITUTION;
-}
-
-
-checkPocket(ball);
-}
-
-
-/*
-Mehrere Kollisionsdurchläufe
-nur wenn tatsächlich Bewegung
-vorhanden ist.
-*/
-
-if(moving){
-
-for(
-let pass = 0;
-pass < 3;
-pass++
-){
-
-for(
-let i = 0;
-i < balls.length;
-i++
-){
-
-for(
-let j = i+1;
-j < balls.length;
-j++
-){
-
-if(
-balls[i].active &&
-balls[j].active
-){
-
-collideBalls(
-balls[i],
-balls[j]
-);
-}
-}
-}
-}
-}
-
-
-/*
-Wenn alles steht:
-wieder zielen.
-*/
-
-if(
-!moving &&
-shotInProgress
-){
-
-shotInProgress = false;
-
-aiming = true;
-
-shootButton.disabled = false;
-
-statusText.textContent =
-"Deine Runde – ziele und stoße.";
-}
-}
-
-
-/* =====================================================
-RENDER
-===================================================== */
-
-function render(){
-
-drawTable();
-
-for(
-const ball of balls
-){
-
-drawBall(ball);
-}
-
+if(aiming && !moving()){
 drawAim();
+}
+}
 
-requestAnimationFrame(
-render
+function moving(){
+return balls.some(b=>b.active &&
+Math.abs(b.vx)>stopSpeed ||
+b.active && Math.abs(b.vy)>stopSpeed
 );
 }
 
+function update(){
+let anyMoving=false;
 
-/* =====================================================
-SPIELER ZIELEN
-===================================================== */
+balls.forEach(b=>{
+if(!b.active)return;
 
-canvas.addEventListener(
-"mousemove",
-function(event){
+b.x+=b.vx;
+b.y+=b.vy;
 
-const rect =
-canvas.getBoundingClientRect();
+// Realistische Tischreibung:
+b.vx*=friction;
+b.vy*=friction;
 
-mouseX =
-(event.clientX - rect.left) *
-W /
-rect.width;
-
-mouseY =
-(event.clientY - rect.top) *
-H /
-rect.height;
-}
-);
-
-
-/* =====================================================
-TOUCH
-===================================================== */
-
-canvas.addEventListener(
-"touchmove",
-function(event){
-
-event.preventDefault();
-
-const rect =
-canvas.getBoundingClientRect();
-
-const touch =
-event.touches[0];
-
-mouseX =
-(touch.clientX - rect.left) *
-W /
-rect.width;
-
-mouseY =
-(touch.clientY - rect.top) *
-H /
-rect.height;
-
-},
-{
-passive:false
-}
-);
-
-
-/* =====================================================
-STOß
-===================================================== */
-
-shootButton.addEventListener(
-"click",
-function(){
-
-if(!aiming){
-return;
+// Sehr langsame Kugeln werden wirklich gestoppt.
+if(Math.hypot(b.vx,b.vy)<stopSpeed){
+b.vx=0;
+b.vy=0;
 }
 
-const cue =
-balls[0];
-
-if(
-!cue ||
-!cue.active
-){
-return;
+// Banden
+if(b.x-b.r<0){
+b.x=b.r;
+b.vx=Math.abs(b.vx)*wallBounce;
 }
 
-const aim =
-getAim();
-
-if(!aim){
-return;
+if(b.x+b.r>W){
+b.x=W-b.r;
+b.vx=-Math.abs(b.vx)*wallBounce;
 }
 
-
-const power =
-Number(
-powerSlider.value
-) / 100;
-
-
-/*
-Sehr direkter Geschwindigkeitsbereich.
-
-1% = 120 px/s
-100% = 1750 px/s
-
-Das ist bewusst deutlich schneller
-als die bisherigen Versionen.
-*/
-
-const minSpeed = 120;
-
-const speed =
-minSpeed +
-power *
-(MAX_SHOT_SPEED-minSpeed);
-
-
-cue.vx =
-aim.x * speed;
-
-cue.vy =
-aim.y * speed;
-
-
-/*
-JETZT erst wird Physik aktiviert.
-*/
-
-shotInProgress = true;
-
-aiming = false;
-
-shootButton.disabled = true;
-
-statusText.textContent =
-"🎱 STOß!";
-}
-);
-
-
-/* =====================================================
-POWER
-===================================================== */
-
-powerSlider.addEventListener(
-"input",
-function(){
-
-powerValue.textContent =
-this.value + "%";
-}
-);
-
-
-/* =====================================================
-RESET
-===================================================== */
-
-resetButton.addEventListener(
-"click",
-function(){
-
-newGame();
-}
-);
-
-
-/* =====================================================
-PHYSIK-LOOP
-===================================================== */
-
-function physicsLoop(now){
-
-let delta =
-(now - previousTime) / 1000;
-
-previousTime = now;
-
-
-/*
-Browser-Pausen begrenzen.
-*/
-
-if(delta > .1){
-delta = .1;
+if(b.y-b.r<0){
+b.y=b.r;
+b.vy=Math.abs(b.vy)*wallBounce;
 }
 
-
-/*
-WICHTIG:
-
-Im Ruhezustand läuft zwar der Timer,
-aber die Kugeln haben vx=0/vy=0.
-
-Es entsteht KEINE Bewegung.
-*/
-
-accumulator += delta;
-
-
-while(
-accumulator >= PHYSICS_STEP
-){
-
-physicsStep();
-
-accumulator -=
-PHYSICS_STEP;
+if(b.y+b.r>H){
+b.y=H-b.r;
+b.vy=-Math.abs(b.vy)*wallBounce;
 }
 
+if(Math.abs(b.vx)>stopSpeed || Math.abs(b.vy)>stopSpeed){
+anyMoving=true;
+}
+});
 
-requestAnimationFrame(
-physicsLoop
-);
+handleCollisions();
+
+if(anyMoving){
+draw();
+requestAnimationFrame(update);
+}else{
+aiming=true;
+statusText.textContent="Kugeln stehen – nächster Stoß.";
+draw();
+}
 }
 
+function handleCollisions(){
 
-/* =====================================================
-START
-===================================================== */
+for(let i=0;i<balls.length;i++){
 
-newGame();
+const a=balls[i];
 
-requestAnimationFrame(
-physicsLoop
-);
+if(!a.active)continue;
 
-requestAnimationFrame(
-render
-);
+for(let j=i+1;j<balls.length;j++){
 
+const b=balls[j];
+
+if(!b.active)continue;
+
+let dx=b.x-a.x;
+let dy=b.y-a.y;
+
+let dist=Math.hypot(dx,dy);
+let minDist=a.r+b.r;
+
+if(dist===0){
+dx=.01;
+dy=.01;
+dist=.014;
+}
+
+if(dist<minDist){
+
+const nx=dx/dist;
+const ny=dy/dist;
+
+const overlap=minDist-dist;
+
+a.x-=nx*overlap/2;
+a.y-=ny*overlap/2;
+b.x+=nx*overlap/2;
+b.y+=ny*overlap/2;
+
+const rvx=b.vx-a.vx;
+const rvy=b.vy-a.vy;
+
+const velocityAlongNormal=rvx*nx+rvy*ny;
+
+if(velocityAlongNormal>0)continue;
+
+const impulse=
+-(1+ballBounce)*velocityAlongNormal/2;
+
+a.vx-=impulse*nx;
+a.vy-=impulse*ny;
+
+b.vx+=impulse*nx;
+b.vy+=impulse*ny;
+}
+}
+}
+}
+
+function shoot(){
+
+if(moving())return;
+
+const cue=balls[0];
+
+const power=Number(powerSlider.value);
+
+const force=power*.075;
+
+cue.vx=Math.cos(angle)*force;
+cue.vy=Math.sin(angle)*force;
+
+aiming=false;
+
+statusText.textContent="Stoß läuft…";
+
+requestAnimationFrame(update);
+}
+
+function restart(){
+resetGame();
+}
+
+canvas.addEventListener("pointermove",e=>{
+
+const rect=canvas.getBoundingClientRect();
+
+const x=e.clientX-rect.left;
+const y=e.clientY-rect.top;
+
+const cue=balls[0];
+
+angle=Math.atan2(y-cue.y,x-cue.x);
+
+if(!moving()){
+draw();
+}
+});
+
+canvas.addEventListener("pointerdown",e=>{
+
+if(moving())return;
+
+const rect=canvas.getBoundingClientRect();
+
+const x=e.clientX-rect.left;
+const y=e.clientY-rect.top;
+
+const cue=balls[0];
+
+angle=Math.atan2(y-cue.y,x-cue.x);
+
+draw();
+});
+
+document.getElementById("shoot").addEventListener("click",shoot);
+document.getElementById("restart").addEventListener("click",restart);
+
+window.addEventListener("resize",resize);
+
+resize();
 </script>
 
 </body>
 </html>
-
-
-
