@@ -6,9 +6,7 @@
 <title>CueVerse – Play Beyond Luxury</title>
 
 <style>
-* {
-box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
 margin: 0;
@@ -21,35 +19,30 @@ text-align: center;
 .screen {
 display: none;
 min-height: 100vh;
-padding: 50px 20px;
+padding: 45px 20px;
 }
 
-.active {
-display: block;
-}
+.active { display: block; }
 
 h1 {
 color: #d4af37;
 font-size: 38px;
-margin-top: 60px;
+margin-top: 55px;
 }
 
-h2 {
-color: #d4af37;
-}
+h2 { color: #d4af37; }
 
 .subtitle {
 color: #aaa;
 margin-bottom: 40px;
 }
 
-button,
-.card {
+button, .card {
 width: 90%;
-max-width: 420px;
+max-width: 430px;
 margin: 12px auto;
 padding: 18px;
-border-radius: 12px;
+border-radius: 14px;
 border: 1px solid #d4af37;
 background: #111;
 color: white;
@@ -64,8 +57,7 @@ color: #050505;
 font-weight: bold;
 }
 
-.card:hover,
-button:hover {
+.card:hover, button:hover {
 transform: scale(1.02);
 }
 
@@ -74,19 +66,37 @@ color: #d4af37;
 margin-bottom: 30px;
 }
 
-.room {
-font-size: 20px;
+.gold {
+color: #d4af37;
+font-size: 32px;
+margin: 25px;
+}
+
+.player {
+border: 1px solid #333;
+border-radius: 14px;
+padding: 18px;
+margin: 15px auto;
+max-width: 430px;
+background: #0d0d0d;
+}
+
+.vs {
+color: #d4af37;
+font-size: 25px;
+font-weight: bold;
+margin: 15px;
+}
+
+.status {
+color: #aaa;
+margin: 20px;
 }
 
 .back {
 background: #222;
 color: white;
 border-color: #555;
-}
-
-.gold {
-color: #d4af37;
-font-size: 28px;
 }
 </style>
 </head>
@@ -114,38 +124,80 @@ font-size: 28px;
 <div id="play" class="screen">
 <h2>Spiel wählen</h2>
 
-<div class="card room" onclick="joinRoom(100)">
+<div class="card" onclick="joinRoom(100)">
 🪙 100 Coins Room
 </div>
 
-<div class="card room" onclick="joinRoom(500)">
+<div class="card" onclick="joinRoom(500)">
 🪙 500 Coins Room
 </div>
 
-<div class="card room" onclick="joinRoom(2500)">
+<div class="card" onclick="joinRoom(2500)">
 🪙 2.500 Coins Room
 </div>
 
 <button class="back" onclick="show('home')">Zurück</button>
 </div>
 
-<!-- MATCH -->
+<!-- MATCHMAKING -->
 <div id="match" class="screen">
 <h1>Royal Match</h1>
 
 <div class="gold">🎱</div>
 
-<h2 id="matchTitle">Gegner wird gesucht...</h2>
-
-<p id="matchText">
-Bitte warten. CueVerse sucht einen passenden Gegner.
-</p>
-
-<div class="coins">
-Einsatz: <span id="stake">100</span> Coins
+<div class="player">
+👤 <strong>Orhan</strong><br>
+Level 1
 </div>
 
-<button onclick="show('play')">Abbrechen</button>
+<div class="vs">VS</div>
+
+<div class="player" id="opponent">
+🔍 <strong>Gegner wird gesucht...</strong><br>
+<span class="status">CueVerse sucht einen passenden Spieler</span>
+</div>
+
+<div class="coins">
+🪙 Einsatz: <span id="stake">100</span> Coins
+</div>
+
+<div id="matchStatus" class="status">
+Suche nach einem Gegner...
+</div>
+
+<button id="startButton" style="display:none;" onclick="startMatch()">
+MATCH STARTEN
+</button>
+
+<button class="back" onclick="show('play')">
+Abbrechen
+</button>
+</div>
+
+<!-- GAME -->
+<div id="game" class="screen">
+<h1>Royal Table</h1>
+
+<div class="gold">🎱</div>
+
+<h2>8-Ball Match</h2>
+
+<div class="player">
+👤 Orhan<br>
+🪙 <span id="gameStake">100</span> Coins
+</div>
+
+<div class="card">
+🎱 <strong>Der Tisch wird vorbereitet...</strong>
+</div>
+
+<p class="status">
+Das echte 8-Ball-Spiel bauen wir als nächsten Schritt.
+</p>
+
+<button class="back" onclick="show('home')">
+Royal Lounge
+</button>
 </div>
 
 <!-- SHOP -->
@@ -167,22 +219,17 @@ Einsatz: <span id="stake">100</span> Coins
 <div id="profile" class="screen">
 <h2>Profil</h2>
 
-<div class="card">
-Level 1
-</div>
-
-<div class="card">
-Siege 0
-</div>
-
-<div class="card">
-Niederlagen 0
-</div>
+<div class="card">Level 1</div>
+<div class="card">Siege 0</div>
+<div class="card">Niederlagen 0</div>
 
 <button class="back" onclick="show('home')">Zurück</button>
 </div>
 
 <script>
+
+let selectedCoins = 100;
+
 function show(id) {
 document.querySelectorAll('.screen').forEach(function(screen) {
 screen.classList.remove('active');
@@ -192,17 +239,45 @@ document.getElementById(id).classList.add('active');
 }
 
 function joinRoom(coins) {
+
+selectedCoins = coins;
+
 document.getElementById('stake').textContent =
 coins.toLocaleString('de-DE');
 
-document.getElementById('matchTitle').textContent =
-'Gegner wird gesucht...';
+document.getElementById('gameStake').textContent =
+coins.toLocaleString('de-DE');
 
-document.getElementById('matchText').textContent =
-'Bitte warten. CueVerse sucht einen passenden Gegner.';
+document.getElementById('opponent').innerHTML =
+'🔍 <strong>Gegner wird gesucht...</strong><br>' +
+'<span class="status">CueVerse sucht einen passenden Spieler</span>';
+
+document.getElementById('matchStatus').textContent =
+'Suche nach einem Gegner...';
+
+document.getElementById('startButton').style.display = 'none';
 
 show('match');
+
+setTimeout(function() {
+
+document.getElementById('opponent').innerHTML =
+'👤 <strong>OOZ Player</strong><br>' +
+'Level 12';
+
+document.getElementById('matchStatus').textContent =
+'🎉 Gegner gefunden!';
+
+document.getElementById('startButton').style.display =
+'block';
+
+}, 3000);
 }
+
+function startMatch() {
+show('game');
+}
+
 </script>
 
 </body>
