@@ -55,6 +55,15 @@ window.onload=()=>show('splash');
 <div id="profile" class="screen">
 <h1>Profil</h1>
 <div class="card">Level 1<br>Siege: 0<br>Niederlagen: 0</div>
+ <script>
+document.querySelectorAll('.card').forEach(card => {
+if (card.textContent.includes('100 Coins Room')) {
+card.onclick = function() {
+alert('🎱 Gegner wird gesucht...\n\n100 Coins Einsatz\n\nBitte warten...');
+};
+}
+});
+</script>
 <a class="btn" href="#" onclick="show('home')">Zurück</a>
 </div>
 </body>
