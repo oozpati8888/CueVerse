@@ -6,247 +6,179 @@
 <title>CueVerse – Royal Table</title>
 
 <style>
-* {
-box-sizing: border-box;
+*{box-sizing:border-box}
+
+body{
+margin:0;
+background:
+radial-gradient(circle at top,#202020,#050505 65%);
+color:#fff;
+font-family:Arial,sans-serif;
+text-align:center;
+overflow-x:hidden;
 }
 
-body {
-margin: 0;
-background: #050505;
-color: white;
-font-family: Arial, sans-serif;
-text-align: center;
+header{
+padding:12px 15px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+max-width:1100px;
+margin:auto;
 }
 
-.screen {
-display: none;
-min-height: 100vh;
-padding: 25px 12px;
+.player{
+font-size:14px;
 }
 
-.active {
-display: block;
+.player strong{
+color:#d4af37;
 }
 
-h1, h2 {
-color: #d4af37;
+.logo{
+color:#d4af37;
+font-size:22px;
+font-weight:bold;
+letter-spacing:3px;
 }
 
-.info {
-display: flex;
-justify-content: space-between;
-max-width: 900px;
-margin: 10px auto 18px;
-font-size: 15px;
+.stake{
+color:#d4af37;
+font-size:13px;
 }
 
-.gold {
-color: #d4af37;
+#gameArea{
+width:96%;
+max-width:1100px;
+margin:auto;
 }
 
-#tableWrap {
-width: 95%;
-max-width: 900px;
-margin: auto;
-padding: 28px;
-background: #24170b;
-border: 10px solid #d4af37;
-border-radius: 24px;
-box-shadow: 0 0 35px rgba(212,175,55,.35);
+#tableFrame{
+padding:22px;
+border-radius:22px;
+background:
+linear-gradient(145deg,#080808,#292929,#080808);
+border:3px solid #8f7220;
+box-shadow:
+0 0 35px rgba(212,175,55,.22),
+inset 0 0 25px #000;
 }
 
-#table {
-position: relative;
-width: 100%;
-aspect-ratio: 2 / 1;
-background: #075b42;
-border: 18px solid #10251d;
-border-radius: 12px;
-box-shadow: inset 0 0 25px rgba(0,0,0,.7);
-overflow: hidden;
+canvas{
+display:block;
+width:100%;
+height:auto;
+background:#07583f;
+border-radius:12px;
+box-shadow:
+inset 0 0 35px #00150e,
+0 10px 30px #000;
+cursor:crosshair;
 }
 
-.pocket {
-position: absolute;
-width: 6%;
-aspect-ratio: 1;
-background: #020202;
-border-radius: 50%;
-box-shadow: inset 0 0 8px #000;
+.controls{
+max-width:800px;
+margin:16px auto;
 }
 
-.p1 { left: -2%; top: -3%; }
-.p2 { right: -2%; top: -3%; }
-.p3 { left: -2%; bottom: -3%; }
-.p4 { right: -2%; bottom: -3%; }
-.p5 { left: 47%; top: -5%; }
-.p6 { left: 47%; bottom: -5%; }
-
-.ball {
-position: absolute;
-width: 4.3%;
-aspect-ratio: 1;
-border-radius: 50%;
-box-shadow: 2px 3px 5px rgba(0,0,0,.7);
-display: flex;
-align-items: center;
-justify-content: center;
-color: white;
-font-size: clamp(8px, 1.4vw, 14px);
-font-weight: bold;
-user-select: none;
+.powerRow{
+display:flex;
+align-items:center;
+gap:12px;
 }
 
-.white {
-background: white;
-color: #111;
+.powerRow span{
+color:#d4af37;
+min-width:55px;
 }
 
-.red {
-background: #b5121b;
+input[type=range]{
+flex:1;
+accent-color:#d4af37;
 }
 
-.yellow {
-background: #e5b800;
-color: #111;
+button{
+margin:8px;
+padding:13px 24px;
+border:1px solid #d4af37;
+border-radius:10px;
+background:#d4af37;
+color:#050505;
+font-weight:bold;
+cursor:pointer;
 }
 
-.black {
-background: #050505;
+button:disabled{
+opacity:.4;
 }
 
-#cue {
-position: absolute;
-height: 5px;
-background: linear-gradient(to right, #eee, #d4af37, #6b3518);
-transform-origin: right center;
-border-radius: 5px;
-display: none;
-pointer-events: none;
+.status{
+min-height:24px;
+color:#aaa;
+margin-top:8px;
 }
 
-.controls {
-max-width: 600px;
-margin: 22px auto;
-}
-
-label {
-display: block;
-color: #aaa;
-margin-bottom: 8px;
-}
-
-input[type="range"] {
-width: 90%;
-accent-color: #d4af37;
-}
-
-button {
-border: 1px solid #d4af37;
-background: #d4af37;
-color: #050505;
-font-weight: bold;
-padding: 14px 25px;
-border-radius: 10px;
-margin: 8px;
-font-size: 16px;
-cursor: pointer;
-}
-
-button.back {
-background: #222;
-color: white;
-border-color: #555;
-}
-
-.status {
-color: #aaa;
-min-height: 24px;
+.help{
+color:#777;
+font-size:12px;
+margin-top:8px;
 }
 </style>
 </head>
 
 <body>
 
-<div id="game" class="screen active">
+<header>
 
-<h1>🎱 CueVerse</h1>
-<h2>ROYAL TABLE</h2>
-
-<div class="info">
-<div>
+<div class="player">
 👤 <strong>Orhan</strong><br>
-<span class="gold">10.000 Coins</span>
+Level 1
 </div>
 
-<div>
-🪙 Einsatz<br>
-<span class="gold">100 Coins</span>
+<div class="logo">
+CUEVERSE
 </div>
 
-<div>
+<div class="player">
 <strong>OOZ Player</strong><br>
 Level 12
 </div>
+
+</header>
+
+<div id="gameArea">
+
+<div class="stake">
+🪙 Einsatz: 100 Coins
 </div>
 
-<div id="tableWrap">
-<div id="table">
-
-<div class="pocket p1"></div>
-<div class="pocket p2"></div>
-<div class="pocket p3"></div>
-<div class="pocket p4"></div>
-<div class="pocket p5"></div>
-<div class="pocket p6"></div>
-
-<div class="ball white" id="cueBall" style="left:20%;top:48%;">
-⚪
-</div>
-
-<div class="ball red" style="left:63%;top:45%;">1</div>
-<div class="ball yellow" style="left:67%;top:40%;">2</div>
-<div class="ball red" style="left:67%;top:50%;">3</div>
-<div class="ball yellow" style="left:71%;top:35%;">4</div>
-<div class="ball red" style="left:71%;top:45%;">5</div>
-<div class="ball yellow" style="left:71%;top:55%;">6</div>
-<div class="ball red" style="left:75%;top:30%;">7</div>
-<div class="ball black" style="left:75%;top:40%;">8</div>
-<div class="ball yellow" style="left:75%;top:50%;">9</div>
-<div class="ball red" style="left:75%;top:60%;">10</div>
-<div class="ball yellow" style="left:79%;top:35%;">11</div>
-<div class="ball red" style="left:79%;top:45%;">12</div>
-<div class="ball yellow" style="left:79%;top:55%;">13</div>
-<div class="ball red" style="left:83%;top:40%;">14</div>
-<div class="ball yellow" style="left:83%;top:50%;">15</div>
-
-<div id="cue"></div>
-
-</div>
+<div id="tableFrame">
+<canvas id="table" width="1000" height="500"></canvas>
 </div>
 
 <div class="controls">
 
-<label>
-Stoßstärke:
-<span id="powerValue" class="gold">50%</span>
-</label>
-
+<div class="powerRow">
+<span>POWER</span>
 <input
 id="power"
 type="range"
-min="1"
+min="5"
 max="100"
 value="50"
 >
-
-<div>
-<button onclick="shoot()">STOSS AUSFÜHREN</button>
-<button class="back" onclick="resetBall()">Kugel zurücksetzen</button>
+<span id="powerValue">50%</span>
 </div>
 
+<button id="shoot">STOSS AUSFÜHREN</button>
+<button id="reset">NEUSTART</button>
+
 <div id="status" class="status">
-Deine Runde – positioniere den Stoß.
+Ziehe mit der Maus über den Tisch, um zu zielen.
+</div>
+
+<div class="help">
+Maus bewegen = zielen · Stoßstärke einstellen · STOSS AUSFÜHREN
 </div>
 
 </div>
@@ -255,52 +187,532 @@ Deine Runde – positioniere den Stoß.
 
 <script>
 
-const power = document.getElementById("power");
+const canvas = document.getElementById("table");
+const ctx = canvas.getContext("2d");
+
+const powerSlider = document.getElementById("power");
 const powerValue = document.getElementById("powerValue");
-const cueBall = document.getElementById("cueBall");
-const cue = document.getElementById("cue");
+const shootButton = document.getElementById("shoot");
+const resetButton = document.getElementById("reset");
 const statusText = document.getElementById("status");
 
-power.addEventListener("input", function() {
-powerValue.textContent = this.value + "%";
+const W = canvas.width;
+const H = canvas.height;
+
+const ballRadius = 14;
+
+const pockets = [
+{x:20,y:20},
+{x:W/2,y:20},
+{x:W-20,y:20},
+{x:20,y:H-20},
+{x:W/2,y:H-20},
+{x:W-20,y:H-20}
+];
+
+let mouse = {
+x:650,
+y:250
+};
+
+let shooting = false;
+
+let balls = [];
+
+const colors = [
+"#f4d03f",
+"#2980b9",
+"#c0392b",
+"#8e44ad",
+"#e67e22",
+"#16a085",
+"#d35400",
+"#050505",
+"#f1c40f",
+"#3498db",
+"#e74c3c",
+"#9b59b6",
+"#f39c12",
+"#1abc9c",
+"#c0392b"
+];
+
+function createBall(x,y,color,number){
+
+balls.push({
+x:x,
+y:y,
+vx:0,
+vy:0,
+color:color,
+number:number,
+active:true
 });
 
-function shoot() {
-
-const strength = Number(power.value);
-
-statusText.textContent =
-"🎱 Stoß ausgeführt – Stärke " + strength + "%";
-
-cue.style.display = "block";
-
-cue.style.width = (120 + strength * 2) + "px";
-
-cue.style.left = "calc(20% - 120px)";
-cue.style.top = "calc(48% + 1.8%)";
-
-setTimeout(function() {
-
-cueBall.style.left =
-Math.min(82, 20 + strength * 0.55) + "%";
-
-cue.style.display = "none";
-
-statusText.textContent =
-"Nächster Stoß bereit.";
-
-}, 500);
 }
 
-function resetBall() {
+function setup(){
 
-cueBall.style.left = "20%";
-cueBall.style.top = "48%";
+balls=[];
 
-statusText.textContent =
-"Weiße Kugel zurückgesetzt.";
+// Weiße Kugel
+createBall(230,250,"#ffffff",0);
+
+// Dreieck
+const startX=650;
+const startY=250;
+const gap=30;
+
+let n=0;
+
+for(let row=0;row<5;row++){
+
+for(let col=0;col<=row;col++){
+
+const x=startX + row*gap;
+const y=startY + (col-row/2)*gap;
+
+createBall(
+x,
+y,
+colors[n % colors.length],
+n+1
+);
+
+n++;
 
 }
+
+}
+
+}
+
+setup();
+
+function drawTable(){
+
+ctx.clearRect(0,0,W,H);
+
+// Tuch
+const cloth=ctx.createLinearGradient(0,0,0,H);
+cloth.addColorStop(0,"#0b6b4c");
+cloth.addColorStop(.5,"#07583f");
+cloth.addColorStop(1,"#034531");
+
+ctx.fillStyle=cloth;
+ctx.fillRect(0,0,W,H);
+
+// Bande
+ctx.strokeStyle="#14382d";
+ctx.lineWidth=28;
+ctx.strokeRect(14,14,W-28,H-28);
+
+// Gold inner line
+ctx.strokeStyle="#8f7220";
+ctx.lineWidth=2;
+ctx.strokeRect(29,29,W-58,H-58);
+
+// Taschen
+pockets.forEach(p=>{
+
+const g=ctx.createRadialGradient(
+p.x-4,p.y-4,2,
+p.x,p.y,27
+);
+
+g.addColorStop(0,"#000");
+g.addColorStop(.7,"#020202");
+g.addColorStop(1,"#171717");
+
+ctx.fillStyle=g;
+
+ctx.beginPath();
+ctx.arc(p.x,p.y,25,0,Math.PI*2);
+ctx.fill();
+
+});
+
+}
+
+function drawBall(ball){
+
+if(!ball.active) return;
+
+const gradient=ctx.createRadialGradient(
+ball.x-5,
+ball.y-6,
+2,
+ball.x,
+ball.y,
+ballRadius
+);
+
+if(ball.number===0){
+
+gradient.addColorStop(0,"#fff");
+gradient.addColorStop(.55,"#eee");
+gradient.addColorStop(1,"#aaa");
+
+}else{
+
+gradient.addColorStop(0,"#fff");
+gradient.addColorStop(.15,ball.color);
+gradient.addColorStop(.8,ball.color);
+gradient.addColorStop(1,"#111");
+
+}
+
+ctx.fillStyle=gradient;
+
+ctx.beginPath();
+ctx.arc(
+ball.x,
+ball.y,
+ballRadius,
+0,
+Math.PI*2
+);
+ctx.fill();
+
+ctx.strokeStyle="rgba(0,0,0,.5)";
+ctx.lineWidth=1;
+ctx.stroke();
+
+if(ball.number>0){
+
+ctx.fillStyle="#fff";
+
+ctx.beginPath();
+ctx.arc(
+ball.x,
+ball.y,
+5,
+0,
+Math.PI*2
+);
+ctx.fill();
+
+ctx.fillStyle="#111";
+ctx.font="8px Arial";
+ctx.textAlign="center";
+ctx.textBaseline="middle";
+
+ctx.fillText(
+ball.number,
+ball.x,
+ball.y
+);
+
+}
+
+}
+
+function drawAim(){
+
+const cueBall=balls[0];
+
+if(!cueBall || shooting) return;
+
+const dx=mouse.x-cueBall.x;
+const dy=mouse.y-cueBall.y;
+
+const length=Math.sqrt(dx*dx+dy*dy);
+
+if(length<1) return;
+
+const nx=dx/length;
+const ny=dy/length;
+
+// Ziel-Linie
+ctx.save();
+
+ctx.setLineDash([10,8]);
+ctx.strokeStyle="rgba(255,255,255,.8)";
+ctx.lineWidth=2;
+
+ctx.beginPath();
+
+ctx.moveTo(
+cueBall.x,
+cueBall.y
+);
+
+ctx.lineTo(
+cueBall.x+nx*300,
+cueBall.y+ny*300
+);
+
+ctx.stroke();
+
+ctx.restore();
+
+// Queue
+const queueLength=210;
+
+ctx.save();
+
+ctx.translate(
+cueBall.x-nx*queueLength,
+cueBall.y-ny*queueLength
+);
+
+ctx.rotate(Math.atan2(ny,nx));
+
+const wood=ctx.createLinearGradient(
+0,-4,
+0,4
+);
+
+wood.addColorStop(0,"#eee");
+wood.addColorStop(.45,"#d4af37");
+wood.addColorStop(1,"#5a3015");
+
+ctx.fillStyle=wood;
+
+ctx.fillRect(
+0,
+-3,
+queueLength,
+6
+);
+
+ctx.fillStyle="#fff";
+
+ctx.fillRect(
+queueLength-10,
+-4,
+10,
+8
+);
+
+ctx.restore();
+
+}
+
+function draw(){
+
+drawTable();
+
+balls.forEach(drawBall);
+
+drawAim();
+
+requestAnimationFrame(draw);
+
+}
+
+draw();
+
+function updatePhysics(){
+
+let moving=false;
+
+balls.forEach(ball=>{
+
+if(!ball.active) return;
+
+ball.x += ball.vx;
+ball.y += ball.vy;
+
+ball.vx *= .985;
+ball.vy *= .985;
+
+if(
+Math.abs(ball.vx)>.03 ||
+Math.abs(ball.vy)>.03
+){
+moving=true;
+}else{
+ball.vx=0;
+ball.vy=0;
+}
+
+// Bande
+if(ball.x-ballRadius<30){
+
+ball.x=30+ballRadius;
+ball.vx=Math.abs(ball.vx)*.9;
+
+}
+
+if(ball.x+ballRadius>W-30){
+
+ball.x=W-30-ballRadius;
+ball.vx=-Math.abs(ball.vx)*.9;
+
+}
+
+if(ball.y-ballRadius<30){
+
+ball.y=30+ballRadius;
+ball.vy=Math.abs(ball.vy)*.9;
+
+}
+
+if(ball.y+ballRadius>H-30){
+
+ball.y=H-30-ballRadius;
+ball.vy=-Math.abs(ball.vy)*.9;
+
+}
+
+// Taschen
+pockets.forEach(p=>{
+
+const dx=ball.x-p.x;
+const dy=ball.y-p.y;
+
+const d=Math.sqrt(dx*dx+dy*dy);
+
+if(d<24){
+
+ball.active=false;
+ball.vx=0;
+ball.vy=0;
+
+}
+
+});
+
+});
+
+// Kugel-Kollisionen
+for(let i=0;i<balls.length;i++){
+
+for(let j=i+1;j<balls.length;j++){
+
+const a=balls[i];
+const b=balls[j];
+
+if(!a.active || !b.active) continue;
+
+const dx=b.x-a.x;
+const dy=b.y-a.y;
+
+const dist=Math.sqrt(dx*dx+dy*dy);
+
+if(dist>0 && dist<ballRadius*2){
+
+const nx=dx/dist;
+const ny=dy/dist;
+
+const relativeVelocity=
+(a.vx-b.vx)*nx+
+(a.vy-b.vy)*ny;
+
+if(relativeVelocity>0){
+
+a.vx-=relativeVelocity*nx;
+a.vy-=relativeVelocity*ny;
+
+b.vx+=relativeVelocity*nx;
+b.vy+=relativeVelocity*ny;
+
+}
+
+const overlap=
+ballRadius*2-dist;
+
+a.x-=nx*overlap/2;
+a.y-=ny*overlap/2;
+
+b.x+=nx*overlap/2;
+b.y+=ny*overlap/2;
+
+}
+
+}
+
+}
+
+if(!moving){
+shooting=false;
+shootButton.disabled=false;
+statusText.textContent=
+"Deine Runde – ziele und stoße.";
+}
+
+requestAnimationFrame(updatePhysics);
+
+}
+
+updatePhysics();
+
+canvas.addEventListener("mousemove",function(e){
+
+const rect=canvas.getBoundingClientRect();
+
+mouse.x=
+(e.clientX-rect.left)*
+(canvas.width/rect.width);
+
+mouse.y=
+(e.clientY-rect.top)*
+(canvas.height/rect.height);
+
+});
+
+shootButton.addEventListener("click",function(){
+
+if(shooting) return;
+
+const cueBall=balls[0];
+
+if(!cueBall.active){
+
+statusText.textContent=
+"Die weiße Kugel ist versenkt.";
+
+return;
+
+}
+
+const dx=mouse.x-cueBall.x;
+const dy=mouse.y-cueBall.y;
+
+const length=Math.sqrt(dx*dx+dy*dy);
+
+if(length<5) return;
+
+const nx=dx/length;
+const ny=dy/length;
+
+const strength=
+Number(powerSlider.value)/100;
+
+cueBall.vx=
+nx*strength*18;
+
+cueBall.vy=
+ny*strength*18;
+
+shooting=true;
+shootButton.disabled=true;
+
+statusText.textContent=
+"🎱 Stoß ausgeführt!";
+
+});
+
+powerSlider.addEventListener("input",function(){
+
+powerValue.textContent=
+this.value+"%";
+
+});
+
+resetButton.addEventListener("click",function(){
+
+setup();
+
+shooting=false;
+
+shootButton.disabled=false;
+
+statusText.textContent=
+"Tisch neu aufgebaut.";
+
+});
 
 </script>
 
