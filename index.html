@@ -2,1132 +2,200 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>CueVerse – OOZ BALL</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>8-Ball Billard</title>
 <style>
-html,body{
-margin:0;
-padding:0;
-width:100%;
-height:100%;
-overflow:hidden;
-background:#050505;
+body {
+background-color: #222;
+color: white;
+font-family: Arial, sans-serif;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+height: 100vh;
+margin: 0;
 }
-
-#game{
-position:fixed;
-inset:0;
-width:100%;
-height:100%;
-object-fit:contain;
-touch-action:none;
+h1 {
+margin-bottom: 10px;
 }
-
-#sound{
-position:fixed;
-right:15px;
-bottom:15px;
-z-index:20;
-border:0;
-border-radius:12px;
-padding:10px 14px;
-background:rgba(0,0,0,.75);
-color:white;
-font-weight:bold;
+canvas {
+background-color: #076324; /* Billard-Grün */
+border: 15px solid #5c3a21; /* Holzrahmen */
+border-radius: 5px;
+box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+cursor: crosshair;
+}
+p {
+margin-top: 15px;
+color: #aaa;
 }
 </style>
 </head>
-
 <body>
 
-<img id="game" src="ooz-ball-master.jpg">
-
-<button id="sound">🔊 TON AN</button>
+<h1>8-Ball Billard</h1>
+<canvas id="billardCanvas" width="800" height="400"></canvas>
+<p>Steuerung: <strong>Maus bewegen</strong> zum Zielen, <strong>Klicken und Ziehen</strong> für die Stoßkraft.</p>
 
 <script>
+const canvas = document.getElementById("billardCanvas");
+const ctx = canvas.getContext("2d");
 
-/* =========================================================
-CUEVERSE – OOZ BALL
-PHYSIK BASIS
-========================================================= */
+// Spiel-Physik und Objekte
+const BALL_RADIUS = 12;
+let isAiming = false;
+let power = 0;
 
-const img = document.getElementById("game");
-
-let audio = null;
-let soundEnabled = true;
-
-const balls = [];
-
-
-/* ---------------------------------------------------------
-SPIELTISCH
-Koordinaten beziehen sich auf das Master-Bild
---------------------------------------------------------- */
-
-const TABLE = {
-left: 225,
-right: 1620,
-top: 220,
-bottom: 735
+// Die weiße Kugel
+let cueBall = {
+x: 200,
+y: 200,
+vx: 0,
+vy: 0,
+color: "#ffffff"
 };
 
-const BALL_RADIUS = 18;
+// Beispielhaft ein paar farbige Kugeln (Zielkugeln)
+let balls = [
+cueBall,
+{ x: 550, y: 200, vx: 0, vy: 0, color: "#f1c40f" }, // Gelb
+{ x: 575, y: 185, vx: 0, vy: 0, color: "#2980b9" }, // Blau
+{ x: 575, y: 215, vx: 0, vy: 0, color: "#e74c3c" }, // Rot
+{ x: 600, y: 200, vx: 0, vy: 0, color: "#111111" } // Schwarze 8
+];
 
+// Maus-Interaktion für den Queue (Billard-Queue)
+let mouse = { x: 0, y: 0 };
 
-/* =========================================================
-14 KUGELN
-========================================================= */
-
-function createBalls(){
-
-balls.length = 0;
-
-/* WEISSE */
-
-balls.push({
-x:525,
-y:480,
-vx:0,
-vy:0,
-number:0,
-type:"cue",
-active:true
+canvas.addEventListener("mousemove", (e) => {
+const rect = canvas.getBoundingClientRect();
+mouse.x = e.clientX - rect.left;
+mouse.y = e.clientY - rect.top;
 });
 
-
-/* 6 VOLLE */
-
-const solids=[1,2,3,4,5,6];
-
-/* 6 GESTREIFTE */
-
-const stripes=[9,10,11,12,13,14];
-
-
-const rack = [
-
-[0,0],
-
-[-1,-.5],
-[-1,.5],
-
-[-2,-1],
-[-2,0],
-[-2,1],
-
-[-3,-1.5],
-[-3,-.5],
-[-3,.5],
-[-3,1.5],
-
-[-4,-2],
-[-4,-.67],
-[-4,.67],
-[-4,2]
-
-];
-
-
-const startX = 1375;
-const startY = 480;
-const spacing = 37;
-
-
-for(let i=0;i<14;i++){
-
-let number;
-
-if(i===4){
-
-number=8;
-
-}else if(i<7){
-
-number=solids[
-i>4 ? i-1 : i
-];
-
-}else{
-
-number=stripes[
-i-7
-];
-
+canvas.addEventListener("mousedown", () => {
+if (cueBall.vx === 0 && cueBall.vy === 0) {
+isAiming = true;
 }
-
-
-balls.push({
-
-x:startX + Math.abs(rack[i][0])*spacing,
-
-y:startY + rack[i][1]*spacing,
-
-vx:0,
-vy:0,
-
-number:number,
-
-type:
-number===8
-? "eight"
-: number>=9
-? "stripe"
-: "solid",
-
-active:true
-
 });
 
+canvas.addEventListener("mouseup", () => {
+if (isAiming) {
+// Berechne Stoßrichtung basierend auf Mausposition
+let dx = cueBall.x - mouse.x;
+let dy = cueBall.y - mouse.y;
+
+// Stoßkraft (skaliert)
+cueBall.vx = dx * 0.08;
+cueBall.vy = dy * 0.08;
+
+isAiming = false;
+}
+});
+
+// Haupt-Spielschleife (Game Loop)
+function update() {
+// Reibung (Verlangsamung der Kugeln)
+const friction = 0.985;
+
+balls.forEach(ball => {
+ball.x += ball.vx;
+ball.y += ball.vy;
+ball.vx *= friction;
+ball.vy *= friction;
+
+// Stop, wenn die Bewegung minimal ist
+if (Math.abs(ball.vx) < 0.01) ball.vx = 0;
+if (Math.abs(ball.vy) < 0.01) ball.vy = 0;
+
+// Kollision mit den Banden (Rahmen)
+if (ball.x - BALL_RADIUS < 0) {
+ball.x = BALL_RADIUS;
+ball.vx *= -1;
+}
+if (ball.x + BALL_RADIUS > canvas.width) {
+ball.x = canvas.width - BALL_RADIUS;
+ball.vx *= -1;
+}
+if (ball.y - BALL_RADIUS < 0) {
+ball.y = BALL_RADIUS;
+ball.vy *= -1;
+}
+if (ball.y + BALL_RADIUS > canvas.height) {
+ball.y = canvas.height - BALL_RADIUS;
+ball.vy *= -1;
+}
+});
+
+// Einfache Kollisionserkennung zwischen Kugeln
+for (let i = 0; i < balls.length; i++) {
+for (let j = i + 1; j < balls.length; j++) {
+let b1 = balls[i];
+let b2 = balls[j];
+
+let dx = b2.x - b1.x;
+let dy = b2.y - b1.y;
+let distance = Math.sqrt(dx * dx + dy * dy);
+
+if (distance < BALL_RADIUS * 2) {
+// Einfacher elastischer Impulsaustausch bei Kollision
+let tempVx = b1.vx;
+let tempVy = b1.vy;
+b1.vx = b2.vx;
+b1.vy = b2.vy;
+b2.vx = tempVx;
+b2.vy = tempVy;
+
+// Kugeln leicht auseinanderschieben, um Überlappung zu verhindern
+let overlap = (BALL_RADIUS * 2) - distance;
+let nx = dx / distance;
+let ny = dy / distance;
+b1.x -= nx * overlap / 2;
+b1.y -= ny * overlap / 2;
+b2.x += nx * overlap / 2;
+b2.y += ny * overlap / 2;
+}
+}
+}
 }
 
-}
-
-createBalls();
-
-
-/* =========================================================
-AUDIO
-========================================================= */
-
-function startAudio(){
-
-if(!audio){
-
-audio =
-new (
-window.AudioContext ||
-window.webkitAudioContext
-)();
-
-}
-
-if(audio.state==="suspended"){
-
-audio.resume();
-
-}
-
-}
-
-
-function playSound(
-frequency,
-duration,
-volume
-){
-
-if(!soundEnabled) return;
-
-startAudio();
-
-
-const osc =
-audio.createOscillator();
-
-const gain =
-audio.createGain();
-
-
-osc.type="triangle";
-
-osc.frequency.value=
-frequency;
-
-
-gain.gain.setValueAtTime(
-0.0001,
-audio.currentTime
-);
-
-gain.gain.exponentialRampToValueAtTime(
-volume,
-audio.currentTime+0.005
-);
-
-gain.gain.exponentialRampToValueAtTime(
-0.0001,
-audio.currentTime+duration
-);
-
-
-osc.connect(gain);
-
-gain.connect(
-audio.destination
-);
-
-
-osc.start();
-
-osc.stop(
-audio.currentTime+
-duration+
-.02
-);
-
-}
-
-
-document
-.getElementById("sound")
-.addEventListener(
-"click",
-function(){
-
-startAudio();
-
-soundEnabled =
-!soundEnabled;
-
-this.textContent =
-soundEnabled
-? "🔊 TON AN"
-: "🔇 TON AUS";
-
-}
-);
-
-
-/* =========================================================
-SPIELFLÄCHE ALS TRANSPARENTE CANVAS-EBENE
-========================================================= */
-
-const canvas =
-document.createElement("canvas");
-
-canvas.style.position="fixed";
-canvas.style.inset="0";
-canvas.style.width="100%";
-canvas.style.height="100%";
-canvas.style.pointerEvents="auto";
-canvas.style.touchAction="none";
-canvas.style.zIndex="10";
-
-document.body.appendChild(canvas);
-
-const ctx =
-canvas.getContext("2d");
-
-
-let scale=1;
-let offsetX=0;
-let offsetY=0;
-
-const MASTER_W=1844;
-const MASTER_H=853;
-
-
-function resize(){
-
-const dpr=
-window.devicePixelRatio || 1;
-
-canvas.width=
-innerWidth*dpr;
-
-canvas.height=
-innerHeight*dpr;
-
-ctx.setTransform(
-dpr,
-0,
-0,
-dpr,
-0,
-0
-);
-
-
-scale=Math.min(
-innerWidth/MASTER_W,
-innerHeight/MASTER_H
-);
-
-
-offsetX=
-(innerWidth-
-MASTER_W*scale)/2;
-
-offsetY=
-(innerHeight-
-MASTER_H*scale)/2;
-
-}
-
-resize();
-
-window.addEventListener(
-"resize",
-resize
-);
-
-
-/* =========================================================
-KOORDINATEN
-========================================================= */
-
-function sx(x){
-
-return offsetX+
-x*scale;
-
-}
-
-function sy(y){
-
-return offsetY+
-y*scale;
-
-}
-
-
-/* =========================================================
-KUGELN ZEICHNEN
-========================================================= */
-
-const COLORS={
-
-1:"#e32626",
-2:"#2458e8",
-3:"#f0b400",
-4:"#8738c7",
-5:"#f47b16",
-6:"#20a447",
-
-9:"#e32626",
-10:"#2458e8",
-11:"#f0b400",
-12:"#8738c7",
-13:"#f47b16",
-14:"#20a447"
-
-};
-
-
-function drawBall(ball){
-
-if(!ball.active)
-return;
-
-
-const x=sx(ball.x);
-const y=sy(ball.y);
-
-const r=
-BALL_RADIUS*scale;
-
-
-/* Schatten */
-
+function draw() {
+// Hintergrund leeren
+ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+// Kugeln zeichnen
+balls.forEach(ball => {
 ctx.beginPath();
-
-ctx.ellipse(
-x+2*scale,
-y+3*scale,
-r,
-r*.55,
-0,
-0,
-Math.PI*2
-);
-
-ctx.fillStyle=
-"rgba(0,0,0,.45)";
-
+ctx.arc(ball.x, ball.y, BALL_RADIUS, 0, Math.PI * 2);
+ctx.fillStyle = ball.color;
 ctx.fill();
+ctx.closePath();
+});
 
-
-/* Kugel */
-
-let gradient=
-ctx.createRadialGradient(
-x-r*.4,
-y-r*.45,
-r*.1,
-x,
-y,
-r
-);
-
-
-if(ball.type==="cue"){
-
-gradient.addColorStop(
-0,
-"#ffffff"
-);
-
-gradient.addColorStop(
-.75,
-"#eeeeee"
-);
-
-gradient.addColorStop(
-1,
-"#999999"
-);
-
-}
-
-else if(ball.type==="eight"){
-
-gradient.addColorStop(
-0,
-"#555555"
-);
-
-gradient.addColorStop(
-.4,
-"#111111"
-);
-
-gradient.addColorStop(
-1,
-"#000000"
-);
-
-}
-
-else if(ball.type==="stripe"){
-
-gradient.addColorStop(
-0,
-"#ffffff"
-);
-
-gradient.addColorStop(
-1,
-"#d8d8d8"
-);
-
-}
-
-else{
-
-gradient.addColorStop(
-0,
-"#ffffff"
-);
-
-gradient.addColorStop(
-.15,
-COLORS[ball.number]
-);
-
-gradient.addColorStop(
-1,
-COLORS[ball.number]
-);
-
-}
-
-
+// Ziel-Linie zeichnen (wenn die Kugel stillsteht und gezielt wird)
+if (isAiming) {
 ctx.beginPath();
-
-ctx.arc(
-x,
-y,
-r,
-0,
-Math.PI*2
-);
-
-ctx.fillStyle=
-gradient;
-
-ctx.fill();
-
-
-/* Streifen */
-
-if(ball.type==="stripe"){
-
-ctx.save();
-
-ctx.beginPath();
-
-ctx.arc(
-x,
-y,
-r,
-0,
-Math.PI*2
-);
-
-ctx.clip();
-
-
-ctx.fillStyle=
-COLORS[ball.number];
-
-ctx.fillRect(
-x-r,
-y-r*.3,
-r*2,
-r*.6
-);
-
-
-ctx.restore();
-
-}
-
-
-/* Nummer */
-
-if(ball.type!=="cue"){
-
-ctx.beginPath();
-
-ctx.arc(
-x,
-y,
-r*.34,
-0,
-Math.PI*2
-);
-
-ctx.fillStyle=
-"#fff";
-
-ctx.fill();
-
-
-ctx.fillStyle=
-"#111";
-
-ctx.font=
-"bold "+
-Math.max(
-8,
-9*scale
-)+
-"px Arial";
-
-ctx.textAlign=
-"center";
-
-ctx.textBaseline=
-"middle";
-
-ctx.fillText(
-ball.number,
-x,
-y
-);
-
-}
-
-}
-
-
-/* =========================================================
-ZIELSYSTEM
-========================================================= */
-
-let aimX=950;
-let aimY=480;
-
-let dragging=false;
-
-
-function drawAim(){
-
-const cue=
-balls[0];
-
-if(!cue.active)
-return;
-
-
-const moving=
-balls.some(
-b =>
-b.active &&
-Math.hypot(
-b.vx,
-b.vy
-)>2
-);
-
-
-if(moving)
-return;
-
-
-ctx.save();
-
-
-ctx.strokeStyle=
-"rgba(255,255,255,.9)";
-
-ctx.lineWidth=
-2;
-
-
-ctx.setLineDash([
-8,
-7
-]);
-
-
-ctx.beginPath();
-
-ctx.moveTo(
-sx(cue.x),
-sy(cue.y)
-);
-
-ctx.lineTo(
-sx(aimX),
-sy(aimY)
-);
-
+ctx.moveTo(cueBall.x, cueBall.y);
+ctx.lineTo(mouse.x, mouse.y);
+ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
+ctx.lineWidth = 2;
 ctx.stroke();
-
-
-ctx.setLineDash([]);
-
-
-ctx.beginPath();
-
-ctx.arc(
-sx(aimX),
-sy(aimY),
-16*scale,
-0,
-Math.PI*2
-);
-
-ctx.stroke();
-
-
-ctx.restore();
-
+}
 }
 
-
-/* =========================================================
-PHYSIK
-========================================================= */
-
-function physics(dt){
-
-const friction=
-Math.pow(
-0.12,
-dt
-);
-
-
-for(const b of balls){
-
-if(!b.active)
-continue;
-
-
-b.x +=
-b.vx*dt;
-
-b.y +=
-b.vy*dt;
-
-
-b.vx *=
-friction;
-
-b.vy *=
-friction;
-
-
-if(
-Math.hypot(
-b.vx,
-b.vy
-) < 3
-){
-
-b.vx=0;
-b.vy=0;
-
+function gameLoop() {
+update();
+draw();
+requestAnimationFrame(gameLoop);
 }
 
-
-/* Bande */
-
-if(
-b.x<
-TABLE.left+
-BALL_RADIUS
-){
-
-b.x=
-TABLE.left+
-BALL_RADIUS;
-
-b.vx=
-Math.abs(b.vx)*.82;
-
-playSound(
-120,
-.06,
-.025
-);
-
-}
-
-
-if(
-b.x>
-TABLE.right-
-BALL_RADIUS
-){
-
-b.x=
-TABLE.right-
-BALL_RADIUS;
-
-b.vx=
--Math.abs(b.vx)*.82;
-
-playSound(
-120,
-.06,
-.025
-);
-
-}
-
-
-if(
-b.y<
-TABLE.top+
-BALL_RADIUS
-){
-
-b.y=
-TABLE.top+
-BALL_RADIUS;
-
-b.vy=
-Math.abs(b.vy)*.82;
-
-playSound(
-120,
-.06,
-.025
-);
-
-}
-
-
-if(
-b.y>
-TABLE.bottom-
-BALL_RADIUS
-){
-
-b.y=
-TABLE.bottom-
-BALL_RADIUS;
-
-b.vy=
--Math.abs(b.vy)*.82;
-
-playSound(
-120,
-.06,
-.025
-);
-
-}
-
-}
-
-
-/* Kugel-Kollisionen */
-
-for(
-let i=0;
-i<balls.length;
-i++
-){
-
-for(
-let j=i+1;
-j<balls.length;
-j++
-){
-
-const a=
-balls[i];
-
-const b=
-balls[j];
-
-
-if(
-!a.active ||
-!b.active
-)
-continue;
-
-
-const dx=
-b.x-a.x;
-
-const dy=
-b.y-a.y;
-
-const distance=
-Math.hypot(
-dx,
-dy
-);
-
-
-const minimum=
-BALL_RADIUS*2;
-
-
-if(
-distance>0 &&
-distance<minimum
-){
-
-const nx=
-dx/distance;
-
-const ny=
-dy/distance;
-
-
-const overlap=
-minimum-
-distance;
-
-
-a.x -=
-nx*
-overlap/2;
-
-a.y -=
-ny*
-overlap/2;
-
-
-b.x +=
-nx*
-overlap/2;
-
-b.y +=
-ny*
-overlap/2;
-
-
-const relative=
-(b.vx-a.vx)*nx+
-(b.vy-a.vy)*ny;
-
-
-if(relative<0){
-
-const impulse=
--relative*
-.96;
-
-
-a.vx -=
-impulse*nx;
-
-a.vy -=
-impulse*ny;
-
-
-b.vx +=
-impulse*nx;
-
-b.vy +=
-impulse*ny;
-
-
-playSound(
-240+
-Math.min(
-300,
-Math.abs(relative)
-),
-.07,
-.04
-);
-
-}
-
-}
-
-}
-
-}
-
-}
-
-
-/* =========================================================
-MAUS / TOUCH
-========================================================= */
-
-canvas.addEventListener(
-"pointermove",
-function(e){
-
-aimX=
-(e.clientX-
-offsetX)/
-scale;
-
-aimY=
-(e.clientY-
-offsetY)/
-scale;
-
-}
-);
-
-
-canvas.addEventListener(
-"pointerdown",
-function(){
-
-startAudio();
-
-dragging=true;
-
-}
-);
-
-
-canvas.addEventListener(
-"pointerup",
-function(){
-
-if(!dragging)
-return;
-
-dragging=false;
-
-
-const cue=
-balls[0];
-
-
-const dx=
-cue.x-
-aimX;
-
-const dy=
-cue.y-
-aimY;
-
-
-const distance=
-Math.hypot(
-dx,
-dy
-);
-
-
-if(distance<15)
-return;
-
-
-const power=
-Math.min(
-1500,
-Math.max(
-250,
-distance*4
-)
-);
-
-
-cue.vx=
-dx/
-distance*
-power;
-
-cue.vy=
-dy/
-distance*
-power;
-
-
-playSound(
-170+
-power*.07,
-.1,
-.07
-);
-
-}
-);
-
-
-/* =========================================================
-GAME LOOP
-========================================================= */
-
-let last=
-performance.now();
-
-
-function loop(now){
-
-const dt=
-Math.min(
-.02,
-(now-last)/1000
-);
-
-last=now;
-
-
-physics(dt);
-
-
-ctx.clearRect(
-0,
-0,
-innerWidth,
-innerHeight
-);
-
-
-drawAim();
-
-
-for(
-const ball
-of balls
-){
-
-drawBall(ball);
-
-}
-
-
-requestAnimationFrame(
-loop
-);
-
-}
-
-
-requestAnimationFrame(
-loop
-);
-
+// Spiel starten
+gameLoop();
 </script>
-
 </body>
 </html>
+
+
+
+
