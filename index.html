@@ -3,19 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>8 Ball Pool Premium</title>
+<title>CueVerse OOZ Ball</title>
 <style>
 :root {
---bg-color: #1a1a1a;
---panel-bg: #2d2d2d;
---accent: #00b4d8;
---text: #ffffff;
+--bg-dark: #07101e;
+--wood-red: #8b261a;
+--cloth-blue: #329bbd;
+--panel-bg: #111a24;
+--accent-green: #2ecc71;
 }
 
 body {
-background-color: var(--bg-color);
-color: var(--text);
-font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+background-color: var(--bg-dark);
+color: white;
+font-family: 'Segoe UI', Arial, sans-serif;
 display: flex;
 flex-direction: column;
 align-items: center;
@@ -26,143 +27,206 @@ overflow: hidden;
 user-select: none;
 }
 
-/* Seriöses Dashboard-Interface */
-.game-container {
+/* Haupt-Interface im Stil von Miniclip 8 Ball Pool */
+.game-interface {
+background: linear-gradient(135deg, #16222f 0%, #0d151f 100%);
+padding: 30px;
+border-radius: 20px;
+box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8);
+border: 1px solid #233547;
 display: flex;
 flex-direction: column;
 align-items: center;
-background: var(--panel-bg);
-padding: 24px;
-border-radius: 16px;
-box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
-border: 1px solid #444;
 }
 
-.scoreboard {
+/* Top-Bar Spielerprofile */
+.top-bar {
 display: flex;
 justify-content: space-between;
-width: 100%;
-max-width: 800px;
+align-items: center;
+width: 880px;
 margin-bottom: 20px;
-background: #151515;
-padding: 12px 24px;
-border-radius: 8px;
-box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
-font-weight: 600;
-letter-spacing: 1px;
+background: rgba(0, 0, 0, 0.4);
+padding: 10px 20px;
+border-radius: 50px;
+border: 1px solid #1f2f3e;
 }
 
-.player {
+.player-profile {
 display: flex;
 align-items: center;
-gap: 10px;
+gap: 12px;
 }
 
-.player.active {
-color: var(--accent);
-text-shadow: 0 0 10px rgba(0, 180, 216, 0.5);
+.avatar {
+width: 45px;
+height: 45px;
+border-radius: 8px;
+border: 2px solid var(--accent-green);
+background: #444;
 }
 
-.status-msg {
-color: #888;
-font-size: 0.9rem;
+.player-info {
+font-weight: bold;
+font-size: 1.05rem;
 }
 
-/* Der Billardtisch-Rahmen */
-.table-wrapper {
-position: relative;
-background: #4a2c11; /* Edles Wurzelholz-Design */
-padding: 22px;
+.vs-badge {
+background: #cca43b;
+color: #000;
+font-weight: 900;
+padding: 4px 12px;
+border-radius: 4px;
+font-size: 0.85rem;
+}
+
+/* Tisch-Layout mit separatem Power-Meter links */
+.table-area {
+display: flex;
+align-items: center;
+gap: 25px;
+}
+
+/* Interaktives Power-Meter (links wie im Screenshot) */
+.power-meter-container {
+width: 24px;
+height: 380px;
+background: #111;
+border: 3px solid #333;
 border-radius: 12px;
-box-shadow: 0 15px 35px rgba(0,0,0,0.7), inset 0 2px 4px rgba(255,255,255,0.2);
-border: 2px solid #36200c;
+position: relative;
+overflow: hidden;
+box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+}
+
+.power-fill {
+position: absolute;
+bottom: 0;
+width: 100%;
+height: 0%;
+background: linear-gradient(to top, #ffcc00, #ff3300);
+transition: height 0.05s ease;
+}
+
+.power-cue-indicator {
+position: absolute;
+bottom: 0;
+width: 100%;
+height: 4px;
+background: white;
+box-shadow: 0 0 8px white;
+}
+
+/* Tischrahmen */
+.table-frame {
+background: var(--wood-red);
+padding: 24px;
+border-radius: 16px;
+box-shadow: 0 20px 40px rgba(0,0,0,0.6), inset 0 4px 10px rgba(255,255,255,0.2);
+border: 3px solid #61180f;
+position: relative;
 }
 
 canvas {
-background-color: #0d5c3a; /* Deep Tournament Green */
-border-radius: 4px;
+background-color: var(--cloth-blue);
 display: block;
-cursor: crosshair;
+border-radius: 4px;
+box-shadow: inset 0 10px 30px rgba(0,0,0,0.4);
 }
 
-.controls-hint {
+.toast-banner {
 margin-top: 15px;
-font-size: 0.85rem;
-color: #777;
-text-align: center;
-}
-
-.controls-hint strong {
-color: #bbb;
+background: rgba(0, 0, 0, 0.7);
+padding: 8px 30px;
+border-radius: 20px;
+border: 1px solid #333;
+font-size: 0.9rem;
+color: #ddd;
 }
 </style>
 </head>
 <body>
 
-<div class="game-container">
-<!-- Professionelle Scoreboard-Leiste -->
-<div class="scoreboard">
-<div class="player active" id="player1">SPIELER 1</div>
-<div class="status-msg" id="statusDisplay">Zielen & Schießen</div>
-<div class="player" id="player2">SPIELER 2</div>
+<div class="game-interface">
+<!-- Spielerleiste oben -->
+<div class="top-bar">
+<div class="player-profile">
+<div class="avatar" style="border-color: #cca43b;"></div>
+<div class="player-info">ooz <span style="color: #cca43b;">★ 200</span></div>
+</div>
+<div class="vs-badge">VS</div>
+<div class="player-profile" style="flex-direction: row-reverse;">
+<div class="avatar" style="border-color: #2ecc71;"></div>
+<div class="player-info" style="text-align: right;">Ginevra <span style="color: #2ecc71;">★ 133</span></div>
+</div>
+</div>
+
+<!-- Spielfeld -->
+<div class="table-area">
+<!-- Linkes Power-Meter -->
+<div class="power-meter-container">
+<div class="power-fill" id="powerFill"></div>
 </div>
 
 <!-- Billardtisch -->
-<div class="table-wrapper">
-<canvas id="poolCanvas" width="800" height="400"></canvas>
+<div class="table-frame" id="tableFrame">
+<canvas id="poolCanvas" width="840" height="420"></canvas>
+</div>
 </div>
 
-<div class="controls-hint">
-Steuerung: <strong>Maus bewegen</strong> zum Zielen | <strong>Klicken & Ziehen</strong> nach hinten für Power | <strong>Loslassen</strong> zum Stoßen
+<div class="toast-banner">
+Du hast Anstoß, viel Glück!
 </div>
 </div>
 
 <script>
 const canvas = document.getElementById("poolCanvas");
 const ctx = canvas.getContext("2d");
+const powerFill = document.getElementById("powerFill");
 
-// Spielkonstanten
+// Konfigurationen & Abmessungen
 const BALL_RADIUS = 11;
-const POCKET_RADIUS = 20;
-const FRICTION = 0.988; // Realistisches Ausrollen
+const POCKET_RADIUS = 22;
+const FRICTION = 0.985;
 
-// Definition der 6 Taschen (Löcher)
+// Positionen der 6 Taschen
 const pockets = [
-{ x: 6, y: 6 }, // Oben links
-{ x: canvas.width / 2, y: 4 }, // Oben Mitte
-{ x: canvas.width - 6, y: 6 }, // Oben rechts
-{ x: 6, y: canvas.height - 6 }, // Unten links
-{ x: canvas.width / 2, y: canvas.height - 4 }, // Unten Mitte
-{ x: canvas.width - 6, y: canvas.height - 6 } // Unten rechts
+{ x: 5, y: 5 }, { x: canvas.width / 2, y: 2 }, { x: canvas.width - 5, y: 5 },
+{ x: 5, y: canvas.height - 5 }, { x: canvas.width / 2, y: canvas.height - 2 }, { x: canvas.width - 5, y: canvas.height - 5 }
 ];
 
-// Strukturierte Kugel-Klasse für Premium-Rendering
+// Farbcodes exakt wie im realen Spiel
+const ballColors = {
+1: "#f1c40f", 2: "#2980b9", 3: "#e74c3c", 4: "#9b59b6", 5: "#e67e22",
+6: "#2ecc7 green", 7: "#7f8c8d", 8: "#111111", 9: "#f1c40f", 10: "#2980b9",
+11: "#e74c3c", 12: "#9b59b6", 13: "#e67e22", 14: "#2ecc71", 15: "#7f8c8d"
+};
+
 class Ball {
-constructor(x, y, color, number, isCue = false) {
+constructor(x, y, number, isCue = false) {
 this.x = x;
 this.y = y;
 this.vx = 0;
 this.vy = 0;
-this.color = color;
 this.number = number;
 this.isCue = isCue;
+this.color = isCue ? "#ffffff" : ballColors[number];
+this.isStriped = number > 8;
 this.isActive = true;
 }
 
 update() {
 if (!this.isActive) return;
-
 this.x += this.vx;
 this.y += this.vy;
 this.vx *= FRICTION;
 this.vy *= FRICTION;
 
-// Bei minimaler Bewegung Kugel stoppen
-if (Math.abs(this.vx) < 0.005) this.vx = 0;
-if (Math.abs(this.vy) < 0.005) this.vy = 0;
+if (Math.abs(this.vx) < 0.008) this.vx = 0;
+if (Math.abs(this.vy) < 0.008) this.vy = 0;
 
-// Banden-Kollision (unter Berücksichtigung des Tischinnenraums)
-const margin = BALL_RADIUS;
+// Banden-Bounce
+const margin = BALL_RADIUS + 12; // Abstand zur inneren Bande
 if (this.x < margin) { this.x = margin; this.vx *= -1; }
 if (this.x > canvas.width - margin) { this.x = canvas.width - margin; this.vx *= -1; }
 if (this.y < margin) { this.y = margin; this.vy *= -1; }
@@ -173,118 +237,68 @@ draw() {
 if (!this.isActive) return;
 
 ctx.save();
-
-// 1. Kugel-Schatten für Tiefenwirkung (3D-Look)
+// 3D Kugel-Schatten
 ctx.beginPath();
-ctx.arc(this.x + 3, this.y + 3, BALL_RADIUS, 0, Math.PI * 2);
-ctx.fillStyle = "rgba(0, 0, 0, 0.35)";
+ctx.arc(this.x + 3, this.y + 4, BALL_RADIUS, 0, Math.PI * 2);
+ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
 ctx.fill();
 
-// 2. Kugel-Grundfarbe
+// Basis-Kugel
 ctx.beginPath();
 ctx.arc(this.x, this.y, BALL_RADIUS, 0, Math.PI * 2);
 ctx.fillStyle = this.color;
 ctx.fill();
 
-// 3. Weißer Nummernkreis (wenn es nicht die weiße Kugel ist)
 if (!this.isCue) {
+if (this.isStriped) {
+// Halbe Kugel (Weißer Mittelstreifen)
 ctx.beginPath();
-ctx.arc(this.x, this.y, BALL_RADIUS * 0.45, 0, Math.PI * 2);
+ctx.arc(this.x, this.y, BALL_RADIUS, 0, Math.PI * 2);
+ctx.clip();
+ctx.fillStyle = "#ffffff";
+ctx.fillRect(this.x - BALL_RADIUS, this.y - BALL_RADIUS * 0.5, BALL_RADIUS * 2, BALL_RADIUS);
+}
+
+// Nummern-Spiegel
+ctx.beginPath();
+ctx.arc(this.x, this.y, BALL_RADIUS * 0.4, 0, Math.PI * 2);
 ctx.fillStyle = "#ffffff";
 ctx.fill();
 
-// Ziffer schreiben
 ctx.fillStyle = "#000000";
-ctx.font = "bold 8px sans-serif";
+ctx.font = "bold 7px Arial";
 ctx.textAlign = "center";
 ctx.textBaseline = "middle";
 ctx.fillText(this.number, this.x, this.y + 0.5);
 }
 
-// 4. Premium 3D-Lichtreflex (Glossy/Glanz-Effekt)
-let gradient = ctx.createRadialGradient(
-this.x - BALL_RADIUS * 0.3, this.y - BALL_RADIUS * 0.3, BALL_RADIUS * 0.1,
-this.x, this.y, BALL_RADIUS
-);
-gradient.addColorStop(0, "rgba(255, 255, 255, 0.6)");
-gradient.addColorStop(0.4, "rgba(255, 255, 255, 0.0)");
-gradient.addColorStop(1, "rgba(0, 0, 0, 0.4)");
-
+// Hochglanz Reflexion
+let grad = ctx.createRadialGradient(this.x - 3, this.y - 3, 1, this.x, this.y, BALL_RADIUS);
+grad.addColorStop(0, "rgba(255, 255, 255, 0.5)");
+grad.addColorStop(1, "rgba(0, 0, 0, 0.3)");
 ctx.beginPath();
 ctx.arc(this.x, this.y, BALL_RADIUS, 0, Math.PI * 2);
-ctx.fillStyle = gradient;
+ctx.fillStyle = grad;
 ctx.fill();
-
 ctx.restore();
 }
 }
 
-// Kugeln initialisieren (Klassisches Dreieck / Rack)
+// Setup Spielfeld (Weiße Kugel links, perfektes Dreieck rechts)
 let balls = [];
-let cueBall = new Ball(200, 200, "#ffffff", 0, true);
+let cueBall = new Ball(220, 210, 0, true);
 balls.push(cueBall);
 
-// Rack-Positionen berechnen
-const startX = 560;
-const startY = 200;
-const rowSpacing = BALL_RADIUS * 1.732;
-let ballData = [
-{ c: "#f1c40f", n: 1 }, // Reihe 1
-{ c: "#2980b9", n: 2 }, { c: "#e74c3c", n: 3 }, // Reihe 2
-{ c: "#9b59b6", n: 4 }, { c: "#111111", n: 8 }, { c: "#e67e22", n: 5 }, // Reihe 3 (Schwarz in der Mitte)
-{ c: "#2ecc71", n: 6 }, { c: "#7f8c8d", n: 7 }, { c: "#f1c40f", n: 9 }, { c: "#2980b9", n: 10 }
+// Rack-Reihenfolge exakt nach Screenshot
+const rackOrder = [
+1,
+2, 3,
+4, 8, 5,
+6, 7, 9, 10,
+11, 12, 13, 14, 15
 ];
 
-let dataIdx = 0;
-for (let col = 0; col < 4; col++) {
-for (let row = 0; row <= col; row++) {
-if(dataIdx >= ballData.length) break;
-let x = startX + col * rowSpacing;
-let y = startY + (row - col / 2) * (BALL_RADIUS * 2.1);
-balls.push(new Ball(x, y, ballData[dataIdx].c, ballData[dataIdx].n));
-dataIdx++;
-}
-}
-
-// Interaktions-Variablen
-let mouse = { x: 0, y: 0 };
-let isDragging = false;
-let dragStart = { x: 0, y: 0 };
-
-canvas.addEventListener("mousemove", (e) => {
-const rect = canvas.getBoundingClientRect();
-mouse.x = e.clientX - rect.left;
-mouse.y = e.clientY - rect.top;
-});
-
-canvas.addEventListener("mousedown", () => {
-// Nur stoßen erlauben, wenn alle Kugeln komplett stillstehen
-let allStill = balls.every(b => b.vx === 0 && b.vy === 0);
-if (allStill && cueBall.isActive) {
-isDragging = true;
-dragStart.x = mouse.x;
-dragStart.y = mouse.y;
-}
-});
-
-canvas.addEventListener("mouseup", () => {
-if (isDragging) {
-let dx = dragStart.x - mouse.x;
-let dy = dragStart.y - mouse.y;
-
-// Impuls auf weiße Kugel übertragen
-cueBall.vx = dx * 0.06;
-cueBall.vy = dy * 0.06;
-
-isDragging = false;
-}
-});
-
-// Kollisions- und Lochprüfung
-function checkPhysics() {
-// 1. Loch-Erkennung (Kugel versenkt?)
-balls.forEach(ball => {
-if (!ball.isActive) return;
-pockets.forEach(pocket => {
-
+function createRack() {
+const startX = 580;
+const startY = 210;
 
