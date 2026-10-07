@@ -2,8 +2,8 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CueVerse – Royal Table</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CueVerse Royal Table</title>
 
 <style>
 *{box-sizing:border-box}
@@ -11,56 +11,59 @@
 body{
 margin:0;
 background:
-radial-gradient(circle at top,#202020,#050505 65%);
+radial-gradient(circle at 50% 0%,#252525 0,#080808 55%,#000 100%);
 color:#fff;
 font-family:Arial,sans-serif;
 text-align:center;
 overflow-x:hidden;
 }
 
-header{
-padding:12px 15px;
+.top{
+width:96%;
+max-width:1200px;
+margin:auto;
 display:flex;
 justify-content:space-between;
 align-items:center;
-max-width:1100px;
-margin:auto;
+padding:14px 10px;
 }
 
 .player{
-font-size:14px;
+min-width:150px;
+font-size:15px;
+line-height:1.5;
 }
 
-.player strong{
-color:#d4af37;
-}
+.player strong{color:#e3bd4a}
 
 .logo{
-color:#d4af37;
-font-size:22px;
+color:#e3bd4a;
+font-size:28px;
 font-weight:bold;
-letter-spacing:3px;
+letter-spacing:4px;
+text-shadow:0 0 15px #8f6c19;
 }
 
 .stake{
-color:#d4af37;
-font-size:13px;
+color:#e3bd4a;
+font-weight:bold;
+margin-bottom:12px;
 }
 
-#gameArea{
+.game{
 width:96%;
-max-width:1100px;
+max-width:1200px;
 margin:auto;
 }
 
-#tableFrame{
-padding:22px;
-border-radius:22px;
+.frame{
+padding:20px;
+border-radius:25px;
 background:
-linear-gradient(145deg,#080808,#292929,#080808);
-border:3px solid #8f7220;
+linear-gradient(135deg,#050505,#3b2a13,#080808);
+border:3px solid #c49a32;
 box-shadow:
-0 0 35px rgba(212,175,55,.22),
+0 0 35px rgba(212,175,55,.3),
 inset 0 0 25px #000;
 }
 
@@ -68,54 +71,56 @@ canvas{
 display:block;
 width:100%;
 height:auto;
-background:#07583f;
 border-radius:12px;
-box-shadow:
-inset 0 0 35px #00150e,
-0 10px 30px #000;
 cursor:crosshair;
+box-shadow:0 15px 40px #000;
 }
 
 .controls{
-max-width:800px;
-margin:16px auto;
+margin:18px auto;
+max-width:850px;
 }
 
-.powerRow{
+.power{
 display:flex;
 align-items:center;
 gap:12px;
 }
 
-.powerRow span{
-color:#d4af37;
-min-width:55px;
+.power span:first-child{
+color:#e3bd4a;
+font-weight:bold;
 }
 
-input[type=range]{
+#power{
 flex:1;
-accent-color:#d4af37;
+accent-color:#e3bd4a;
+}
+
+#powerValue{
+width:55px;
+color:#e3bd4a;
 }
 
 button{
-margin:8px;
-padding:13px 24px;
+padding:14px 28px;
+margin:9px;
 border:1px solid #d4af37;
 border-radius:10px;
-background:#d4af37;
-color:#050505;
+background:linear-gradient(#f0cb5b,#b88618);
+color:#080808;
 font-weight:bold;
 cursor:pointer;
 }
 
 button:disabled{
 opacity:.4;
+cursor:not-allowed;
 }
 
 .status{
-min-height:24px;
-color:#aaa;
-margin-top:8px;
+min-height:25px;
+color:#bbb;
 }
 
 .help{
@@ -128,116 +133,109 @@ margin-top:8px;
 
 <body>
 
-<header>
+<div class="top">
 
 <div class="player">
 👤 <strong>Orhan</strong><br>
-Level 1
+Level 1<br>
+🪙 10.000 Coins
 </div>
 
-<div class="logo">
-CUEVERSE
-</div>
+<div class="logo">CUEVERSE</div>
 
 <div class="player">
 <strong>OOZ Player</strong><br>
-Level 12
+Level 12<br>
+🪙 10.000 Coins
 </div>
 
-</header>
-
-<div id="gameArea">
-
-<div class="stake">
-🪙 Einsatz: 100 Coins
 </div>
 
-<div id="tableFrame">
-<canvas id="table" width="1000" height="500"></canvas>
+<div class="stake">ROYAL TABLE · Einsatz 100 Coins</div>
+
+<div class="game">
+
+<div class="frame">
+<canvas id="table" width="1200" height="600"></canvas>
 </div>
 
 <div class="controls">
 
-<div class="powerRow">
+<div class="power">
 <span>POWER</span>
+
 <input
 id="power"
 type="range"
-min="5"
+min="1"
 max="100"
-value="50"
+value="55"
 >
-<span id="powerValue">50%</span>
+
+<span id="powerValue">55%</span>
 </div>
 
 <button id="shoot">STOSS AUSFÜHREN</button>
 <button id="reset">NEUSTART</button>
 
 <div id="status" class="status">
-Ziehe mit der Maus über den Tisch, um zu zielen.
+Ziehe die Maus zum Zielen und stelle die Stoßstärke ein.
 </div>
 
 <div class="help">
-Maus bewegen = zielen · Stoßstärke einstellen · STOSS AUSFÜHREN
+Maus bewegen = zielen · Power einstellen · Stoß ausführen
 </div>
 
 </div>
-
 </div>
 
 <script>
 
-const canvas = document.getElementById("table");
-const ctx = canvas.getContext("2d");
+const canvas=document.getElementById("table");
+const ctx=canvas.getContext("2d");
 
-const powerSlider = document.getElementById("power");
-const powerValue = document.getElementById("powerValue");
-const shootButton = document.getElementById("shoot");
-const resetButton = document.getElementById("reset");
-const statusText = document.getElementById("status");
+const powerSlider=document.getElementById("power");
+const powerValue=document.getElementById("powerValue");
+const shootButton=document.getElementById("shoot");
+const resetButton=document.getElementById("reset");
+const statusText=document.getElementById("status");
 
-const W = canvas.width;
-const H = canvas.height;
+const W=canvas.width;
+const H=canvas.height;
 
-const ballRadius = 14;
+/* Spielfeld */
+const rail=58;
+const left=rail;
+const right=W-rail;
+const top=rail;
+const bottom=H-rail;
 
-const pockets = [
-{x:20,y:20},
-{x:W/2,y:20},
-{x:W-20,y:20},
-{x:20,y:H-20},
-{x:W/2,y:H-20},
-{x:W-20,y:H-20}
+const ballR=15;
+
+/* Taschen */
+const pockets=[
+{x:left,y:top},
+{x:W/2,y:top},
+{x:right,y:top},
+{x:left,y:bottom},
+{x:W/2,y:bottom},
+{x:right,y:bottom}
 ];
 
-let mouse = {
-x:650,
-y:250
-};
+/* Physik */
+const friction=0.992;
+const cushionLoss=0.88;
+const restitution=0.96;
 
-let shooting = false;
+let balls=[];
+let aiming=true;
+let mouse={x:850,y:300};
 
-let balls = [];
+/* =========================
+KUGEL ERSTELLEN
+========================= */
 
-const colors = [
-"#f4d03f",
-"#2980b9",
-"#c0392b",
-"#8e44ad",
-"#e67e22",
-"#16a085",
-"#d35400",
-"#050505",
-"#f1c40f",
-"#3498db",
-"#e74c3c",
-"#9b59b6",
-"#f39c12",
-"#1abc9c",
-"#c0392b"
-];
-
-function createBall(x,y,color,number){
+function makeBall(x,y,color,number){
 
 balls.push({
 x:x,
@@ -251,237 +249,375 @@ active:true
 
 }
 
+/* =========================
+BREAK AUFBAU
+========================= */
+
 function setup(){
 
 balls=[];
 
-// Weiße Kugel
-createBall(230,250,"#ffffff",0);
+/* Weiße Kugel */
+makeBall(280,H/2,"white",0);
 
-// Dreieck
-const startX=650;
-const startY=250;
-const gap=30;
+/*
+Standard-Dreieck.
+Die Kugeln stehen enger zusammen,
+damit der Break sofort sichtbar reagiert.
+*/
 
-let n=0;
+const startX=860;
+const startY=H/2;
+const spacing=ballR*2+0.5;
+
+const colors=[
+"#f4c542",
+"#2674d9",
+"#d92d3a",
+"#8b42d6",
+"#f28c28",
+"#1fa36b",
+"#a83a24",
+"#111",
+"#f4c542",
+"#2674d9",
+"#d92d3a",
+"#8b42d6",
+"#f28c28",
+"#1fa36b",
+"#d92d3a"
+];
+
+let number=1;
 
 for(let row=0;row<5;row++){
 
 for(let col=0;col<=row;col++){
 
-const x=startX + row*gap;
-const y=startY + (col-row/2)*gap;
+const x=startX+row*spacing;
+const y=startY+(col-row/2)*spacing;
 
-createBall(
+makeBall(
 x,
 y,
-colors[n % colors.length],
-n+1
+colors[number-1],
+number
 );
 
-n++;
-
+number++;
 }
-
 }
 
 }
 
 setup();
 
+/* =========================
+TISCH ZEICHNEN
+========================= */
+
 function drawTable(){
 
 ctx.clearRect(0,0,W,H);
 
-// Tuch
-const cloth=ctx.createLinearGradient(0,0,0,H);
-cloth.addColorStop(0,"#0b6b4c");
-cloth.addColorStop(.5,"#07583f");
-cloth.addColorStop(1,"#034531");
+/* Außenfläche */
+const outer=ctx.createLinearGradient(0,0,W,H);
+outer.addColorStop(0,"#24170b");
+outer.addColorStop(.5,"#6b4516");
+outer.addColorStop(1,"#160d05");
 
-ctx.fillStyle=cloth;
+ctx.fillStyle=outer;
 ctx.fillRect(0,0,W,H);
 
-// Bande
-ctx.strokeStyle="#14382d";
+/* Tuch */
+const cloth=ctx.createRadialGradient(
+W/2,H/2,40,
+W/2,H/2,650
+);
+
+cloth.addColorStop(0,"#087451");
+cloth.addColorStop(.55,"#075b40");
+cloth.addColorStop(1,"#023725");
+
+ctx.fillStyle=cloth;
+
+ctx.fillRect(
+rail,
+rail,
+W-rail*2,
+H-rail*2
+);
+
+/* Banden */
+ctx.strokeStyle="#153e31";
 ctx.lineWidth=28;
-ctx.strokeRect(14,14,W-28,H-28);
 
-// Gold inner line
-ctx.strokeStyle="#8f7220";
+ctx.strokeRect(
+rail,
+rail,
+W-rail*2,
+H-rail*2
+);
+
+/* Goldkante */
+ctx.strokeStyle="#c69b35";
 ctx.lineWidth=2;
-ctx.strokeRect(29,29,W-58,H-58);
 
-// Taschen
+ctx.strokeRect(
+rail+14,
+rail+14,
+W-(rail+14)*2,
+H-(rail+14)*2
+);
+
+/* Mittellinie */
+ctx.strokeStyle="rgba(255,255,255,.10)";
+ctx.lineWidth=2;
+
+ctx.beginPath();
+ctx.moveTo(W/2,rail+20);
+ctx.lineTo(W/2,bottom-20);
+ctx.stroke();
+
+/* Taschen */
+
 pockets.forEach(p=>{
 
 const g=ctx.createRadialGradient(
-p.x-4,p.y-4,2,
-p.x,p.y,27
+p.x-5,p.y-5,2,
+p.x,p.y,32
 );
 
-g.addColorStop(0,"#000");
-g.addColorStop(.7,"#020202");
-g.addColorStop(1,"#171717");
+g.addColorStop(0,"#222");
+g.addColorStop(.5,"#000");
+g.addColorStop(1,"#050505");
 
 ctx.fillStyle=g;
 
 ctx.beginPath();
-ctx.arc(p.x,p.y,25,0,Math.PI*2);
+ctx.arc(p.x,p.y,31,0,Math.PI*2);
 ctx.fill();
+
+ctx.strokeStyle="#111";
+ctx.lineWidth=4;
+ctx.stroke();
 
 });
 
+/* Diamanten */
+
+ctx.fillStyle="#d8bd77";
+
+for(let x=150;x<W-150;x+=150){
+
+diamond(x,rail/2);
+diamond(x,bottom+rail/2);
+
 }
 
-function drawBall(ball){
+}
 
-if(!ball.active) return;
+function diamond(x,y){
 
-const gradient=ctx.createRadialGradient(
-ball.x-5,
-ball.y-6,
+ctx.beginPath();
+ctx.moveTo(x,y-5);
+ctx.lineTo(x+5,y);
+ctx.lineTo(x,y+5);
+ctx.lineTo(x-5,y);
+ctx.closePath();
+ctx.fill();
+
+}
+
+/* =========================
+KUGELN
+========================= */
+
+function drawBall(b){
+
+if(!b.active)return;
+
+const g=ctx.createRadialGradient(
+b.x-5,
+b.y-6,
 2,
-ball.x,
-ball.y,
-ballRadius
+b.x,
+b.y,
+ballR
 );
 
-if(ball.number===0){
+if(b.number===0){
 
-gradient.addColorStop(0,"#fff");
-gradient.addColorStop(.55,"#eee");
-gradient.addColorStop(1,"#aaa");
+g.addColorStop(0,"#fff");
+g.addColorStop(.55,"#eee");
+g.addColorStop(1,"#999");
 
 }else{
 
-gradient.addColorStop(0,"#fff");
-gradient.addColorStop(.15,ball.color);
-gradient.addColorStop(.8,ball.color);
-gradient.addColorStop(1,"#111");
+g.addColorStop(0,"#fff");
+g.addColorStop(.12,b.color);
+g.addColorStop(.72,b.color);
+g.addColorStop(1,"#111");
 
 }
 
-ctx.fillStyle=gradient;
+/* Schatten */
+ctx.fillStyle="rgba(0,0,0,.35)";
+ctx.beginPath();
+ctx.ellipse(
+b.x+5,
+b.y+7,
+ballR,
+ballR*.55,
+0,0,Math.PI*2
+);
+ctx.fill();
+
+/* Kugel */
+ctx.fillStyle=g;
 
 ctx.beginPath();
 ctx.arc(
-ball.x,
-ball.y,
-ballRadius,
+b.x,
+b.y,
+ballR,
 0,
 Math.PI*2
 );
 ctx.fill();
 
-ctx.strokeStyle="rgba(0,0,0,.5)";
-ctx.lineWidth=1;
-ctx.stroke();
+/* Glanz */
+ctx.fillStyle="rgba(255,255,255,.7)";
 
-if(ball.number>0){
+ctx.beginPath();
+ctx.arc(
+b.x-5,
+b.y-6,
+3,
+0,
+Math.PI*2
+);
+ctx.fill();
+
+/* Nummer */
+if(b.number>0){
 
 ctx.fillStyle="#fff";
 
 ctx.beginPath();
 ctx.arc(
-ball.x,
-ball.y,
-5,
+b.x,
+b.y,
+6,
 0,
 Math.PI*2
 );
 ctx.fill();
 
 ctx.fillStyle="#111";
-ctx.font="8px Arial";
+ctx.font="bold 8px Arial";
 ctx.textAlign="center";
 ctx.textBaseline="middle";
 
 ctx.fillText(
-ball.number,
-ball.x,
-ball.y
+b.number,
+b.x,
+b.y
 );
 
 }
 
 }
 
+/* =========================
+ZIELLINIE + QUEUE
+========================= */
+
 function drawAim(){
 
-const cueBall=balls[0];
+if(!aiming)return;
 
-if(!cueBall || shooting) return;
+const cue=balls[0];
 
-const dx=mouse.x-cueBall.x;
-const dy=mouse.y-cueBall.y;
+if(!cue || !cue.active)return;
 
-const length=Math.sqrt(dx*dx+dy*dy);
+const dx=mouse.x-cue.x;
+const dy=mouse.y-cue.y;
 
-if(length<1) return;
+const len=Math.hypot(dx,dy);
 
-const nx=dx/length;
-const ny=dy/length;
+if(len<1)return;
 
-// Ziel-Linie
+const nx=dx/len;
+const ny=dy/len;
+
+/* Ziel-Linie */
+
 ctx.save();
 
-ctx.setLineDash([10,8]);
-ctx.strokeStyle="rgba(255,255,255,.8)";
+ctx.setLineDash([12,8]);
+
+ctx.strokeStyle="rgba(255,255,255,.85)";
 ctx.lineWidth=2;
 
 ctx.beginPath();
 
 ctx.moveTo(
-cueBall.x,
-cueBall.y
+cue.x,
+cue.y
 );
 
 ctx.lineTo(
-cueBall.x+nx*300,
-cueBall.y+ny*300
+cue.x+nx*520,
+cue.y+ny*520
 );
 
 ctx.stroke();
 
 ctx.restore();
 
-// Queue
-const queueLength=210;
+/* Queue */
+
+const qLength=310;
 
 ctx.save();
 
 ctx.translate(
-cueBall.x-nx*queueLength,
-cueBall.y-ny*queueLength
+cue.x-nx*qLength,
+cue.y-ny*qLength
 );
 
 ctx.rotate(Math.atan2(ny,nx));
 
-const wood=ctx.createLinearGradient(
-0,-4,
-0,4
+/* Griff */
+
+const qGradient=ctx.createLinearGradient(
+0,-6,
+0,6
 );
 
-wood.addColorStop(0,"#eee");
-wood.addColorStop(.45,"#d4af37");
-wood.addColorStop(1,"#5a3015");
+qGradient.addColorStop(0,"#4b2410");
+qGradient.addColorStop(.4,"#d19a43");
+qGradient.addColorStop(.6,"#e3bc65");
+qGradient.addColorStop(1,"#3a1808");
 
-ctx.fillStyle=wood;
+ctx.fillStyle=qGradient;
 
 ctx.fillRect(
 0,
--3,
-queueLength,
-6
+-5,
+qLength,
+10
 );
 
-ctx.fillStyle="#fff";
+/* Spitze */
+
+ctx.fillStyle="#eee";
 
 ctx.fillRect(
-queueLength-10,
+qLength-14,
 -4,
-10,
+14,
 8
 );
 
@@ -489,129 +625,67 @@ ctx.restore();
 
 }
 
-function draw(){
+/* =========================
+STOß
+========================= */
 
-drawTable();
+function shoot(){
 
-balls.forEach(drawBall);
+if(!aiming)return;
 
-drawAim();
+const cue=balls[0];
 
-requestAnimationFrame(draw);
+if(!cue || !cue.active)return;
 
-}
+const dx=mouse.x-cue.x;
+const dy=mouse.y-cue.y;
 
-draw();
+const len=Math.hypot(dx,dy);
 
-function updatePhysics(){
+if(len<10)return;
 
-let moving=false;
+const nx=dx/len;
+const ny=dy/len;
 
-balls.forEach(ball=>{
+const p=Number(powerSlider.value)/100;
 
-if(!ball.active) return;
+/*
+Deutlich kräftiger als die alte Version.
+Der Break kann jetzt wirklich schnell werden.
+*/
 
-ball.x += ball.vx;
-ball.y += ball.vy;
+const maxSpeed=26;
 
-ball.vx *= .985;
-ball.vy *= .985;
+cue.vx=nx*(4+p*maxSpeed);
+cue.vy=ny*(4+p*maxSpeed);
 
-if(
-Math.abs(ball.vx)>.03 ||
-Math.abs(ball.vy)>.03
-){
-moving=true;
-}else{
-ball.vx=0;
-ball.vy=0;
-}
+aiming=false;
+shootButton.disabled=true;
 
-// Bande
-if(ball.x-ballRadius<30){
-
-ball.x=30+ballRadius;
-ball.vx=Math.abs(ball.vx)*.9;
+statusText.textContent=
+"🎱 Stoß ausgeführt – Kugeln in Bewegung.";
 
 }
 
-if(ball.x+ballRadius>W-30){
+/* =========================
+KOLLISIONEN
+========================= */
 
-ball.x=W-30-ballRadius;
-ball.vx=-Math.abs(ball.vx)*.9;
-
-}
-
-if(ball.y-ballRadius<30){
-
-ball.y=30+ballRadius;
-ball.vy=Math.abs(ball.vy)*.9;
-
-}
-
-if(ball.y+ballRadius>H-30){
-
-ball.y=H-30-ballRadius;
-ball.vy=-Math.abs(ball.vy)*.9;
-
-}
-
-// Taschen
-pockets.forEach(p=>{
-
-const dx=ball.x-p.x;
-const dy=ball.y-p.y;
-
-const d=Math.sqrt(dx*dx+dy*dy);
-
-if(d<24){
-
-ball.active=false;
-ball.vx=0;
-ball.vy=0;
-
-}
-
-});
-
-});
-
-// Kugel-Kollisionen
-for(let i=0;i<balls.length;i++){
-
-for(let j=i+1;j<balls.length;j++){
-
-const a=balls[i];
-const b=balls[j];
-
-if(!a.active || !b.active) continue;
+function resolveCollision(a,b){
 
 const dx=b.x-a.x;
 const dy=b.y-a.y;
 
-const dist=Math.sqrt(dx*dx+dy*dy);
+const dist=Math.hypot(dx,dy);
 
-if(dist>0 && dist<ballRadius*2){
+if(dist===0 || dist>ballR*2)return;
 
 const nx=dx/dist;
 const ny=dy/dist;
 
-const relativeVelocity=
-(a.vx-b.vx)*nx+
-(a.vy-b.vy)*ny;
+const overlap=ballR*2-dist;
 
-if(relativeVelocity>0){
-
-a.vx-=relativeVelocity*nx;
-a.vy-=relativeVelocity*ny;
-
-b.vx+=relativeVelocity*nx;
-b.vy+=relativeVelocity*ny;
-
-}
-
-const overlap=
-ballRadius*2-dist;
+/* Kugeln auseinanderdrücken */
 
 a.x-=nx*overlap/2;
 a.y-=ny*overlap/2;
@@ -619,100 +693,259 @@ a.y-=ny*overlap/2;
 b.x+=nx*overlap/2;
 b.y+=ny*overlap/2;
 
+/* Relativgeschwindigkeit */
+
+const rvx=b.vx-a.vx;
+const rvy=b.vy-a.vy;
+
+const velAlongNormal=
+rvx*nx+rvy*ny;
+
+if(velAlongNormal>0)return;
+
+/*
+Gleiche Masse.
+Impulsübertragung.
+*/
+
+const impulse=
+-(1+restitution)*velAlongNormal/2;
+
+a.vx-=impulse*nx;
+a.vy-=impulse*ny;
+
+b.vx+=impulse*nx;
+b.vy+=impulse*ny;
+
 }
+
+/* =========================
+PHYSIK
+========================= */
+
+function physics(){
+
+let moving=false;
+
+balls.forEach(b=>{
+
+if(!b.active)return;
+
+b.x+=b.vx;
+b.y+=b.vy;
+
+/* Reibung */
+
+b.vx*=friction;
+b.vy*=friction;
+
+if(Math.abs(b.vx)<.035)b.vx=0;
+if(Math.abs(b.vy)<.035)b.vy=0;
+
+if(
+Math.abs(b.vx)>.035 ||
+Math.abs(b.vy)>.035
+){
+moving=true;
+}
+
+/* Bande links */
+
+if(b.x-ballR<rail+15){
+
+b.x=rail+15+ballR;
+
+b.vx=
+Math.abs(b.vx)*cushionLoss;
+}
+
+/* Bande rechts */
+
+if(b.x+ballR>right-15){
+
+b.x=right-15-ballR;
+
+b.vx=
+-Math.abs(b.vx)*cushionLoss;
+}
+
+/* Bande oben */
+
+if(b.y-ballR<rail+15){
+
+b.y=rail+15+ballR;
+
+b.vy=
+Math.abs(b.vy)*cushionLoss;
+}
+
+/* Bande unten */
+
+if(b.y+ballR>bottom-15){
+
+b.y=bottom-15-ballR;
+
+b.vy=
+-Math.abs(b.vy)*cushionLoss;
+}
+
+/* Taschen */
+
+pockets.forEach(p=>{
+
+const d=Math.hypot(
+b.x-p.x,
+b.y-p.y
+);
+
+if(d<27){
+
+b.active=false;
+b.vx=0;
+b.vy=0;
+
+}
+
+});
+
+});
+
+/* Kugel-Kollisionen */
+
+for(let i=0;i<balls.length;i++){
+
+for(let j=i+1;j<balls.length;j++){
+
+if(
+balls[i].active &&
+balls[j].active
+){
+
+resolveCollision(
+balls[i],
+balls[j]
+);
 
 }
 
 }
 
-if(!moving){
-shooting=false;
+}
+
+if(!moving && !aiming){
+
+aiming=true;
 shootButton.disabled=false;
+
 statusText.textContent=
 "Deine Runde – ziele und stoße.";
 }
 
-requestAnimationFrame(updatePhysics);
+requestAnimationFrame(physics);
 
 }
 
-updatePhysics();
+/* =========================
+RENDER LOOP
+========================= */
 
-canvas.addEventListener("mousemove",function(e){
+function render(){
 
-const rect=canvas.getBoundingClientRect();
+drawTable();
+
+balls.forEach(drawBall);
+
+drawAim();
+
+requestAnimationFrame(render);
+
+}
+
+/* =========================
+MOUSE
+========================= */
+
+canvas.addEventListener(
+"mousemove",
+function(e){
+
+const r=canvas.getBoundingClientRect();
 
 mouse.x=
-(e.clientX-rect.left)*
-(canvas.width/rect.width);
+(e.clientX-r.left)*
+(W/r.width);
 
 mouse.y=
-(e.clientY-rect.top)*
-(canvas.height/rect.height);
-
-});
-
-shootButton.addEventListener("click",function(){
-
-if(shooting) return;
-
-const cueBall=balls[0];
-
-if(!cueBall.active){
-
-statusText.textContent=
-"Die weiße Kugel ist versenkt.";
-
-return;
+(e.clientY-r.top)*
+(H/r.height);
 
 }
+);
 
-const dx=mouse.x-cueBall.x;
-const dy=mouse.y-cueBall.y;
+/* =========================
+TOUCH
+========================= */
 
-const length=Math.sqrt(dx*dx+dy*dy);
+canvas.addEventListener(
+"touchmove",
+function(e){
 
-if(length<5) return;
+e.preventDefault();
 
-const nx=dx/length;
-const ny=dy/length;
+const r=canvas.getBoundingClientRect();
+const t=e.touches[0];
 
-const strength=
-Number(powerSlider.value)/100;
+mouse.x=
+(t.clientX-r.left)*
+(W/r.width);
 
-cueBall.vx=
-nx*strength*18;
+mouse.y=
+(t.clientY-r.top)*
+(H/r.height);
 
-cueBall.vy=
-ny*strength*18;
+},
+{passive:false}
+);
 
-shooting=true;
-shootButton.disabled=true;
+/* =========================
+BUTTONS
+========================= */
 
-statusText.textContent=
-"🎱 Stoß ausgeführt!";
+shootButton.addEventListener(
+"click",
+shoot
+);
 
-});
-
-powerSlider.addEventListener("input",function(){
+powerSlider.addEventListener(
+"input",
+function(){
 
 powerValue.textContent=
 this.value+"%";
 
-});
+}
+);
 
-resetButton.addEventListener("click",function(){
+resetButton.addEventListener(
+"click",
+function(){
 
 setup();
 
-shooting=false;
+aiming=true;
 
 shootButton.disabled=false;
 
 statusText.textContent=
-"Tisch neu aufgebaut.";
+"Break bereit – ziele und stoße.";
 
-});
+}
+);
+
+/* Start */
+
+physics();
+render();
 
 </script>
 
