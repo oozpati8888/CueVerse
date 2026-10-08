@@ -167,7 +167,7 @@ number: number,
 type: type,
 
 radius: BALL_RADIUS,
-
+angle:0,
 active: true
 };
 
@@ -262,41 +262,43 @@ startY,
 /* =========================================================
 KUGEL-ZEICHNEN
 ========================================================= */
-
 function drawBall(ball) {
 
 if (!ball.active) return;
 
 ctx.save();
 
-/*
-Schatten
-*/
+/* Kugelposition */
+ctx.translate(ball.x, ball.y);
+
+/* echte sichtbare Rotation */
+ctx.rotate(ball.angle);
+
+
+/* Schatten */
 
 ctx.beginPath();
 
 ctx.arc(
-ball.x + 3,
-ball.y + 4,
+3,
+4,
 ball.radius + 1,
 0,
 Math.PI * 2
 );
 
-ctx.fillStyle = "rgba(0,0,0,.45)";
+ctx.fillStyle = "rgba(0,0,0,.40)";
 ctx.fill();
 
 
-/*
-Kugel
-*/
+/* Kugel */
 
 const gradient = ctx.createRadialGradient(
-ball.x - 6,
-ball.y - 7,
+-6,
+-7,
 2,
-ball.x,
-ball.y,
+0,
+0,
 ball.radius
 );
 
@@ -311,9 +313,9 @@ gradient.addColorStop(1, "#bdbdbd");
 
 else if (ball.type === "eight") {
 
-gradient.addColorStop(0, "#555");
+gradient.addColorStop(0, "#555555");
 gradient.addColorStop(.4, "#151515");
-gradient.addColorStop(1, "#000");
+gradient.addColorStop(1, "#000000");
 
 }
 
@@ -324,27 +326,26 @@ const color = ballColors[ball.number];
 gradient.addColorStop(0, "#ffffff");
 gradient.addColorStop(.18, color);
 gradient.addColorStop(.72, color);
-gradient.addColorStop(1, "#111");
+gradient.addColorStop(1, "#111111");
 }
 
 
 ctx.beginPath();
 
 ctx.arc(
-ball.x,
-ball.y,
+0,
+0,
 ball.radius,
 0,
 Math.PI * 2
 );
 
 ctx.fillStyle = gradient;
+
 ctx.fill();
 
 
-/*
-Streifen
-*/
+/* Streifen */
 
 if (ball.type === "stripe") {
 
@@ -353,8 +354,8 @@ ctx.save();
 ctx.beginPath();
 
 ctx.arc(
-ball.x,
-ball.y,
+0,
+0,
 ball.radius,
 0,
 Math.PI * 2
@@ -365,8 +366,8 @@ ctx.clip();
 ctx.fillStyle = "#f4f4f4";
 
 ctx.fillRect(
-ball.x - ball.radius,
-ball.y - 7,
+-ball.radius,
+-7,
 ball.radius * 2,
 14
 );
@@ -375,64 +376,66 @@ ctx.restore();
 }
 
 
-/*
-Nummernkreis
-*/
+/* Nummer */
 
 if (ball.number !== 0) {
 
 ctx.beginPath();
 
 ctx.arc(
-ball.x,
-ball.y,
+0,
+0,
 7,
 0,
 Math.PI * 2
 );
 
 ctx.fillStyle = "#ffffff";
+
 ctx.fill();
 
 
 ctx.fillStyle =
 ball.type === "eight"
-? "#000"
-: "#111";
+? "#000000"
+: "#111111";
 
 ctx.font = "bold 8px Arial";
 
 ctx.textAlign = "center";
+
 ctx.textBaseline = "middle";
 
 ctx.fillText(
 ball.number,
-ball.x,
-ball.y + .5
+0,
+1
 );
 }
 
 
-/*
-Glanzpunkt
-*/
+/* Glanz */
 
 ctx.beginPath();
 
 ctx.arc(
-ball.x - 6,
-ball.y - 7,
+-6,
+-7,
 3,
 0,
 Math.PI * 2
 );
 
-ctx.fillStyle = "rgba(255,255,255,.75)";
+ctx.fillStyle =
+"rgba(255,255,255,.75)";
+
 ctx.fill();
 
 
 ctx.restore();
 }
+
+
 
 
 /* =========================================================
@@ -691,6 +694,11 @@ balls.forEach(ball => {
 if (!ball.active) return;
 
 ball.x += ball.vx;
+const distanceMoved = Math.sqrt(
+  ball.vx * ball.vx +
+  ball.vy * ball.vy
+  );
+  ball.angle += distanceMoved / ball.radius;
 
 ball.y += ball.vy;
 
