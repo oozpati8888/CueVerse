@@ -618,7 +618,7 @@ return;
 Elastischer Stoß
 */
 
-const restitution = 0.96;
+const restitution = 0.98;
 
 const impulse =
 -(1 + restitution) *
@@ -684,7 +684,7 @@ PHYSIK
 
 function updatePhysics() {
 
-const friction = 0.985;
+const friction = 0.992;
 
 balls.forEach(ball => {
 
@@ -976,7 +976,7 @@ Das ist deutlich kräftiger.
 */
 
 const velocity =
-power * 0.105;
+power * 0.85;
 
 
 cueBall.vx =
