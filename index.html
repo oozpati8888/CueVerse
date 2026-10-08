@@ -36,7 +36,7 @@ margin: auto;
 
 /* =====================================================
 OOZ BALL
-QUEUE + EXAKTES ZIELEN
+PREMIUM QUEUE / AIM SYSTEM
 ===================================================== */
 
 const GAME_W = 900;
@@ -64,6 +64,7 @@ let ballGraphic;
 let aimGraphic;
 let cueGraphic;
 let powerGraphic;
+let spinGraphic;
 
 let dragging = false;
 
@@ -132,7 +133,7 @@ const table = scene.add.graphics();
 
 table.fillStyle(
 0x000000,
-0.40
+0.45
 );
 
 table.fillRoundedRect(
@@ -193,7 +194,7 @@ TABLE_H + 36,
 );
 
 
-/* Spielfeld */
+/* Tuch */
 
 table.fillStyle(
 0x126247,
@@ -208,7 +209,7 @@ TABLE_H
 );
 
 
-/* Spielfeldkante */
+/* Tuchkante */
 
 table.lineStyle(
 3,
@@ -228,11 +229,7 @@ TABLE_H
 TASCHEN
 ================================================= */
 
-drawPocket(
-scene,
-TABLE_X,
-TABLE_Y
-);
+drawPocket(scene, TABLE_X, TABLE_Y);
 
 drawPocket(
 scene,
@@ -266,7 +263,7 @@ TABLE_Y + TABLE_H
 
 
 /* =================================================
-Banden
+BANDEN
 ================================================= */
 
 createRails(scene);
@@ -285,11 +282,11 @@ TABLE_Y + TABLE_H / 2,
 BALL_R,
 
 {
-restitution: 0.92,
+restitution: 0.94,
 
-friction: 0.01,
+friction: 0.006,
 
-frictionAir: 0.025,
+frictionAir: 0.012,
 
 density: 0.004
 }
@@ -297,35 +294,26 @@ density: 0.004
 
 
 /* =================================================
-KUGEL GRAPHIK
+GRAPHICS
 ================================================= */
 
 ballGraphic =
 scene.add.graphics();
 
-
-/* =================================================
-ZIELLINIE
-================================================= */
-
 aimGraphic =
 scene.add.graphics();
-
-
-/* =================================================
-QUEUE
-================================================= */
 
 cueGraphic =
 scene.add.graphics();
 
-
-/* =================================================
-POWER
-================================================= */
-
 powerGraphic =
 scene.add.graphics();
+
+spinGraphic =
+scene.add.graphics();
+
+
+drawBall();
 
 
 /* =================================================
@@ -341,8 +329,6 @@ return;
 }
 
 
-/* Kugel muss stehen */
-
 const speed =
 Math.sqrt(
 ball.velocity.x *
@@ -353,7 +339,9 @@ ball.velocity.y
 );
 
 
-if (speed > 0.08) {
+/* Nur schießen wenn Kugel steht */
+
+if (speed > 0.10) {
 return;
 }
 
@@ -374,7 +362,7 @@ dy * dy
 );
 
 
-if (distance <= 45) {
+if (distance <= 55) {
 
 dragging = true;
 
@@ -442,7 +430,7 @@ dy * dy
 const power =
 Math.min(
 distance,
-180
+220
 );
 
 
@@ -452,18 +440,15 @@ cueGraphic.clear();
 
 powerGraphic.clear();
 
+spinGraphic.clear();
+
 
 if (distance < 8) {
 return;
 }
 
 
-/* =========================================
-STOßRICHTUNG
-
-Drag nach hinten
-= Kugel fliegt nach vorne
-========================================= */
+/* Schussrichtung */
 
 const dirX =
 -dx / distance;
@@ -472,12 +457,10 @@ const dirY =
 -dy / distance;
 
 
-/* =========================================
-STOßKRAFT
-========================================= */
+/* Stärkere Kraft */
 
 const force =
-power * 0.00007;
+power * 0.00013;
 
 
 scene.matter.body.applyForce(
@@ -487,9 +470,9 @@ ball,
 ball.position,
 
 {
-x: dirX * power * 0.00007,
+x: dirX * force,
 
-y: dirY * power * 0.00007
+y: dirY * force
 }
 );
 
@@ -541,9 +524,6 @@ color: '#ffffff',
 alpha: 0.65
 }
 );
-
-
-drawBall();
 }
 
 
@@ -555,11 +535,6 @@ function updateAim(
 mouseX,
 mouseY
 ) {
-
-if (!ball) {
-return;
-}
-
 
 const dx =
 mouseX -
@@ -582,11 +557,7 @@ return;
 }
 
 
-/* ================================================
-DRAG-RICHTUNG
-
-Diese Richtung zeigt nach hinten.
-================================================ */
+/* Richtung nach hinten */
 
 const backX =
 dx / distance;
@@ -595,11 +566,7 @@ const backY =
 dy / distance;
 
 
-/* ================================================
-SCHUSSRICHTUNG
-
-Genau entgegengesetzt.
-================================================ */
+/* Schussrichtung */
 
 aimDX =
 -backX;
@@ -608,24 +575,20 @@ aimDY =
 -backY;
 
 
-/* ================================================
-POWER
-================================================ */
-
 shotPower =
 Math.min(
 distance,
-180
+220
 );
 
 
 drawAim();
 
-
 drawCue();
 
-
 drawPower();
+
+drawSpin();
 }
 
 
@@ -645,9 +608,8 @@ const startY =
 ball.position.y;
 
 
-/* lange präzise Ziellinie */
-
-const lineLength = 650;
+const lineLength =
+700;
 
 
 const endX =
@@ -661,12 +623,12 @@ aimDY *
 lineLength;
 
 
-/* dünner Schatten */
+/* Schatten */
 
 aimGraphic.lineStyle(
 4,
 0x000000,
-0.25
+0.22
 );
 
 aimGraphic.beginPath();
@@ -684,7 +646,7 @@ endY
 aimGraphic.strokePath();
 
 
-/* weiße Ziellinie */
+/* Präzise weiße Linie */
 
 aimGraphic.lineStyle(
 1.5,
@@ -707,12 +669,12 @@ endY
 aimGraphic.strokePath();
 
 
-/* Mittelpunkt */
+/* Mittelpunkt-Ring */
 
 aimGraphic.lineStyle(
 1,
 0xffffff,
-0.8
+0.85
 );
 
 aimGraphic.strokeCircle(
@@ -744,46 +706,60 @@ const centerY =
 ball.position.y;
 
 
-/* ================================================
-QUEUE LÄNGE
-================================================ */
+/* =================================================
+WICHTIG:
 
-const cueLength =
-230 +
-shotPower * 0.55;
+Queue-Spitze befindet sich NICHT
+im Mittelpunkt der Kugel.
+
+Sie endet knapp VOR der Kugel.
+================================================= */
+
+const TIP_GAP = 3;
 
 
-/* ================================================
-QUEUE BEGINNT EXAKT
-IM MITTELPUNKT DER KUGEL
-================================================ */
+const tipDistance =
+BALL_R +
+TIP_GAP;
+
 
 const tipX =
-centerX;
+centerX -
+aimDX *
+tipDistance;
 
 const tipY =
-centerY;
+centerY -
+aimDY *
+tipDistance;
+
+
+/* Langer Queue */
+
+const cueLength =
+290 +
+shotPower * 0.75;
 
 
 const buttX =
-centerX -
+tipX -
 aimDX *
 cueLength;
 
 const buttY =
-centerY -
+tipY -
 aimDY *
 cueLength;
 
 
-/* ================================================
-SCHATTEN
-================================================ */
+/* =================================================
+QUEUE SCHATTEN
+================================================= */
 
 cueGraphic.lineStyle(
-10,
+11,
 0x000000,
-0.35
+0.32
 );
 
 cueGraphic.beginPath();
@@ -801,13 +777,13 @@ buttY
 cueGraphic.strokePath();
 
 
-/* ================================================
-QUEUE-SCHAFT
-================================================ */
+/* =================================================
+HOLZSCHAFT
+================================================= */
 
 cueGraphic.lineStyle(
-6,
-0xd5a65a,
+7,
+0xb87932,
 1
 );
 
@@ -826,14 +802,12 @@ buttY
 cueGraphic.strokePath();
 
 
-/* ================================================
-HELLER HOLZSTREIFEN
-================================================ */
+/* heller Mittelstreifen */
 
 cueGraphic.lineStyle(
 2,
-0xffe7ad,
-0.9
+0xffe0a0,
+0.95
 );
 
 cueGraphic.beginPath();
@@ -851,12 +825,12 @@ buttY
 cueGraphic.strokePath();
 
 
-/* ================================================
-TIP
-================================================ */
+/* =================================================
+QUEUE-SPITZE
+================================================= */
 
 cueGraphic.fillStyle(
-0xf2eee5,
+0xf4f0df,
 1
 );
 
@@ -867,28 +841,28 @@ tipY,
 );
 
 
-/* ================================================
+/* =================================================
 JOINT
-================================================ */
+================================================= */
 
 const jointDistance =
 cueLength * 0.28;
 
 
 const jointX =
-centerX -
+tipX -
 aimDX *
 jointDistance;
 
 const jointY =
-centerY -
+tipY -
 aimDY *
 jointDistance;
 
 
 cueGraphic.lineStyle(
-7,
-0x8b5a2b,
+8,
+0x7b4825,
 1
 );
 
@@ -907,36 +881,36 @@ buttY
 cueGraphic.strokePath();
 
 
-/* ================================================
+/* =================================================
 GRIFF
-================================================ */
+================================================= */
 
 const gripStart =
 cueLength * 0.68;
 
 
-const gripStartX =
-centerX -
+const gripX =
+tipX -
 aimDX *
 gripStart;
 
-const gripStartY =
-centerY -
+const gripY =
+tipY -
 aimDY *
 gripStart;
 
 
 cueGraphic.lineStyle(
-8,
-0x191919,
+9,
+0x171717,
 1
 );
 
 cueGraphic.beginPath();
 
 cueGraphic.moveTo(
-gripStartX,
-gripStartY
+gripX,
+gripY
 );
 
 cueGraphic.lineTo(
@@ -947,36 +921,36 @@ buttY
 cueGraphic.strokePath();
 
 
-/* ================================================
-GOLDENE DETAILRINGE
-================================================ */
+/* =================================================
+GOLDDETAILS
+================================================= */
 
 for (
 let i = 0;
-i < 4;
+i < 5;
 i++
 ) {
 
 const p =
 0.70 +
-i * 0.065;
+i * 0.055;
 
 
 const ringX =
-centerX -
+tipX -
 aimDX *
 cueLength *
 p;
 
 const ringY =
-centerY -
+tipY -
 aimDY *
 cueLength *
 p;
 
 
 cueGraphic.fillStyle(
-0xc9a34a,
+0xd3aa4d,
 1
 );
 
@@ -986,6 +960,22 @@ ringY,
 1.8
 );
 }
+
+
+/* =================================================
+BUTT-KAPPE
+================================================= */
+
+cueGraphic.fillStyle(
+0xc9a34a,
+1
+);
+
+cueGraphic.fillCircle(
+buttX,
+buttY,
+4
+);
 }
 
 
@@ -1010,8 +1000,6 @@ const width = 18;
 const height = 170;
 
 
-/* Außen */
-
 powerGraphic.fillStyle(
 0x151515,
 1
@@ -1026,11 +1014,9 @@ height,
 );
 
 
-/* Innen */
-
 const fillHeight =
 height *
-(shotPower / 180);
+(shotPower / 220);
 
 
 powerGraphic.fillStyle(
@@ -1039,7 +1025,9 @@ powerGraphic.fillStyle(
 );
 
 powerGraphic.fillRoundedRect(
+
 x + 4,
+
 y +
 height -
 fillHeight +
@@ -1047,9 +1035,63 @@ fillHeight +
 
 width - 8,
 
-fillHeight - 8,
+Math.max(
+2,
+fillHeight - 8
+),
 
 4
+);
+}
+
+
+/* =====================================================
+SPIN / EFFET
+===================================================== */
+
+function drawSpin() {
+
+spinGraphic.clear();
+
+
+if (!dragging) {
+return;
+}
+
+
+const x =
+ball.position.x;
+
+const y =
+ball.position.y;
+
+
+/* kleiner Effet-Kreis */
+
+spinGraphic.lineStyle(
+1.5,
+0xffffff,
+0.45
+);
+
+spinGraphic.strokeCircle(
+x,
+y,
+BALL_R + 9
+);
+
+
+/* Mittelpunkt */
+
+spinGraphic.fillStyle(
+0xffffff,
+0.8
+);
+
+spinGraphic.fillCircle(
+x,
+y,
+1.5
 );
 }
 
@@ -1123,31 +1165,23 @@ TABLE_W / 2;
 
 addRail(
 scene,
-
 TABLE_X +
 (mid - gap) / 2,
-
 TABLE_Y -
 RAIL / 2,
-
 mid - gap,
-
 RAIL
 );
 
 
 addRail(
 scene,
-
 TABLE_X +
 mid +
 (mid - gap) / 2,
-
 TABLE_Y -
 RAIL / 2,
-
 mid - gap,
-
 RAIL
 );
 
@@ -1156,33 +1190,25 @@ RAIL
 
 addRail(
 scene,
-
 TABLE_X +
 (mid - gap) / 2,
-
 TABLE_Y +
 TABLE_H +
 RAIL / 2,
-
 mid - gap,
-
 RAIL
 );
 
 
 addRail(
 scene,
-
 TABLE_X +
 mid +
 (mid - gap) / 2,
-
 TABLE_Y +
 TABLE_H +
 RAIL / 2,
-
 mid - gap,
-
 RAIL
 );
 
@@ -1196,64 +1222,48 @@ gap;
 
 addRail(
 scene,
-
 TABLE_X -
 RAIL / 2,
-
 TABLE_Y +
 sideLength / 2,
-
 RAIL,
-
 sideLength
 );
 
 
 addRail(
 scene,
-
 TABLE_X -
 RAIL / 2,
-
 TABLE_Y +
 TABLE_H -
 sideLength / 2,
-
 RAIL,
-
 sideLength
 );
 
 
 addRail(
 scene,
-
 TABLE_X +
 TABLE_W +
 RAIL / 2,
-
 TABLE_Y +
 sideLength / 2,
-
 RAIL,
-
 sideLength
 );
 
 
 addRail(
 scene,
-
 TABLE_X +
 TABLE_W +
 RAIL / 2,
-
 TABLE_Y +
 TABLE_H -
 sideLength / 2,
-
 RAIL,
-
 sideLength
 );
 }
@@ -1290,7 +1300,7 @@ friction: 0
 
 
 /* =====================================================
-WEISSE KUGEL
+BALL
 ===================================================== */
 
 function drawBall() {
@@ -1364,10 +1374,6 @@ return;
 drawBall();
 
 
-/* ================================================
-QUEUE NUR BEIM ZIELEN
-================================================ */
-
 if (!dragging) {
 
 cueGraphic.clear();
@@ -1375,6 +1381,8 @@ cueGraphic.clear();
 aimGraphic.clear();
 
 powerGraphic.clear();
+
+spinGraphic.clear();
 }
 }
 
