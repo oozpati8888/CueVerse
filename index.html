@@ -2,7 +2,12 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<meta name="viewport"
+content="width=device-width,
+initial-scale=1.0,
+maximum-scale=1.0,
+user-scalable=no">
 
 <title>OOZ BALL</title>
 
@@ -14,243 +19,263 @@ width: 100%;
 height: 100%;
 overflow: hidden;
 background: #111;
-}
-
-body {
-display: flex;
-justify-content: center;
-align-items: center;
 touch-action: none;
 }
 
 canvas {
 display: block;
+margin: auto;
 }
 </style>
 
 <!-- Phaser 3 -->
 <script src="https://cdn.jsdelivr.net/npm/phaser@3.90.0/dist/phaser.min.js"></script>
+
 </head>
 
 <body>
 
 <script>
 
+/* =========================================================
+OOZ BALL
+ECHTER OOZ-TISCH + MATTER PHYSICS
+========================================================= */
+
 const TABLE_W = 800;
 const TABLE_H = 400;
 
-const MARGIN_X = 80;
-const MARGIN_Y = 80;
-
 const BALL_RADIUS = 10;
 
-let game;
-let scene;
+/* =========================================================
+PHASER
+========================================================= */
+
+const config = {
+
+type: Phaser.AUTO,
+
+width: TABLE_W,
+height: TABLE_H,
+
+backgroundColor: '#111111',
+
+scale: {
+mode: Phaser.Scale.FIT,
+autoCenter: Phaser.Scale.CENTER_BOTH
+},
+
+physics: {
+
+default: 'matter',
+
+matter: {
+
+gravity: {
+x: 0,
+y: 0
+},
+
+enableSleeping: true,
+
+positionIterations: 12,
+velocityIterations: 10
+}
+},
+
+scene: {
+preload: preload,
+create: create,
+update: update
+}
+};
+
+new Phaser.Game(config);
+
+
+/* =========================================================
+VARIABLEN
+========================================================= */
+
 let whiteBall;
 
-let aimGraphics;
-let ballGraphics;
+let ballGraphic;
+
+let aimGraphic;
 
 let dragging = false;
+
 let dragStartX = 0;
 let dragStartY = 0;
 
 const MAX_DRAG = 220;
-const FORCE_SCALE = 0.000055;
+
+const FORCE_SCALE = 0.00008;
 
 
 /* =========================================================
-GAME SCENE
+BILDER LADEN
 ========================================================= */
 
-class PoolScene extends Phaser.Scene {
+function preload() {
 
-constructor() {
-super("PoolScene");
+/*
+Dein vorhandenes Bild aus GitHub.
+Dateiname muss exakt sein:
+ooz-table.jpg
+*/
+
+this.load.image(
+'oozTable',
+'ooz-table.jpg'
+);
 }
 
-create() {
 
-scene = this;
+/* =========================================================
+SPIEL ERSTELLEN
+========================================================= */
 
-/*
-* PHYSIK
-*/
+function create() {
 
-this.matter.world.setGravity(0, 0);
+/* -----------------------------------------------------
+1. DEIN ECHTER OOZ-TISCH
+----------------------------------------------------- */
 
-
-/*
-* HINTERGRUND
-*/
-
-this.add.rectangle(
-TABLE_W / 2 + MARGIN_X,
-TABLE_H / 2 + MARGIN_Y,
-TABLE_W + 160,
-TABLE_H + 160,
-0x151515
+const tableImage = this.add.image(
+TABLE_W / 2,
+TABLE_H / 2,
+'oozTable'
 );
 
-
 /*
-* SPIELFELD
-* exakt 2:1
-* 800 x 400
+Das Bild wird exakt auf unser 800 × 400
+Spielfeld gelegt.
 */
 
-this.add.rectangle(
-TABLE_W / 2 + MARGIN_X,
-TABLE_H / 2 + MARGIN_Y,
-TABLE_W,
-TABLE_H,
-0x08745f
-);
-
-
-/*
-* LEICHTE TISCHLINIEN
-*/
-
-const field = this.add.graphics();
-
-field.lineStyle(3, 0x1db395, 1);
-
-field.strokeRect(
-MARGIN_X,
-MARGIN_Y,
+tableImage.setDisplaySize(
 TABLE_W,
 TABLE_H
 );
 
+tableImage.setDepth(0);
+
+
+/* -----------------------------------------------------
+2. UNSICHTBARE BANDE
+----------------------------------------------------- */
+
+const wallOptions = {
+
+isStatic: true,
+
+restitution: 1.0,
+
+friction: 0,
+
+frictionStatic: 0
+};
 
 /*
-* MITTELLINIE
+Oben
 */
-
-field.lineStyle(1, 0x4fcab1, 0.35);
-
-field.lineBetween(
-MARGIN_X + TABLE_W / 2,
-MARGIN_Y,
-MARGIN_X + TABLE_W / 2,
-MARGIN_Y + TABLE_H
-);
-
-
-/*
-* MATTER-RAILS
-*/
-
-const railThickness = 18;
 
 this.matter.add.rectangle(
-MARGIN_X + TABLE_W / 2,
-MARGIN_Y - railThickness / 2,
+TABLE_W / 2,
+-5,
 TABLE_W,
-railThickness,
-{
-isStatic: true,
-restitution: 1,
-friction: 0
-}
+10,
+wallOptions
 );
-
-this.matter.add.rectangle(
-MARGIN_X + TABLE_W / 2,
-MARGIN_Y + TABLE_H + railThickness / 2,
-TABLE_W,
-railThickness,
-{
-isStatic: true,
-restitution: 1,
-friction: 0
-}
-);
-
-this.matter.add.rectangle(
-MARGIN_X - railThickness / 2,
-MARGIN_Y + TABLE_H / 2,
-railThickness,
-TABLE_H,
-{
-isStatic: true,
-restitution: 1,
-friction: 0
-}
-);
-
-this.matter.add.rectangle(
-MARGIN_X + TABLE_W + railThickness / 2,
-MARGIN_Y + TABLE_H / 2,
-railThickness,
-TABLE_H,
-{
-isStatic: true,
-restitution: 1,
-friction: 0
-}
-);
-
 
 /*
-* WEISSE KUGEL
+Unten
 */
+
+this.matter.add.rectangle(
+TABLE_W / 2,
+TABLE_H + 5,
+TABLE_W,
+10,
+wallOptions
+);
+
+/*
+Links
+*/
+
+this.matter.add.rectangle(
+-5,
+TABLE_H / 2,
+10,
+TABLE_H,
+wallOptions
+);
+
+/*
+Rechts
+*/
+
+this.matter.add.rectangle(
+TABLE_W + 5,
+TABLE_H / 2,
+10,
+TABLE_H,
+wallOptions
+);
+
+
+/* -----------------------------------------------------
+3. WEISSE KUGEL
+----------------------------------------------------- */
 
 whiteBall = this.matter.add.circle(
-MARGIN_X + 190,
-MARGIN_Y + TABLE_H / 2,
+
+200,
+TABLE_H / 2,
+
 BALL_RADIUS,
+
 {
+
 restitution: 0.92,
-friction: 0.02,
+
+friction: 0.01,
+
 frictionAir: 0.025,
-density: 0.004
+
+density: 0.004,
+
+sleepThreshold: 10
 }
 );
 
 
-/*
-* KUGEL-GRAFIK
-*/
+/* -----------------------------------------------------
+4. KUGEL-GRAFIK
+----------------------------------------------------- */
 
-ballGraphics = this.add.graphics();
+ballGraphic = this.add.graphics();
 
-
-/*
-* ZIELLINIE
-*/
-
-aimGraphics = this.add.graphics();
+ballGraphic.setDepth(10);
 
 
-/*
-* TOUCH / MAUS
-*/
+/* -----------------------------------------------------
+5. ZIEL-/STOSSLINIE
+----------------------------------------------------- */
 
-this.input.on(
-"pointerdown",
-this.pointerDown,
-this
-);
+aimGraphic = this.add.graphics();
+
+aimGraphic.setDepth(9);
+
+
+/* -----------------------------------------------------
+6. MOUSE / TOUCH
+----------------------------------------------------- */
 
 this.input.on(
-"pointermove",
-this.pointerMove,
-this
-);
-
-this.input.on(
-"pointerup",
-this.pointerUp,
-this
-);
-}
-
-
-pointerDown(pointer) {
-
-if (!whiteBall) return;
+'pointerdown',
+function(pointer) {
 
 const dx =
 pointer.worldX -
@@ -264,206 +289,140 @@ const distance =
 Math.sqrt(dx * dx + dy * dy);
 
 /*
-* Nur greifen,
-* wenn Finger/Maus nahe an der Kugel ist.
+Nur starten, wenn man die Kugel
+ungefähr trifft.
 */
 
-if (distance < 35) {
+if (distance < BALL_RADIUS * 3) {
 
 dragging = true;
 
-dragStartX = pointer.worldX;
-dragStartY = pointer.worldY;
-}
-}
-
-
-pointerMove(pointer) {
-
-if (!dragging || !whiteBall) return;
-
-this.drawAim(
-pointer.worldX,
-pointer.worldY
-);
-}
-
-
-pointerUp(pointer) {
-
-if (!dragging || !whiteBall) return;
-
-dragging = false;
-
-this.shoot(
-pointer.worldX,
-pointer.worldY
-);
-
-aimGraphics.clear();
-}
-
-
-drawAim(pointerX, pointerY) {
-
-aimGraphics.clear();
-
-const ballX =
+dragStartX =
 whiteBall.position.x;
 
-const ballY =
+dragStartY =
 whiteBall.position.y;
-
-let dx =
-pointerX - ballX;
-
-let dy =
-pointerY - ballY;
-
-let distance =
-Math.sqrt(dx * dx + dy * dy);
-
-if (distance < 1) return;
-
-/*
-* maximale Zuglänge
-*/
-
-if (distance > MAX_DRAG) {
-
-dx =
-dx / distance * MAX_DRAG;
-
-dy =
-dy / distance * MAX_DRAG;
 }
-
-/*
-* ZIELRICHTUNG:
-* entgegengesetzt zum Ziehen
-*/
-
-const aimX =
-ballX - dx;
-
-const aimY =
-ballY - dy;
-
-
-/*
-* Linie zeichnen
-*/
-
-aimGraphics.lineStyle(
-2,
-0xffffff,
-0.8
-);
-
-aimGraphics.beginPath();
-
-aimGraphics.moveTo(
-ballX,
-ballY
-);
-
-aimGraphics.lineTo(
-aimX,
-aimY
-);
-
-aimGraphics.strokePath();
-
-
-/*
-* kleines Zielkreuz
-*/
-
-aimGraphics.lineStyle(
-1,
-0xffffff,
-0.5
-);
-
-aimGraphics.strokeCircle(
-aimX,
-aimY,
-7
-);
 }
+);
 
 
-shoot(pointerX, pointerY) {
+this.input.on(
+'pointermove',
+function(pointer) {
 
-/*
-* Kugel darf nicht
-* während der Bewegung erneut
-* geschossen werden.
-*/
-
-const vx =
-whiteBall.velocity.x;
-
-const vy =
-whiteBall.velocity.y;
-
-const currentSpeed =
-Math.sqrt(vx * vx + vy * vy);
-
-if (currentSpeed > 0.15) {
+if (!dragging) {
 return;
 }
 
+drawAimLine(
+pointer.worldX,
+pointer.worldY
+);
+}
+);
 
-/*
-* Zugvektor
-*/
 
-let dx =
-pointerX -
+this.input.on(
+'pointerup',
+function(pointer) {
+
+if (!dragging) {
+return;
+}
+
+dragging = false;
+
+aimGraphic.clear();
+
+shoot(
+pointer.worldX,
+pointer.worldY
+);
+}
+);
+}
+
+
+/* =========================================================
+STOß
+========================================================= */
+
+function shoot(targetX, targetY) {
+
+const dx =
+targetX -
 whiteBall.position.x;
 
-let dy =
-pointerY -
+const dy =
+targetY -
 whiteBall.position.y;
 
 let distance =
 Math.sqrt(dx * dx + dy * dy);
 
-
-if (distance < 5) return;
-
-
-if (distance > MAX_DRAG) {
-
-dx =
-dx / distance * MAX_DRAG;
-
-dy =
-dy / distance * MAX_DRAG;
-
-distance = MAX_DRAG;
+if (distance < 5) {
+return;
 }
+
+/*
+Maximale Stärke begrenzen
+*/
+
+distance =
+Math.min(
+distance,
+MAX_DRAG
+);
+
+const factor =
+distance /
+Math.sqrt(dx * dx + dy * dy);
+
+const limitedDX =
+dx * factor;
+
+const limitedDY =
+dy * factor;
 
 
 /*
-* ENTGEGENGESETZTE RICHTUNG
+Gegenrichtung des Ziehens.
 */
 
 const forceX =
--dx * FORCE_SCALE;
+-limitedDX *
+FORCE_SCALE;
 
 const forceY =
--dy * FORCE_SCALE;
+-limitedDY *
+FORCE_SCALE;
 
 
-/*
-* IMPULS / KRAFT
-*/
+thisMatterApplyForce(
+forceX,
+forceY
+);
+}
 
-this.matter.body.applyForce(
+
+/* =========================================================
+FORCE
+========================================================= */
+
+function thisMatterApplyForce(
+forceX,
+forceY
+) {
+
+whiteBall.isSleeping = false;
+
+Phaser.Physics.Matter.Matter.Body.applyForce(
+
 whiteBall,
+
 whiteBall.position,
+
 {
 x: forceX,
 y: forceY
@@ -472,23 +431,119 @@ y: forceY
 }
 
 
-update() {
+/* =========================================================
+AIM-LINIE
+========================================================= */
 
-if (!whiteBall) return;
+function drawAimLine(
+pointerX,
+pointerY
+) {
+
+aimGraphic.clear();
+
+const ballX =
+whiteBall.position.x;
+
+const ballY =
+whiteBall.position.y;
+
+
+let dx =
+pointerX - ballX;
+
+let dy =
+pointerY - ballY;
+
+
+let distance =
+Math.sqrt(dx * dx + dy * dy);
+
+
+if (distance < 1) {
+return;
+}
+
+
+if (distance > MAX_DRAG) {
+
+const scale =
+MAX_DRAG /
+distance;
+
+dx *= scale;
+dy *= scale;
+}
 
 
 /*
-* Kugel zeichnen
+Linie zeigt die spätere Stoßrichtung.
 */
 
-ballGraphics.clear();
+aimGraphic.lineStyle(
+2,
+0xffffff,
+0.8
+);
 
-ballGraphics.fillStyle(
+aimGraphic.beginPath();
+
+aimGraphic.moveTo(
+ballX,
+ballY
+);
+
+aimGraphic.lineTo(
+ballX - dx,
+ballY - dy
+);
+
+aimGraphic.strokePath();
+}
+
+
+/* =========================================================
+UPDATE
+========================================================= */
+
+function update() {
+
+if (!whiteBall) {
+return;
+}
+
+
+/* Kugel zeichnen */
+
+ballGraphic.clear();
+
+
+/*
+Schatten
+*/
+
+ballGraphic.fillStyle(
+0x000000,
+0.25
+);
+
+ballGraphic.fillCircle(
+whiteBall.position.x + 2,
+whiteBall.position.y + 2,
+BALL_RADIUS + 1
+);
+
+
+/*
+Weiße Kugel
+*/
+
+ballGraphic.fillStyle(
 0xffffff,
 1
 );
 
-ballGraphics.fillCircle(
+ballGraphic.fillCircle(
 whiteBall.position.x,
 whiteBall.position.y,
 BALL_RADIUS
@@ -496,85 +551,20 @@ BALL_RADIUS
 
 
 /*
-* Kugel-Schatten
+Kleiner Glanzpunkt
 */
 
-ballGraphics.lineStyle(
-1,
-0xbbbbbb,
-1
-);
-
-ballGraphics.strokeCircle(
-whiteBall.position.x,
-whiteBall.position.y,
-BALL_RADIUS
-);
-
-
-/*
-* kleiner Glanzpunkt
-*/
-
-ballGraphics.fillStyle(
+ballGraphic.fillStyle(
 0xffffff,
 0.9
 );
 
-ballGraphics.fillCircle(
+ballGraphic.fillCircle(
 whiteBall.position.x - 3,
 whiteBall.position.y - 3,
 2
 );
 }
-}
-
-
-/* =========================================================
-PHASER
-========================================================= */
-
-const config = {
-
-type: Phaser.AUTO,
-
-width: TABLE_W + MARGIN_X * 2,
-
-height: TABLE_H + MARGIN_Y * 2,
-
-backgroundColor: "#111111",
-
-scale: {
-mode: Phaser.Scale.FIT,
-autoCenter: Phaser.Scale.CENTER_BOTH
-},
-
-physics: {
-
-default: "matter",
-
-matter: {
-
-gravity: {
-x: 0,
-y: 0
-},
-
-enableSleeping: true,
-
-positionIterations: 12,
-
-velocityIterations: 10,
-
-constraintIterations: 4
-}
-},
-
-scene: PoolScene
-};
-
-
-game = new Phaser.Game(config);
 
 </script>
 
