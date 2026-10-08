@@ -34,6 +34,11 @@ margin: auto;
 
 <script>
 
+/* =========================================================
+OOZ BALL
+SCHRITT 2 – KÖ + SCHUSS
+========================================================= */
+
 const GAME_W = 900;
 const GAME_H = 500;
 
@@ -50,14 +55,20 @@ const BALL_R = 10;
 
 let ball;
 let ballGraphic;
+let cueGraphic;
 let aimGraphic;
 
 let dragging = false;
 
+let dragDistance = 0;
+let shotAngle = 0;
 
-/* ================================
+const MAX_DRAG = 180;
+
+
+/* =========================================================
 PHASER
-================================ */
+========================================================= */
 
 const config = {
 
@@ -69,9 +80,11 @@ height: GAME_H,
 backgroundColor: '#101010',
 
 physics: {
+
 default: 'matter',
 
 matter: {
+
 gravity: {
 x: 0,
 y: 0
@@ -84,7 +97,9 @@ debug: false
 },
 
 scene: {
+
 create: create,
+
 update: update
 }
 };
@@ -92,20 +107,29 @@ update: update
 new Phaser.Game(config);
 
 
-/* ================================
+/* =========================================================
 CREATE
-================================ */
+========================================================= */
 
 function create() {
 
 const scene = this;
 
-/* TABLE */
 
-const table = scene.add.graphics();
+/* =====================================================
+TISCH
+===================================================== */
 
-// Schatten
-table.fillStyle(0x000000, 0.35);
+const table =
+scene.add.graphics();
+
+
+/* Schatten */
+
+table.fillStyle(
+0x000000,
+0.35
+);
 
 table.fillRoundedRect(
 TABLE_X - 32,
@@ -115,8 +139,13 @@ TABLE_H + 64,
 18
 );
 
-// Außenrahmen
-table.fillStyle(0x171717, 1);
+
+/* Außenrahmen */
+
+table.fillStyle(
+0x171717,
+1
+);
 
 table.fillRoundedRect(
 TABLE_X - 28,
@@ -126,7 +155,9 @@ TABLE_H + 56,
 16
 );
 
-// Goldkante
+
+/* Goldkante */
+
 table.lineStyle(
 4,
 0xc9a34a,
@@ -141,7 +172,9 @@ TABLE_H + 48,
 13
 );
 
-// Bande
+
+/* Bande */
+
 table.fillStyle(
 0x4a2c19,
 1
@@ -155,7 +188,9 @@ TABLE_H + 36,
 10
 );
 
-// grünes Spielfeld
+
+/* grünes Spielfeld */
+
 table.fillStyle(
 0x126247,
 1
@@ -168,7 +203,9 @@ TABLE_W,
 TABLE_H
 );
 
-// Spielfeldkante
+
+/* Spielfeldkante */
+
 table.lineStyle(
 3,
 0x0b3e30,
@@ -183,7 +220,9 @@ TABLE_H
 );
 
 
-/* POCKETS */
+/* =====================================================
+TASCHEN
+===================================================== */
 
 drawPocket(
 scene,
@@ -222,14 +261,19 @@ TABLE_Y + TABLE_H
 );
 
 
-/* RAILS */
+/* =====================================================
+BANDEN
+===================================================== */
 
 createRails(scene);
 
 
-/* WHITE BALL */
+/* =====================================================
+WEISSE KUGEL
+===================================================== */
 
-ball = scene.matter.add.circle(
+ball =
+scene.matter.add.circle(
 
 TABLE_X + 200,
 
@@ -239,213 +283,33 @@ BALL_R,
 
 {
 restitution: 0.92,
+
 friction: 0.01,
+
 frictionAir: 0.025,
+
 density: 0.004
 }
 );
 
 
-/* BALL GRAPHIC */
+/* =====================================================
+GRAFIKEN
+===================================================== */
 
 ballGraphic =
 scene.add.graphics();
 
-drawBall();
-
-
-/* AIM LINE */
+cueGraphic =
+scene.add.graphics();
 
 aimGraphic =
 scene.add.graphics();
 
 
-/* POINTER DOWN */
-
-scene.input.on(
-'pointerdown',
-function(pointer) {
-
-const dx =
-pointer.worldX -
-ball.position.x;
-
-const dy =
-pointer.worldY -
-ball.position.y;
-
-const distance =
-Math.sqrt(
-dx * dx +
-dy * dy
-);
-
-if (distance <= 35) {
-dragging = true;
-}
-}
-);
-
-
-/* POINTER MOVE */
-
-scene.input.on(
-'pointermove',
-function(pointer) {
-
-if (!dragging) {
-return;
-}
-
-const dx =
-pointer.worldX -
-ball.position.x;
-
-const dy =
-pointer.worldY -
-ball.position.y;
-
-const distance =
-Math.sqrt(
-dx * dx +
-dy * dy
-);
-
-const maxDistance = 180;
-
-const power =
-Math.min(
-distance,
-maxDistance
-);
-
-const angle =
-Math.atan2(
-dy,
-dx
-);
-
-const endX =
-ball.position.x -
-Math.cos(angle) * power;
-
-const endY =
-ball.position.y -
-Math.sin(angle) * power;
-
-
-aimGraphic.clear();
-
-
-// weiße Ziellinie
-aimGraphic.lineStyle(
-2,
-0xffffff,
-0.9
-);
-
-aimGraphic.beginPath();
-
-aimGraphic.moveTo(
-ball.position.x,
-ball.position.y
-);
-
-aimGraphic.lineTo(
-endX,
-endY
-);
-
-aimGraphic.strokePath();
-
-
-// goldene Kraftanzeige
-aimGraphic.lineStyle(
-5,
-0xc9a34a,
-0.8
-);
-
-aimGraphic.beginPath();
-
-aimGraphic.moveTo(
-ball.position.x,
-ball.position.y
-);
-
-aimGraphic.lineTo(
-ball.position.x -
-Math.cos(angle) * power * 0.45,
-
-ball.position.y -
-Math.sin(angle) * power * 0.45
-);
-
-aimGraphic.strokePath();
-}
-);
-
-
-/* POINTER UP */
-
-scene.input.on(
-'pointerup',
-function(pointer) {
-
-if (!dragging) {
-return;
-}
-
-dragging = false;
-
-aimGraphic.clear();
-
-
-const dx =
-pointer.worldX -
-ball.position.x;
-
-const dy =
-pointer.worldY -
-ball.position.y;
-
-const distance =
-Math.sqrt(
-dx * dx +
-dy * dy
-);
-
-if (distance < 5) {
-return;
-}
-
-
-const power =
-Math.min(
-distance,
-180
-);
-
-const force =
-power * 0.00007;
-
-
-scene.matter.body.applyForce(
-
-ball,
-
-ball.position,
-
-{
-x: -dx * force,
-y: -dy * force
-}
-);
-}
-);
-
-
-/* LOGO */
+/* =====================================================
+LOGO
+===================================================== */
 
 scene.add.text(
 
@@ -457,8 +321,11 @@ TABLE_X,
 
 {
 fontFamily: 'Arial',
+
 fontSize: '24px',
+
 fontStyle: 'bold',
+
 color: '#d6b15a'
 }
 );
@@ -474,17 +341,216 @@ TABLE_X + TABLE_W - 120,
 
 {
 fontFamily: 'Arial',
+
 fontSize: '14px',
+
 color: '#ffffff',
+
 alpha: 0.65
+}
+);
+
+
+/* =====================================================
+MAUS / TOUCH START
+===================================================== */
+
+scene.input.on(
+'pointerdown',
+
+function(pointer) {
+
+if (!ball) {
+return;
+}
+
+
+/* Kugel darf nur geschossen werden,
+wenn sie fast stillsteht */
+
+const speed =
+Math.sqrt(
+ball.velocity.x *
+ball.velocity.x +
+ball.velocity.y *
+ball.velocity.y
+);
+
+if (speed > 0.02) {
+return;
+}
+
+
+const dx =
+pointer.worldX -
+ball.position.x;
+
+const dy =
+pointer.worldY -
+ball.position.y;
+
+const distance =
+Math.sqrt(
+dx * dx +
+dy * dy
+);
+
+
+if (distance <= 35) {
+
+dragging = true;
+
+dragDistance = 0;
+
+shotAngle =
+Math.atan2(
+dy,
+dx
+);
+}
+}
+);
+
+
+/* =====================================================
+MAUS / TOUCH BEWEGUNG
+===================================================== */
+
+scene.input.on(
+'pointermove',
+
+function(pointer) {
+
+if (!dragging) {
+return;
+}
+
+
+const dx =
+pointer.worldX -
+ball.position.x;
+
+const dy =
+pointer.worldY -
+ball.position.y;
+
+
+const distance =
+Math.sqrt(
+dx * dx +
+dy * dy
+);
+
+
+dragDistance =
+Math.min(
+distance,
+MAX_DRAG
+);
+
+
+shotAngle =
+Math.atan2(
+dy,
+dx
+);
+
+
+drawCue();
+
+
+drawAimLine();
+}
+);
+
+
+/* =====================================================
+SCHUSS
+===================================================== */
+
+scene.input.on(
+'pointerup',
+
+function(pointer) {
+
+if (!dragging) {
+return;
+}
+
+
+dragging = false;
+
+
+cueGraphic.clear();
+
+aimGraphic.clear();
+
+
+const dx =
+pointer.worldX -
+ball.position.x;
+
+const dy =
+pointer.worldY -
+ball.position.y;
+
+
+const distance =
+Math.sqrt(
+dx * dx +
+dy * dy
+);
+
+
+const power =
+Math.min(
+distance,
+MAX_DRAG
+);
+
+
+if (power < 5) {
+
+dragDistance = 0;
+
+return;
+}
+
+
+/*
+Kraft entgegen der
+Zurückzieh-Richtung
+*/
+
+const force =
+power * 0.00007;
+
+
+scene.matter.body.applyForce(
+
+ball,
+
+ball.position,
+
+{
+x:
+-dx * force,
+
+y:
+-dy * force
+}
+);
+
+
+dragDistance = 0;
 }
 );
 }
 
 
-/* ================================
-POCKET
-================================ */
+/* =========================================================
+TASCHEN
+========================================================= */
 
 function drawPocket(
 scene,
@@ -495,7 +561,7 @@ y
 const g =
 scene.add.graphics();
 
-// äußerer Rand
+
 g.fillStyle(
 0x0b0b0b,
 1
@@ -507,7 +573,7 @@ y,
 POCKET_R + 5
 );
 
-// Tasche
+
 g.fillStyle(
 0x000000,
 1
@@ -519,7 +585,7 @@ y,
 POCKET_R
 );
 
-// innere Kante
+
 g.lineStyle(
 2,
 0x292929,
@@ -534,104 +600,161 @@ POCKET_R
 }
 
 
-/* ================================
-RAILS
-================================ */
+/* =========================================================
+BANDEN
+========================================================= */
 
 function createRails(scene) {
 
-const gap = POCKET_R * 2.2;
+const gap =
+POCKET_R * 2.2;
 
 const mid =
 TABLE_W / 2;
 
 
-/* TOP */
+/* OBEN */
 
 addRail(
 scene,
-TABLE_X + (mid - gap) / 2,
-TABLE_Y - RAIL / 2,
-mid - gap,
-RAIL
-);
-
-addRail(
-scene,
-TABLE_X + mid +
+TABLE_X +
 (mid - gap) / 2,
-TABLE_Y - RAIL / 2,
+
+TABLE_Y -
+RAIL / 2,
+
 mid - gap,
+
 RAIL
 );
 
 
-/* BOTTOM */
-
 addRail(
 scene,
-TABLE_X + (mid - gap) / 2,
-TABLE_Y + TABLE_H + RAIL / 2,
-mid - gap,
-RAIL
-);
 
-addRail(
-scene,
-TABLE_X + mid +
+TABLE_X +
+mid +
 (mid - gap) / 2,
-TABLE_Y + TABLE_H + RAIL / 2,
+
+TABLE_Y -
+RAIL / 2,
+
 mid - gap,
+
 RAIL
 );
 
 
-/* LEFT / RIGHT */
+/* UNTEN */
+
+addRail(
+scene,
+
+TABLE_X +
+(mid - gap) / 2,
+
+TABLE_Y +
+TABLE_H +
+RAIL / 2,
+
+mid - gap,
+
+RAIL
+);
+
+
+addRail(
+scene,
+
+TABLE_X +
+mid +
+(mid - gap) / 2,
+
+TABLE_Y +
+TABLE_H +
+RAIL / 2,
+
+mid - gap,
+
+RAIL
+);
+
+
+/* SEITEN */
 
 const sideLength =
-TABLE_H / 2 - gap;
+TABLE_H / 2 -
+gap;
 
 
 addRail(
 scene,
-TABLE_X - RAIL / 2,
-TABLE_Y + sideLength / 2,
-RAIL,
-sideLength
-);
 
-addRail(
-scene,
-TABLE_X - RAIL / 2,
-TABLE_Y + TABLE_H -
+TABLE_X -
+RAIL / 2,
+
+TABLE_Y +
 sideLength / 2,
+
 RAIL,
+
 sideLength
 );
 
 
 addRail(
 scene,
-TABLE_X + TABLE_W + RAIL / 2,
-TABLE_Y + sideLength / 2,
-RAIL,
-sideLength
-);
 
-addRail(
-scene,
-TABLE_X + TABLE_W + RAIL / 2,
-TABLE_Y + TABLE_H -
+TABLE_X -
+RAIL / 2,
+
+TABLE_Y +
+TABLE_H -
 sideLength / 2,
+
 RAIL,
+
+sideLength
+);
+
+
+addRail(
+scene,
+
+TABLE_X +
+TABLE_W +
+RAIL / 2,
+
+TABLE_Y +
+sideLength / 2,
+
+RAIL,
+
+sideLength
+);
+
+
+addRail(
+scene,
+
+TABLE_X +
+TABLE_W +
+RAIL / 2,
+
+TABLE_Y +
+TABLE_H -
+sideLength / 2,
+
+RAIL,
+
 sideLength
 );
 }
 
 
-/* ================================
-MATTER RAIL
-================================ */
+/* =========================================================
+MATTER BANDE
+========================================================= */
 
 function addRail(
 scene,
@@ -650,23 +773,327 @@ height,
 
 {
 isStatic: true,
+
 restitution: 0.95,
+
 friction: 0
 }
 );
 }
 
 
-/* ================================
-BALL
-================================ */
+/* =========================================================
+KÖ ZEICHNEN
+========================================================= */
+
+function drawCue() {
+
+cueGraphic.clear();
+
+
+if (!dragging) {
+return;
+}
+
+
+/*
+Richtung vom Ball weg
+*/
+
+const dirX =
+Math.cos(shotAngle);
+
+const dirY =
+Math.sin(shotAngle);
+
+
+/*
+Köspitze bleibt nahe
+an der weißen Kugel.
+
+Je stärker zurückgezogen,
+desto weiter wandert der Kö
+nach hinten.
+*/
+
+const tipDistance =
+BALL_R + 7;
+
+
+const cueLength =
+210;
+
+
+const pull =
+dragDistance;
+
+
+const tipX =
+ball.position.x -
+dirX *
+tipDistance -
+dirX *
+pull;
+
+
+const tipY =
+ball.position.y -
+dirY *
+tipDistance -
+dirY *
+pull;
+
+
+const buttX =
+tipX +
+dirX *
+cueLength;
+
+
+const buttY =
+tipY +
+dirY *
+cueLength;
+
+
+/* =====================================================
+CUE SCHATTEN
+===================================================== */
+
+cueGraphic.lineStyle(
+10,
+0x000000,
+0.25
+);
+
+cueGraphic.beginPath();
+
+cueGraphic.moveTo(
+tipX + 3,
+tipY + 3
+);
+
+cueGraphic.lineTo(
+buttX + 3,
+buttY + 3
+);
+
+cueGraphic.strokePath();
+
+
+/* =====================================================
+CUE KÖRPER
+===================================================== */
+
+cueGraphic.lineStyle(
+7,
+0x8b5a2b,
+1
+);
+
+cueGraphic.beginPath();
+
+cueGraphic.moveTo(
+tipX,
+tipY
+);
+
+cueGraphic.lineTo(
+buttX,
+buttY
+);
+
+cueGraphic.strokePath();
+
+
+/* =====================================================
+GOLDENE LINIE
+===================================================== */
+
+cueGraphic.lineStyle(
+2,
+0xd6b15a,
+1
+);
+
+cueGraphic.beginPath();
+
+cueGraphic.moveTo(
+tipX,
+tipY
+);
+
+cueGraphic.lineTo(
+buttX,
+buttY
+);
+
+cueGraphic.strokePath();
+
+
+/* =====================================================
+CUE SPITZE
+===================================================== */
+
+cueGraphic.fillStyle(
+0xe6e6e6,
+1
+);
+
+cueGraphic.fillCircle(
+tipX,
+tipY,
+4
+);
+
+
+/* =====================================================
+GRIFF
+===================================================== */
+
+cueGraphic.lineStyle(
+11,
+0x171717,
+1
+);
+
+cueGraphic.beginPath();
+
+cueGraphic.moveTo(
+buttX - dirX * 15,
+buttY - dirY * 15
+);
+
+cueGraphic.lineTo(
+buttX,
+buttY
+);
+
+cueGraphic.strokePath();
+
+
+/* =====================================================
+GOLDENER ABSCHLUSS
+===================================================== */
+
+cueGraphic.fillStyle(
+0xd6b15a,
+1
+);
+
+cueGraphic.fillCircle(
+buttX,
+buttY,
+5
+);
+}
+
+
+/* =========================================================
+ZIELLINIE
+========================================================= */
+
+function drawAimLine() {
+
+aimGraphic.clear();
+
+
+if (!dragging) {
+return;
+}
+
+
+const dirX =
+Math.cos(shotAngle);
+
+const dirY =
+Math.sin(shotAngle);
+
+
+const lineLength =
+260;
+
+
+const endX =
+ball.position.x +
+dirX *
+lineLength;
+
+
+const endY =
+ball.position.y +
+dirY *
+lineLength;
+
+
+aimGraphic.lineStyle(
+2,
+0xffffff,
+0.55
+);
+
+
+aimGraphic.beginPath();
+
+aimGraphic.moveTo(
+ball.position.x,
+ball.position.y
+);
+
+aimGraphic.lineTo(
+endX,
+endY
+);
+
+aimGraphic.strokePath();
+
+
+/* Kraftanzeige */
+
+const powerLength =
+dragDistance * 0.7;
+
+
+aimGraphic.lineStyle(
+4,
+0xc9a34a,
+0.85
+);
+
+
+aimGraphic.beginPath();
+
+aimGraphic.moveTo(
+ball.position.x,
+ball.position.y
+);
+
+aimGraphic.lineTo(
+
+ball.position.x +
+dirX *
+powerLength,
+
+ball.position.y +
+dirY *
+powerLength
+);
+
+aimGraphic.strokePath();
+}
+
+
+/* =========================================================
+WEISSE KUGEL
+========================================================= */
 
 function drawBall() {
 
 ballGraphic.clear();
 
 
-// Schatten
+/* Schatten */
+
 ballGraphic.fillStyle(
 0x000000,
 0.25
@@ -675,12 +1102,15 @@ ballGraphic.fillStyle(
 ballGraphic.fillCircle(
 
 ball.position.x + 2,
+
 ball.position.y + 2,
+
 BALL_R + 2
 );
 
 
-// Kugel
+/* Kugel */
+
 ballGraphic.fillStyle(
 0xffffff,
 1
@@ -689,12 +1119,15 @@ ballGraphic.fillStyle(
 ballGraphic.fillCircle(
 
 ball.position.x,
+
 ball.position.y,
+
 BALL_R
 );
 
 
-// Glanz
+/* Glanz */
+
 ballGraphic.fillStyle(
 0xeaf4ff,
 1
@@ -703,15 +1136,17 @@ ballGraphic.fillStyle(
 ballGraphic.fillCircle(
 
 ball.position.x - 3,
+
 ball.position.y - 3,
+
 2
 );
 }
 
 
-/* ================================
+/* =========================================================
 UPDATE
-================================ */
+========================================================= */
 
 function update() {
 
@@ -719,7 +1154,80 @@ if (!ball) {
 return;
 }
 
+
+/*
+Weiße Kugel neu einsetzen,
+falls sie durch eine Tasche
+vom Tisch fällt.
+*/
+
+if (
+
+ball.position.x <
+TABLE_X - 50 ||
+
+ball.position.x >
+TABLE_X +
+TABLE_W +
+50 ||
+
+ball.position.y <
+TABLE_Y - 50 ||
+
+ball.position.y >
+TABLE_Y +
+TABLE_H +
+50
+
+) {
+
+this.matter.body.setPosition(
+
+ball,
+
+{
+x:
+TABLE_X + 200,
+
+y:
+TABLE_Y +
+TABLE_H / 2
+}
+);
+
+
+this.matter.body.setVelocity(
+
+ball,
+
+{
+x: 0,
+y: 0
+}
+);
+}
+
+
 drawBall();
+
+
+/*
+Kö nur anzeigen,
+wenn gezogen wird.
+*/
+
+if (dragging) {
+
+drawCue();
+
+drawAimLine();
+
+} else {
+
+cueGraphic.clear();
+
+aimGraphic.clear();
+}
 }
 
 </script>
