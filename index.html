@@ -1034,21 +1034,34 @@ SET VELOCITY
 
 function thisMatterSetVelocity(speed) {
 
-Phaser.Physics.Matter.Matter.Body.setVelocity(
+const MatterLib =
+Phaser.Physics.Matter.Matter;
+
+// Kugel unbedingt aufwecken
+MatterLib.Sleeping.set(
+ball,
+false
+);
+
+// Geschwindigkeit setzen
+MatterLib.Body.setVelocity(
 
 ball,
 
 {
-x:
-shotDirection.x *
-speed,
-
-y:
-shotDirection.y *
-speed
+x: shotDirection.x * speed,
+y: shotDirection.y * speed
 }
 );
+
+// Noch einmal sicherstellen,
+// dass sie nicht schläft
+MatterLib.Sleeping.set(
+ball,
+false
+);
 }
+
 
 
 /* =====================================================
