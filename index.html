@@ -55,9 +55,9 @@ let aimGraphic;
 let dragging = false;
 
 
-/* =========================================================
+/* ================================
 PHASER
-========================================================= */
+================================ */
 
 const config = {
 
@@ -69,11 +69,9 @@ height: GAME_H,
 backgroundColor: '#101010',
 
 physics: {
-
 default: 'matter',
 
 matter: {
-
 gravity: {
 x: 0,
 y: 0
@@ -86,38 +84,28 @@ debug: false
 },
 
 scene: {
-
 create: create,
-
 update: update
 }
 };
 
-
 new Phaser.Game(config);
 
 
-/* =========================================================
+/* ================================
 CREATE
-========================================================= */
+================================ */
 
 function create() {
 
 const scene = this;
 
-
-/* =====================================================
-TABLE GRAPHICS
-===================================================== */
+/* TABLE */
 
 const table = scene.add.graphics();
 
-
 // Schatten
-table.fillStyle(
-0x000000,
-0.35
-);
+table.fillStyle(0x000000, 0.35);
 
 table.fillRoundedRect(
 TABLE_X - 32,
@@ -127,12 +115,8 @@ TABLE_H + 64,
 18
 );
 
-
-// Dunkler Außenrahmen
-table.fillStyle(
-0x171717,
-1
-);
+// Außenrahmen
+table.fillStyle(0x171717, 1);
 
 table.fillRoundedRect(
 TABLE_X - 28,
@@ -142,8 +126,7 @@ TABLE_H + 56,
 16
 );
 
-
-// Goldene Zierkante
+// Goldkante
 table.lineStyle(
 4,
 0xc9a34a,
@@ -158,8 +141,7 @@ TABLE_H + 48,
 13
 );
 
-
-// Holz-/Bandenbereich
+// Bande
 table.fillStyle(
 0x4a2c19,
 1
@@ -173,8 +155,7 @@ TABLE_H + 36,
 10
 );
 
-
-// Spielfläche
+// grünes Spielfeld
 table.fillStyle(
 0x126247,
 1
@@ -187,8 +168,7 @@ TABLE_W,
 TABLE_H
 );
 
-
-// feine Spielfeldkante
+// Spielfeldkante
 table.lineStyle(
 3,
 0x0b3e30,
@@ -203,9 +183,7 @@ TABLE_H
 );
 
 
-/* =====================================================
-TASCHEN
-===================================================== */
+/* POCKETS */
 
 drawPocket(
 scene,
@@ -244,16 +222,12 @@ TABLE_Y + TABLE_H
 );
 
 
-/* =====================================================
-BANDEN
-===================================================== */
+/* RAILS */
 
 createRails(scene);
 
 
-/* =====================================================
-WEISSE KUGEL
-===================================================== */
+/* WHITE BALL */
 
 ball = scene.matter.add.circle(
 
@@ -264,40 +238,29 @@ TABLE_Y + TABLE_H / 2,
 BALL_R,
 
 {
-
 restitution: 0.92,
-
 friction: 0.01,
-
 frictionAir: 0.025,
-
 density: 0.004
 }
 );
 
 
-/* =====================================================
-KUGEL GRAFIK
-===================================================== */
+/* BALL GRAPHIC */
 
 ballGraphic =
 scene.add.graphics();
 
-
 drawBall();
 
 
-/* =====================================================
-ZIELLINIE
-===================================================== */
+/* AIM LINE */
 
 aimGraphic =
 scene.add.graphics();
 
 
-/* =====================================================
-POINTER DOWN
-===================================================== */
+/* POINTER DOWN */
 
 scene.input.on(
 'pointerdown',
@@ -317,18 +280,14 @@ dx * dx +
 dy * dy
 );
 
-
 if (distance <= 35) {
-
 dragging = true;
 }
 }
 );
 
 
-/* =====================================================
-POINTER MOVE
-===================================================== */
+/* POINTER MOVE */
 
 scene.input.on(
 'pointermove',
@@ -338,7 +297,6 @@ if (!dragging) {
 return;
 }
 
-
 const dx =
 pointer.worldX -
 ball.position.x;
@@ -347,16 +305,13 @@ const dy =
 pointer.worldY -
 ball.position.y;
 
-
 const distance =
 Math.sqrt(
 dx * dx +
 dy * dy
 );
 
-
 const maxDistance = 180;
-
 
 const power =
 Math.min(
@@ -364,18 +319,15 @@ distance,
 maxDistance
 );
 
-
 const angle =
 Math.atan2(
 dy,
 dx
 );
 
-
 const endX =
 ball.position.x -
 Math.cos(angle) * power;
-
 
 const endY =
 ball.position.y -
@@ -385,48 +337,41 @@ Math.sin(angle) * power;
 aimGraphic.clear();
 
 
-// Haupt-Ziellinie
+// weiße Ziellinie
 aimGraphic.lineStyle(
 2,
 0xffffff,
 0.9
 );
 
-
 aimGraphic.beginPath();
-
 
 aimGraphic.moveTo(
 ball.position.x,
 ball.position.y
 );
-
 
 aimGraphic.lineTo(
 endX,
 endY
 );
 
-
 aimGraphic.strokePath();
 
 
-// Power-Anzeige
+// goldene Kraftanzeige
 aimGraphic.lineStyle(
 5,
 0xc9a34a,
 0.8
 );
 
-
 aimGraphic.beginPath();
-
 
 aimGraphic.moveTo(
 ball.position.x,
 ball.position.y
 );
-
 
 aimGraphic.lineTo(
 ball.position.x -
@@ -436,15 +381,12 @@ ball.position.y -
 Math.sin(angle) * power * 0.45
 );
 
-
 aimGraphic.strokePath();
 }
 );
 
 
-/* =====================================================
-POINTER UP
-===================================================== */
+/* POINTER UP */
 
 scene.input.on(
 'pointerup',
@@ -454,9 +396,7 @@ if (!dragging) {
 return;
 }
 
-
 dragging = false;
-
 
 aimGraphic.clear();
 
@@ -469,13 +409,11 @@ const dy =
 pointer.worldY -
 ball.position.y;
 
-
 const distance =
 Math.sqrt(
 dx * dx +
 dy * dy
 );
-
 
 if (distance < 5) {
 return;
@@ -488,7 +426,6 @@ distance,
 180
 );
 
-
 const force =
 power * 0.00007;
 
@@ -500,9 +437,7 @@ ball,
 ball.position,
 
 {
-
 x: -dx * force,
-
 y: -dy * force
 }
 );
@@ -510,9 +445,7 @@ y: -dy * force
 );
 
 
-/* =====================================================
-LOGO
-===================================================== */
+/* LOGO */
 
 scene.add.text(
 
@@ -523,13 +456,9 @@ TABLE_X,
 'OOZ BALL',
 
 {
-
 fontFamily: 'Arial',
-
 fontSize: '24px',
-
 fontStyle: 'bold',
-
 color: '#d6b15a'
 }
 );
@@ -544,22 +473,18 @@ TABLE_X + TABLE_W - 120,
 '8 BALL',
 
 {
-
 fontFamily: 'Arial',
-
 fontSize: '14px',
-
 color: '#ffffff',
-
 alpha: 0.65
 }
 );
 }
 
 
-/* =========================================================
+/* ================================
 POCKET
-========================================================= */
+================================ */
 
 function drawPocket(
 scene,
@@ -569,7 +494,6 @@ y
 
 const g =
 scene.add.graphics();
-
 
 // äußerer Rand
 g.fillStyle(
@@ -583,7 +507,6 @@ y,
 POCKET_R + 5
 );
 
-
 // Tasche
 g.fillStyle(
 0x000000,
@@ -596,8 +519,7 @@ y,
 POCKET_R
 );
 
-
-// leichte innere Kante
+// innere Kante
 g.lineStyle(
 2,
 0x292929,
@@ -612,9 +534,9 @@ POCKET_R
 }
 
 
-/* =========================================================
+/* ================================
 RAILS
-========================================================= */
+================================ */
 
 function createRails(scene) {
 
@@ -624,7 +546,7 @@ const mid =
 TABLE_W / 2;
 
 
-/* ---------------- TOP ---------------- */
+/* TOP */
 
 addRail(
 scene,
@@ -633,7 +555,6 @@ TABLE_Y - RAIL / 2,
 mid - gap,
 RAIL
 );
-
 
 addRail(
 scene,
@@ -645,7 +566,7 @@ RAIL
 );
 
 
-/* ---------------- BOTTOM ---------------- */
+/* BOTTOM */
 
 addRail(
 scene,
@@ -654,7 +575,6 @@ TABLE_Y + TABLE_H + RAIL / 2,
 mid - gap,
 RAIL
 );
-
 
 addRail(
 scene,
@@ -666,7 +586,7 @@ RAIL
 );
 
 
-/* ---------------- LEFT ---------------- */
+/* LEFT / RIGHT */
 
 const sideLength =
 TABLE_H / 2 - gap;
@@ -680,7 +600,6 @@ RAIL,
 sideLength
 );
 
-
 addRail(
 scene,
 TABLE_X - RAIL / 2,
@@ -691,8 +610,6 @@ sideLength
 );
 
 
-/* ---------------- RIGHT ---------------- */
-
 addRail(
 scene,
 TABLE_X + TABLE_W + RAIL / 2,
@@ -700,7 +617,6 @@ TABLE_Y + sideLength / 2,
 RAIL,
 sideLength
 );
-
 
 addRail(
 scene,
@@ -713,9 +629,9 @@ sideLength
 }
 
 
-/* =========================================================
+/* ================================
 MATTER RAIL
-========================================================= */
+================================ */
 
 function addRail(
 scene,
@@ -728,28 +644,22 @@ height
 scene.matter.add.rectangle(
 
 x,
-
 y,
-
 width,
-
 height,
 
 {
-
 isStatic: true,
-
 restitution: 0.95,
-
 friction: 0
 }
 );
 }
 
 
-/* =========================================================
+/* ================================
 BALL
-========================================================= */
+================================ */
 
 function drawBall() {
 
@@ -765,9 +675,7 @@ ballGraphic.fillStyle(
 ballGraphic.fillCircle(
 
 ball.position.x + 2,
-
 ball.position.y + 2,
-
 BALL_R + 2
 );
 
@@ -781,9 +689,7 @@ ballGraphic.fillStyle(
 ballGraphic.fillCircle(
 
 ball.position.x,
-
 ball.position.y,
-
 BALL_R
 );
 
@@ -797,17 +703,15 @@ ballGraphic.fillStyle(
 ballGraphic.fillCircle(
 
 ball.position.x - 3,
-
 ball.position.y - 3,
-
 2
 );
 }
 
 
-/* =========================================================
+/* ================================
 UPDATE
-========================================================= */
+================================ */
 
 function update() {
 
