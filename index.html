@@ -2,815 +2,873 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<meta name="viewport"
+content="width=device-width,
+initial-scale=1.0,
+maximum-scale=1.0,
+user-scalable=no">
 
 <title>OOZ BALL</title>
 
-<script src="https://cdn.jsdelivr.net/npm/phaser@3.90.0/dist/phaser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/matter-js@0.20.0/build/matter.min.js"></script>
 
 <style>
-html,body{
-margin:0;
-padding:0;
-width:100%;
-height:100%;
-overflow:hidden;
-background:#05070c;
+html, body {
+margin: 0;
+padding: 0;
+width: 100%;
+height: 100%;
+overflow: hidden;
+background: #05070b;
+touch-action: none;
 }
 
-body{
-display:flex;
-align-items:center;
-justify-content:center;
-touch-action:none;
+#game {
+width: 100vw;
+height: 100vh;
+display: flex;
+align-items: center;
+justify-content: center;
 }
 
-canvas{
-display:block;
+canvas {
+display: block;
+max-width: 100vw;
+max-height: 100vh;
+width: 100%;
+height: auto;
+touch-action: none;
 }
 </style>
 </head>
 
 <body>
 
+<div id="game">
+<canvas id="canvas" width="1536" height="768"></canvas>
+</div>
+
 <script>
+/* =========================================================
+OOZ BALL
+13 Kugeln + 1 weiße Kugel
+6 volle + 6 gestreifte + schwarze 8
+========================================================= */
+
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
 
 const W = 1536;
 const H = 768;
 
-/* -------------------------------------------------
-TISCHBILD
-Das ist genau unser Bild ohne Kugeln.
-------------------------------------------------- */
+/* ---------- TISCHBILD ---------- */
 
-const TABLE_IMAGE =
-"12726D74-5ECA-4F59-958C-EC7D2F0B4C3D.png";
+const tableImage = new Image();
+tableImage.src = "ooz-table.jpg";
 
-/* -------------------------------------------------
-KUGELN
-------------------------------------------------- */
+let imageReady = false;
 
-const BALL_RADIUS = 14;
+tableImage.onload = () => {
+imageReady = true;
+draw();
+};
 
-let cueBall;
-let objectBalls = [];
+
+/* ---------- MATTER PHYSICS ---------- */
+
+const Engine = Matter.Engine;
+const Bodies = Matter.Bodies;
+const Body = Matter.Body;
+const Composite = Matter.Composite;
+
+const engine = Engine.create();
+
+engine.gravity.x = 0;
+engine.gravity.y = 0;
+
+const world = engine.world;
+
+
+/* ---------- SPIELFELD ---------- */
+
+/*
+Das Spielfeld liegt innerhalb des Rahmens.
+Die Werte sind auf dein 1536x768 Tischbild abgestimmt.
+*/
+
+const PLAY_LEFT = 92;
+const PLAY_RIGHT = 1444;
+const PLAY_TOP = 94;
+const PLAY_BOTTOM = 674;
+
+
+/* ---------- BÄNDER ---------- */
+
+const wallThickness = 40;
+
+Composite.add(world, [
+
+Bodies.rectangle(
+(PLAY_LEFT + PLAY_RIGHT) / 2,
+PLAY_TOP - wallThickness / 2,
+PLAY_RIGHT - PLAY_LEFT,
+wallThickness,
+{
+isStatic: true,
+restitution: 0.92,
+friction: 0
+}
+),
+
+Bodies.rectangle(
+(PLAY_LEFT + PLAY_RIGHT) / 2,
+PLAY_BOTTOM + wallThickness / 2,
+PLAY_RIGHT - PLAY_LEFT,
+wallThickness,
+{
+isStatic: true,
+restitution: 0.92,
+friction: 0
+}
+),
+
+Bodies.rectangle(
+PLAY_LEFT - wallThickness / 2,
+(PLAY_TOP + PLAY_BOTTOM) / 2,
+wallThickness,
+PLAY_BOTTOM - PLAY_TOP,
+{
+isStatic: true,
+restitution: 0.92,
+friction: 0
+}
+),
+
+Bodies.rectangle(
+PLAY_RIGHT + wallThickness / 2,
+(PLAY_TOP + PLAY_BOTTOM) / 2,
+wallThickness,
+PLAY_BOTTOM - PLAY_TOP,
+{
+isStatic: true,
+restitution: 0.92,
+friction: 0
+}
+)
+
+]);
+
+
+/* ---------- KUGELN ---------- */
+
+const BALL_RADIUS = 22;
+
+const colors = {
+1: "#f2d300",
+2: "#2459d6",
+3: "#d92323",
+4: "#7d35c8",
+5: "#ef5a19",
+6: "#159447",
+
+9: "#f2d300",
+10: "#2459d6",
+11: "#d92323",
+12: "#7d35c8",
+13: "#ef5a19",
+14: "#159447"
+};
+
+const balls = [];
+
+
+/* ---------- KUGEL ERSTELLEN ---------- */
+
+function createBall(number, x, y) {
+
+const ball = Bodies.circle(
+x,
+y,
+BALL_RADIUS,
+{
+restitution: 0.93,
+friction: 0.002,
+frictionAir: 0.012,
+density: 0.004,
+inertia: Infinity,
+label: "ball-" + number
+}
+);
+
+ball.ballNumber = number;
+ball.isCue = false;
+
+Composite.add(world, ball);
+balls.push(ball);
+
+return ball;
+}
+
+
+/* ---------- WEISSE KUGEL ---------- */
+
+const cueBall = Bodies.circle(
+300,
+384,
+BALL_RADIUS,
+{
+restitution: 0.93,
+friction: 0.002,
+frictionAir: 0.010,
+density: 0.004,
+inertia: Infinity,
+label: "cue-ball"
+}
+);
+
+cueBall.ballNumber = 0;
+cueBall.isCue = true;
+
+Composite.add(world, cueBall);
+
+
+/* ---------- 13 KUGELN ---------- */
+
+/*
+1
+2 3
+4 8 5
+6 9 10 11
+12 13 14
+
+= 13 Objektkugeln
+*/
+
+const rackX = 1190;
+const rackY = 384;
+
+const gap = BALL_RADIUS * 2 + 1;
+const rowStepX = gap * 0.866;
+
+const rackPositions = [
+
+[0, 0],
+
+[1, -0.5],
+[1, 0.5],
+
+[2, -1],
+[2, 0],
+[2, 1],
+
+[3, -1.5],
+[3, -0.5],
+[3, 0.5],
+[3, 1.5],
+
+[4, -1],
+[4, 0],
+[4, 1]
+
+];
+
+
+/*
+Wir setzen die Nummern bewusst einzeln.
+Die 8 bleibt in der Mitte.
+*/
+
+const rackNumbers = [
+1,
+2, 3,
+4, 8, 5,
+6, 9, 10, 11,
+12, 13, 14
+];
+
+for (let i = 0; i < rackPositions.length; i++) {
+
+const row = rackPositions[i][0];
+const offset = rackPositions[i][1];
+
+const x = rackX + row * rowStepX;
+const y = rackY + offset * gap;
+
+createBall(
+rackNumbers[i],
+x,
+y
+);
+}
+
+
+/* ---------- ZEICHNEN ---------- */
+
+function drawBall(ball) {
+
+const x = ball.position.x;
+const y = ball.position.y;
+
+/* Schatten */
+
+ctx.beginPath();
+ctx.arc(
+x + 3,
+y + 4,
+BALL_RADIUS + 1,
+0,
+Math.PI * 2
+);
+
+ctx.fillStyle = "rgba(0,0,0,0.35)";
+ctx.fill();
+
+
+/* weiße Kugel */
+
+if (ball.isCue) {
+
+const gradient = ctx.createRadialGradient(
+x - 7,
+y - 8,
+2,
+x,
+y,
+BALL_RADIUS
+);
+
+gradient.addColorStop(0, "#ffffff");
+gradient.addColorStop(0.65, "#eeeeee");
+gradient.addColorStop(1, "#cfcfcf");
+
+ctx.beginPath();
+ctx.arc(
+x,
+y,
+BALL_RADIUS,
+0,
+Math.PI * 2
+);
+
+ctx.fillStyle = gradient;
+ctx.fill();
+
+ctx.strokeStyle = "#999";
+ctx.lineWidth = 1;
+ctx.stroke();
+
+return;
+}
+
+
+const number = ball.ballNumber;
+
+/* schwarze 8 */
+
+if (number === 8) {
+
+const gradient = ctx.createRadialGradient(
+x - 7,
+y - 8,
+2,
+x,
+y,
+BALL_RADIUS
+);
+
+gradient.addColorStop(0, "#444");
+gradient.addColorStop(0.55, "#111");
+gradient.addColorStop(1, "#000");
+
+ctx.beginPath();
+ctx.arc(
+x,
+y,
+BALL_RADIUS,
+0,
+Math.PI * 2
+);
+
+ctx.fillStyle = gradient;
+ctx.fill();
+
+drawNumber(number, x, y, true);
+
+return;
+}
+
+
+const isStripe = number >= 9;
+
+/* Grundfarbe */
+
+ctx.beginPath();
+ctx.arc(
+x,
+y,
+BALL_RADIUS,
+0,
+Math.PI * 2
+);
+
+ctx.fillStyle = colors[number];
+ctx.fill();
+
+
+/* Streifen */
+
+if (isStripe) {
+
+ctx.save();
+
+ctx.beginPath();
+ctx.arc(
+x,
+y,
+BALL_RADIUS,
+0,
+Math.PI * 2
+);
+
+ctx.clip();
+
+ctx.fillStyle = "#ffffff";
+
+ctx.fillRect(
+x - BALL_RADIUS,
+y - 8,
+BALL_RADIUS * 2,
+16
+);
+
+ctx.restore();
+}
+
+
+/* Glanz */
+
+const shine = ctx.createRadialGradient(
+x - 7,
+y - 8,
+1,
+x,
+y,
+BALL_RADIUS
+);
+
+shine.addColorStop(
+0,
+"rgba(255,255,255,0.75)"
+);
+
+shine.addColorStop(
+0.25,
+"rgba(255,255,255,0.15)"
+);
+
+shine.addColorStop(
+1,
+"rgba(0,0,0,0)"
+);
+
+ctx.beginPath();
+
+ctx.arc(
+x,
+y,
+BALL_RADIUS,
+0,
+Math.PI * 2
+);
+
+ctx.fillStyle = shine;
+ctx.fill();
+
+
+/* Nummer */
+
+drawNumber(
+number,
+x,
+y,
+false
+);
+}
+
+
+/* ---------- NUMMER ---------- */
+
+function drawNumber(number, x, y, blackBall) {
+
+const circleRadius = 8;
+
+ctx.beginPath();
+
+ctx.arc(
+x,
+y,
+circleRadius,
+0,
+Math.PI * 2
+);
+
+ctx.fillStyle = "#ffffff";
+ctx.fill();
+
+
+ctx.fillStyle = "#111";
+
+ctx.font = "bold 11px Arial";
+ctx.textAlign = "center";
+ctx.textBaseline = "middle";
+
+ctx.fillText(
+number,
+x,
+y + 0.5
+);
+}
+
+
+/* ---------- ZIELLINIE ---------- */
 
 let aiming = false;
 let aimX = 0;
 let aimY = 0;
 
-const BALL_COLORS = [
-0xffd52f, // 1
-0x1747d1, // 2
-0xd52d30, // 3
-0x6426a8, // 4
-0xf36b18, // 5
-0x149447, // 6
-0x8c171c, // 7
-0x111111, // 8
-0xffd52f, // 9
-0x1747d1, // 10
-0xd52d30, // 11
-0x6426a8, // 12
-0xf36b18 // 13
-];
+function drawAim() {
+
+if (!aiming) return;
+
+const bx = cueBall.position.x;
+const by = cueBall.position.y;
+
+const dx = aimX - bx;
+const dy = aimY - by;
+
+const length = Math.sqrt(
+dx * dx + dy * dy
+);
+
+if (length < 1) return;
+
+const nx = dx / length;
+const ny = dy / length;
+
+const lineLength = 250;
+
+ctx.beginPath();
+
+ctx.moveTo(
+bx,
+by
+);
+
+ctx.lineTo(
+bx + nx * lineLength,
+by + ny * lineLength
+);
+
+ctx.strokeStyle =
+"rgba(255,255,255,0.85)";
+
+ctx.lineWidth = 2;
+
+ctx.setLineDash([10, 8]);
+
+ctx.stroke();
+
+ctx.setLineDash([]);
 
 
-/* -------------------------------------------------
-PHASER
-------------------------------------------------- */
+/* Power-Anzeige */
 
-const config = {
+const power =
+Math.min(length / 220, 1);
 
-type: Phaser.AUTO,
+ctx.beginPath();
 
-width: W,
-height: H,
+ctx.arc(
+bx,
+by,
+BALL_RADIUS + 6,
+-Math.PI / 2,
+-Math.PI / 2 + Math.PI * 2 * power
+);
 
-backgroundColor: "#05070c",
+ctx.strokeStyle =
+"rgba(255,215,80,0.9)";
 
-scale:{
-mode: Phaser.Scale.FIT,
-autoCenter: Phaser.Scale.CENTER_BOTH,
-width: W,
-height: H
-},
+ctx.lineWidth = 4;
 
-physics:{
-default:"matter",
-
-matter:{
-gravity:{
-x:0,
-y:0
-},
-
-enableSleeping:true,
-
-positionIterations:12,
-velocityIterations:10,
-constraintIterations:2
+ctx.stroke();
 }
-},
 
-scene:{
-preload:preload,
-create:create,
-update:update
-}
+
+/* ---------- MOUSE / TOUCH ---------- */
+
+function getPointerPosition(e) {
+
+const rect =
+canvas.getBoundingClientRect();
+
+return {
+x:
+(e.clientX - rect.left)
+* W / rect.width,
+
+y:
+(e.clientY - rect.top)
+* H / rect.height
 };
-
-new Phaser.Game(config);
-
-
-/* -------------------------------------------------
-PRELOAD
-------------------------------------------------- */
-
-function preload(){
-
-this.load.image(
-"table",
-TABLE_IMAGE
-);
 }
 
 
-/* -------------------------------------------------
-CREATE
-------------------------------------------------- */
-
-function create(){
-
-/*
-Tischbild
-*/
-
-this.add.image(
-W/2,
-H/2,
-"table"
-)
-.setDisplaySize(W,H);
-
-
-/*
-Spielfläche
-
-Die Kugeln dürfen nur innerhalb
-des Tisches spielen.
-*/
-
-createRails(this);
-
-
-/*
-13 Objektkugeln
-*/
-
-createRack(this);
-
-
-/*
-Weiße Kugel
-*/
-
-cueBall = createBall(
-this,
-350,
-384,
-0xffffff,
-true
-);
-
-
-/*
-Ziel-/Amlinie
-*/
-
-this.aimGraphics = this.add.graphics();
-
-
-/*
-Maus / Touch
-*/
-
-this.input.on(
+canvas.addEventListener(
 "pointerdown",
-pointerDown,
-this
-);
+function(e) {
 
-this.input.on(
-"pointermove",
-pointerMove,
-this
-);
-
-this.input.on(
-"pointerup",
-pointerUp,
-this
-);
-
-
-/*
-Taschen
-*/
-
-createPockets(this);
-}
-
-
-/* -------------------------------------------------
-RAILS
-------------------------------------------------- */
-
-function createRails(scene){
-
-const options = {
-isStatic:true,
-restitution:0.95,
-friction:0
-};
-
-/*
-Obere Bande
-*/
-
-scene.matter.add.rectangle(
-420,92,
-620,18,
-options
-);
-
-scene.matter.add.rectangle(
-1115,92,
-620,18,
-options
-);
-
-
-/*
-Untere Bande
-*/
-
-scene.matter.add.rectangle(
-420,676,
-620,18,
-options
-);
-
-scene.matter.add.rectangle(
-1115,676,
-620,18,
-options
-);
-
-
-/*
-Linke Bande
-*/
-
-scene.matter.add.rectangle(
-88,385,
-18,520,
-options
-);
-
-
-/*
-Rechte Bande
-*/
-
-scene.matter.add.rectangle(
-1448,385,
-18,520,
-options
-);
-}
-
-
-/* -------------------------------------------------
-TASCHEN
-------------------------------------------------- */
-
-function createPockets(scene){
-
-const pockets = [
-
-{x:72,y:50},
-{x:768,y:45},
-{x:1464,y:50},
-
-{x:72,y:688},
-{x:768,y:700},
-{x:1464,y:688}
-
-];
-
-for(const p of pockets){
-
-const pocket =
-scene.matter.add.circle(
-p.x,
-p.y,
-38,
-{
-isStatic:true,
-isSensor:true,
-label:"pocket"
-}
-);
-
-pocket.plugin = {
-isPocket:true
-};
-}
-}
-
-
-/* -------------------------------------------------
-RACK
-------------------------------------------------- */
-
-function createRack(scene){
-
-/*
-13 Kugeln:
-6 ganze
-6 gestreifte
-1 schwarze 8
-*/
-
-const startX = 1160;
-const startY = 384;
-
-const spacing = 29;
-
-const positions = [
-
-[0,0],
-
-[-1,-0.5],
-[-1,0.5],
-
-[-2,-1],
-[-2,0],
-[-2,1],
-
-[-3,-1.5],
-[-3,-0.5],
-[-3,0.5],
-[-3,1.5],
-
-[-4,-1],
-[-4,0],
-[-4,1]
-
-];
-
-for(let i=0;i<13;i++){
-
-const x =
-startX +
-positions[i][0] * spacing;
-
-const y =
-startY +
-positions[i][1] * spacing;
-
-let color;
-
-if(i === 7){
-
-color = 0x111111;
-
-}else{
-
-color =
-BALL_COLORS[i];
-}
-
-const ball =
-createBall(
-scene,
-x,
-y,
-color,
-false
-);
-
-ball.ballNumber = i + 1;
-
-objectBalls.push(ball);
-}
-}
-
-
-/* -------------------------------------------------
-BALL
-------------------------------------------------- */
-
-function createBall(
-scene,
-x,
-y,
-color,
-isCue
-){
-
-const body =
-scene.matter.add.circle(
-x,
-y,
-BALL_RADIUS,
-{
-restitution:0.93,
-
-friction:0.004,
-
-frictionAir:0.018,
-
-density:0.004,
-
-label:
-isCue
-? "cueBall"
-: "objectBall"
-}
-);
-
-
-/*
-Kugelgrafik
-*/
-
-const graphics =
-scene.add.graphics();
-
-
-drawBall(
-graphics,
-color,
-isCue
-);
-
-
-body.ballGraphics = graphics;
-
-return body;
-}
-
-
-/* -------------------------------------------------
-BALL GRAPHIC
-------------------------------------------------- */
-
-function drawBall(
-graphics,
-color,
-isCue
-){
-
-graphics.clear();
-
-
-/*
-Schatten
-*/
-
-graphics.fillStyle(
-0x000000,
-0.35
-);
-
-graphics.fillCircle(
-3,
-4,
-BALL_RADIUS
-);
-
-
-/*
-Kugel
-*/
-
-graphics.fillStyle(
-color,
-1
-);
-
-graphics.fillCircle(
-0,
-0,
-BALL_RADIUS
-);
-
-
-/*
-Glanz
-*/
-
-graphics.fillStyle(
-0xffffff,
-0.75
-);
-
-graphics.fillCircle(
--5,
--5,
-4
-);
-
-
-/*
-Weiße Kugel
-*/
-
-if(isCue){
-
-graphics.lineStyle(
-1,
-0xcccccc,
-0.8
-);
-
-graphics.strokeCircle(
-0,
-0,
-BALL_RADIUS
-);
-}
-}
-
-
-/* -------------------------------------------------
-AIMING
-------------------------------------------------- */
-
-function pointerDown(pointer){
-
-if(!cueBall) return;
+const p =
+getPointerPosition(e);
 
 const dx =
-pointer.worldX -
-cueBall.position.x;
+p.x - cueBall.position.x;
 
 const dy =
-pointer.worldY -
-cueBall.position.y;
+p.y - cueBall.position.y;
 
 const distance =
 Math.sqrt(
-dx*dx +
-dy*dy
+dx * dx +
+dy * dy
 );
 
+
 /*
-Nur in der Nähe der weißen Kugel
-starten.
+Nur schießen wenn die weiße Kugel
+fast stillsteht.
 */
 
-if(distance < 60){
+const speed =
+Math.sqrt(
+cueBall.velocity.x *
+cueBall.velocity.x +
+cueBall.velocity.y *
+cueBall.velocity.y
+);
+
+if (
+distance < 100 &&
+speed < 0.15
+) {
 
 aiming = true;
 
-aimX =
-pointer.worldX;
+aimX = p.x;
+aimY = p.y;
 
-aimY =
-pointer.worldY;
+canvas.setPointerCapture(e.pointerId);
 }
 }
-
-
-/* -------------------------------------------------
-AIM LINE
-------------------------------------------------- */
-
-function pointerMove(pointer){
-
-if(!aiming) return;
-
-aimX =
-pointer.worldX;
-
-aimY =
-pointer.worldY;
-
-drawAimLine(
-this
 );
+
+
+canvas.addEventListener(
+"pointermove",
+function(e) {
+
+if (!aiming) return;
+
+const p =
+getPointerPosition(e);
+
+aimX = p.x;
+aimY = p.y;
 }
+);
 
 
-/* -------------------------------------------------
-SHOOT
-------------------------------------------------- */
+canvas.addEventListener(
+"pointerup",
+function(e) {
 
-function pointerUp(pointer){
-
-if(!aiming) return;
+if (!aiming) return;
 
 aiming = false;
 
-this.aimGraphics.clear();
-
-
-/*
-Zugrichtung
-*/
+const p =
+getPointerPosition(e);
 
 const dx =
-cueBall.position.x -
-pointer.worldX;
+p.x - cueBall.position.x;
 
 const dy =
-cueBall.position.y -
-pointer.worldY;
-
+p.y - cueBall.position.y;
 
 const distance =
 Math.sqrt(
-dx*dx +
-dy*dy
+dx * dx +
+dy * dy
 );
 
-
-if(distance < 8)
-return;
+if (distance < 10) return;
 
 
 /*
-Maximale Stärke
+WICHTIG:
+Gegensätzliche Richtung =
+weißer Ball läuft in Richtung
+der Kugeln.
+*/
+
+const nx = dx / distance;
+const ny = dy / distance;
+
+
+/*
+DEUTLICH stärker als vorher.
 */
 
 const power =
-Math.min(
-distance,
-350
-);
-
-
-const nx =
-dx / distance;
-
-const ny =
-dy / distance;
-
-
-/*
-Kräftiger Stoß
-*/
+Math.min(distance, 260);
 
 const FORCE =
-power * 0.00042;
+0.00055;
 
 
-this.matter.body.applyForce(
+Body.applyForce(
 cueBall,
 cueBall.position,
 {
-x:nx * FORCE,
-y:ny * FORCE
+x: -nx * power * FORCE,
+y: -ny * power * FORCE
 }
 );
 }
-
-
-/* -------------------------------------------------
-AIM LINE DRAW
-------------------------------------------------- */
-
-function drawAimLine(scene){
-
-scene.aimGraphics.clear();
-
-const dx =
-cueBall.position.x -
-aimX;
-
-const dy =
-cueBall.position.y -
-aimY;
-
-const distance =
-Math.sqrt(
-dx*dx +
-dy*dy
 );
 
-if(distance < 1)
-return;
 
+/* ---------- PHYSIK ---------- */
 
-const nx =
-dx / distance;
+let lastTime = performance.now();
 
-const ny =
-dy / distance;
+function physicsLoop(time) {
 
-
-const length =
+const delta =
 Math.min(
-distance * 1.5,
-500
+time - lastTime,
+25
 );
 
+lastTime = time;
 
-scene.aimGraphics.lineStyle(
-3,
-0xffffff,
-0.75
+Engine.update(
+engine,
+delta
 );
-
-scene.aimGraphics.beginPath();
-
-scene.aimGraphics.moveTo(
-cueBall.position.x,
-cueBall.position.y
-);
-
-scene.aimGraphics.lineTo(
-cueBall.position.x +
-nx * length,
-
-cueBall.position.y +
-ny * length
-);
-
-scene.aimGraphics.strokePath();
 
 
 /*
-Kraftanzeige
+Kleine Geschwindigkeiten komplett stoppen.
+Dadurch rollen die Kugeln sauber aus.
 */
 
-scene.aimGraphics.lineStyle(
-6,
-0xd4af37,
-0.5
+for (const ball of [cueBall, ...balls]) {
+
+const vx = ball.velocity.x;
+const vy = ball.velocity.y;
+
+const speed =
+Math.sqrt(
+vx * vx +
+vy * vy
 );
 
-scene.aimGraphics.beginPath();
+if (speed < 0.025) {
 
-scene.aimGraphics.moveTo(
-cueBall.position.x,
-cueBall.position.y
+Body.setVelocity(
+ball,
+{
+x: 0,
+y: 0
+}
+);
+}
+}
+
+
+requestAnimationFrame(
+physicsLoop
+);
+}
+
+
+/* ---------- RENDER ---------- */
+
+function draw() {
+
+ctx.clearRect(
+0,
+0,
+W,
+H
 );
 
-scene.aimGraphics.lineTo(
-cueBall.position.x -
-nx * Math.min(distance,250),
 
-cueBall.position.y -
-ny * Math.min(distance,250)
+/* Tischbild */
+
+if (imageReady) {
+
+ctx.drawImage(
+tableImage,
+0,
+0,
+W,
+H
 );
 
-scene.aimGraphics.strokePath();
+} else {
+
+ctx.fillStyle = "#173b48";
+
+ctx.fillRect(
+0,
+0,
+W,
+H
+);
 }
 
 
-/* -------------------------------------------------
-UPDATE
-------------------------------------------------- */
+/* Kugeln */
 
-function update(){
+drawBall(cueBall);
 
-/*
-Kugelgrafiken an Matter-Körper koppeln
-*/
-
-if(cueBall){
-
-cueBall.ballGraphics.x =
-cueBall.position.x;
-
-cueBall.ballGraphics.y =
-cueBall.position.y;
+for (const ball of balls) {
+drawBall(ball);
 }
 
 
-for(
-const ball
-of objectBalls
-){
+/* Ziellinie */
 
-ball.ballGraphics.x =
-ball.position.x;
+drawAim();
 
-ball.ballGraphics.y =
-ball.position.y;
-
-/*
-Rotation der Kugel leicht darstellen
-*/
-
-ball.ballGraphics.rotation =
-ball.angle;
+requestAnimationFrame(
+draw
+);
 }
-}
+
+
+/* ---------- START ---------- */
+
+requestAnimationFrame(
+physicsLoop
+);
+
+requestAnimationFrame(
+draw
+);
 
 </script>
 
