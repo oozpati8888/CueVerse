@@ -2,166 +2,94 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>CueVerse OOZ Ball</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OOZ BALL</title>
 
 <style>
-*{box-sizing:border-box}
+*{
+box-sizing:border-box;
+margin:0;
+padding:0;
+}
 
 html,body{
-margin:0;
 width:100%;
 height:100%;
 overflow:hidden;
-background:#080b10;
+background:#050505;
 font-family:Arial,Helvetica,sans-serif;
-color:white;
+}
+
+body{
+display:flex;
+align-items:center;
+justify-content:center;
 }
 
 #game{
-width:100%;
-height:100%;
-display:flex;
-flex-direction:column;
-}
-
-header{
-height:64px;
-flex-shrink:0;
-display:flex;
-align-items:center;
-justify-content:space-between;
-padding:0 22px;
-background:#10151d;
-border-bottom:1px solid #26303c;
-}
-
-.logo{
-font-size:25px;
-font-weight:900;
-letter-spacing:2px;
-}
-
-.logo span{
-color:#27e6a2;
-}
-
-.status{
-font-size:14px;
-color:#aeb8c5;
-}
-
-#area{
-flex:1;
-min-height:0;
-display:flex;
-align-items:center;
-justify-content:center;
-padding:20px;
-}
-
-#tableWrap{
-width:min(1100px,96vw);
-aspect-ratio:2 / 1;
+width:100vw;
+height:100vh;
 position:relative;
+background:
+radial-gradient(circle at 50% 40%,#202020 0%,#090909 55%,#000 100%);
+overflow:hidden;
 }
 
 canvas{
-width:100%;
-height:100%;
+position:absolute;
+left:50%;
+top:50%;
+transform:translate(-50%,-50%);
 display:block;
-border-radius:20px;
-box-shadow:
-0 20px 70px rgba(0,0,0,.7),
-0 0 0 2px #202a34;
 }
 
-#controls{
-height:82px;
-flex-shrink:0;
-display:flex;
-align-items:center;
-justify-content:center;
-gap:18px;
-background:#10151d;
-border-top:1px solid #26303c;
+#hint{
+position:absolute;
+left:50%;
+bottom:18px;
+transform:translateX(-50%);
+color:#fff;
+background:rgba(0,0,0,.78);
+border:1px solid #777;
+border-radius:25px;
+padding:12px 34px;
+font-size:16px;
+z-index:10;
+white-space:nowrap;
 }
 
-button{
-border:0;
+#power{
+position:absolute;
+left:24px;
+bottom:100px;
+width:18px;
+height:260px;
+border:2px solid #c99a2e;
 border-radius:12px;
-padding:12px 20px;
-font-size:15px;
-font-weight:bold;
-cursor:pointer;
-background:#202a35;
-color:white;
+background:#111;
+overflow:hidden;
+z-index:10;
 }
 
-button:hover{
-background:#2c3948;
+#powerFill{
+position:absolute;
+bottom:0;
+left:0;
+width:100%;
+height:10%;
+background:linear-gradient(to top,#ff3100,#ffb000,#ffe17a);
 }
 
-#shoot{
-background:#27e6a2;
-color:#06120d;
-min-width:130px;
+@media(max-height:600px){
+#hint{
+bottom:7px;
+font-size:13px;
+padding:8px 22px;
 }
 
-#shoot:hover{
-background:#48f0b4;
-}
-
-.powerBox{
-display:flex;
-align-items:center;
-gap:10px;
-}
-
-input[type=range]{
-width:180px;
-}
-
-#powerText{
-width:42px;
-color:#27e6a2;
-font-weight:bold;
-}
-
-@media(max-width:650px){
-header{
-height:52px;
-padding:0 12px;
-}
-
-.logo{
-font-size:19px;
-}
-
-.status{
-font-size:11px;
-}
-
-#area{
-padding:8px;
-}
-
-#controls{
-height:72px;
-gap:8px;
-}
-
-button{
-padding:10px 12px;
-font-size:12px;
-}
-
-.powerBox{
-gap:5px;
-}
-
-input[type=range]{
-width:100px;
+#power{
+bottom:60px;
+height:180px;
 }
 }
 </style>
@@ -171,541 +99,1122 @@ width:100px;
 
 <div id="game">
 
-<header>
-<div class="logo">CUEVERSE <span>OOZ</span> BALL</div>
-<div class="status" id="status">Dein Stoß 🎱</div>
-</header>
-
-<div id="area">
-<div id="tableWrap">
 <canvas id="canvas"></canvas>
-</div>
-</div>
 
-<div id="controls">
-
-<div class="powerBox">
-<span>POWER</span>
-<input id="power" type="range" min="5" max="100" value="55">
-<span id="powerText">55%</span>
+<div id="power">
+<div id="powerFill"></div>
 </div>
 
-<button id="reset">NEUES SPIEL</button>
-<button id="shoot">STOSS 🎱</button>
-
+<div id="hint">
+Ziehe den Kö zurück und lasse los.
 </div>
 
 </div>
 
 <script>
 
+/* =========================================================
+OOZ BALL V2
+FESTE 16:9 SPIELFLÄCHE
+========================================================= */
+
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
-const powerSlider = document.getElementById("power");
-const powerText = document.getElementById("powerText");
-const shootButton = document.getElementById("shoot");
-const resetButton = document.getElementById("reset");
-const statusText = document.getElementById("status");
+const hint = document.getElementById("hint");
+const powerFill = document.getElementById("powerFill");
 
-let W = 1000;
-let H = 500;
+const W = 1600;
+const H = 900;
+
+canvas.width = W;
+canvas.height = H;
+
+
+/* =========================================================
+SPIELTISCH
+========================================================= */
 
 const table = {
-x:55,
-y:45,
-w:890,
-h:410
+x:120,
+y:185,
+w:1360,
+h:560,
+
+rail:48,
+
+pocket:47
 };
 
-const ballR = 13;
+const cloth = {
+x:table.x + table.rail,
+y:table.y + table.rail,
+w:table.w - table.rail*2,
+h:table.h - table.rail*2
+};
+
+
+/* =========================================================
+TASCHEN
+========================================================= */
+
+function pockets(){
+
+return [
+
+{
+x:cloth.x,
+y:cloth.y
+},
+
+{
+x:cloth.x + cloth.w/2,
+y:cloth.y
+},
+
+{
+x:cloth.x + cloth.w,
+y:cloth.y
+},
+
+{
+x:cloth.x,
+y:cloth.y + cloth.h
+},
+
+{
+x:cloth.x + cloth.w/2,
+y:cloth.y + cloth.h
+},
+
+{
+x:cloth.x + cloth.w,
+y:cloth.y + cloth.h
+}
+
+];
+}
+
+
+/* =========================================================
+KUGELN
+========================================================= */
+
+const BALL_R = 18;
 
 let balls = [];
+
 let cueBall;
+
 let aiming = false;
+
 let aimX = 0;
 let aimY = 0;
-let shooting = false;
 
-const pockets = [
-{x:table.x,y:table.y},
-{x:table.x+table.w/2,y:table.y-2},
-{x:table.x+table.w,y:table.y},
-{x:table.x,y:table.y+table.h},
-{x:table.x+table.w/2,y:table.y+table.h+2},
-{x:table.x+table.w,y:table.y+table.h}
+let power = 0;
+
+let moving = false;
+
+
+/* Farben */
+
+const solidColors = {
+
+1:"#f3c324",
+2:"#2458d7",
+3:"#d93434",
+4:"#6335a8",
+5:"#ed7620",
+6:"#159448"
+};
+
+const stripeColors = {
+
+9:"#f3c324",
+10:"#2458d7",
+11:"#d93434",
+12:"#6335a8",
+13:"#ed7620",
+14:"#159448"
+};
+
+
+/* =========================================================
+KUGEL ERSTELLEN
+========================================================= */
+
+function makeBall(number,type,x,y){
+
+return {
+
+number:number,
+
+type:type,
+
+x:x,
+
+y:y,
+
+vx:0,
+
+vy:0,
+
+pocketed:false
+};
+}
+
+
+/* =========================================================
+RACK
+=========================================================
+
+Insgesamt:
+
+6 volle
+6 gestreifte
+1 schwarze 8
+
+= 13 Objektkugeln
+
++ weiße Kugel
+= 14
+
+Die schwarze 8 sitzt exakt im Zentrum.
+========================================================= */
+
+function createRack(){
+
+balls=[];
+
+const cx =
+cloth.x + cloth.w*0.77;
+
+const cy =
+cloth.y + cloth.h/2;
+
+const dx = 32;
+const dy = 35;
+
+/*
+4 / 4 / 3 / 2
+
+Dadurch bleiben es exakt 13 Kugeln.
+*/
+
+const rack = [
+
+// Reihe 1
+[11,"stripe",0,-52],
+[1,"solid",0,-17],
+[8,"eight",0,18],
+[9,"stripe",0,53],
+
+// Reihe 2
+[2,"solid",dx,-34],
+[12,"stripe",dx,0],
+[3,"solid",dx,34],
+[13,"stripe",dx,68],
+
+// Reihe 3
+[4,"solid",dx*2,-17],
+[10,"stripe",dx*2,18],
+[5,"solid",dx*2,53],
+
+// Reihe 4
+[14,"stripe",dx*3,0],
+[6,"solid",dx*3,35]
 ];
 
-const colors = [
-"#f4d03f",
-"#2471a3",
-"#c0392b",
-"#8e44ad",
-"#e67e22",
-"#16a085",
-"#922b21",
-"#111111"
-];
+for(const b of rack){
 
-function resize(){
-
-const rect = canvas.getBoundingClientRect();
-
-W = rect.width;
-H = rect.height;
-
-const scaleX = W / 1000;
-const scaleY = H / 500;
-
-canvas.width = Math.round(W * devicePixelRatio);
-canvas.height = Math.round(H * devicePixelRatio);
-
-ctx.setTransform(
-devicePixelRatio * scaleX,
-0,
-0,
-devicePixelRatio * scaleY,
-0,
-0
+balls.push(
+makeBall(
+b[0],
+b[1],
+cx+b[2],
+cy+b[3]
+)
 );
 }
 
-window.addEventListener("resize",resize);
-
-function createBall(x,y,color,number){
-
-return {
-x,
-y,
-vx:0,
-vy:0,
-color,
-number,
-active:true
-};
-}
-
-function resetGame(){
-
-balls = [];
-
-cueBall = createBall(
-table.x + table.w*0.25,
-table.y + table.h/2,
-"#ffffff",
-0
+cueBall =
+makeBall(
+0,
+"cue",
+cloth.x + cloth.w*0.25,
+cy
 );
 
 balls.push(cueBall);
-
-const startX = table.x + table.w*0.70;
-const startY = table.y + table.h/2;
-
-let n = 1;
-
-for(let row=0;row<5;row++){
-
-for(let col=0;col<=row;col++){
-
-const x =
-startX +
-row*(ballR*1.75);
-
-const y =
-startY +
-(col-row/2)*(ballR*2.05);
-
-balls.push(
-createBall(
-x,
-y,
-colors[(n-1)%colors.length],
-n
-)
-);
-
-n++;
-}
 }
 
-shooting=false;
-statusText.textContent="Dein Stoß 🎱";
+
+/* =========================================================
+ZEICHENFUNKTIONEN
+========================================================= */
+
+function roundedRect(x,y,w,h,r){
+
+ctx.beginPath();
+
+ctx.moveTo(x+r,y);
+
+ctx.arcTo(x+w,y,x+w,y+h,r);
+
+ctx.arcTo(x+w,y+h,x,y+h,r);
+
+ctx.arcTo(x,y+h,x,y,r);
+
+ctx.arcTo(x,y,x+w,y,r);
+
+ctx.closePath();
 }
 
-resetGame();
+
+/* =========================================================
+GOLDRAHMEN
+========================================================= */
 
 function drawTable(){
 
-ctx.clearRect(0,0,1000,500);
+/* äußerer Schatten */
 
-// Schatten
-ctx.fillStyle="#050709";
-roundRect(
-table.x-18,
-table.y-18,
-table.w+36,
-table.h+36,
-25
-);
-ctx.fill();
+ctx.save();
 
-// Holzrahmen
-const wood=ctx.createLinearGradient(
+ctx.shadowColor="rgba(0,0,0,.9)";
+ctx.shadowBlur=35;
+ctx.shadowOffsetY=18;
+
+roundedRect(
 table.x,
 table.y,
-table.x,
-table.y+table.h
+table.w,
+table.h,
+42
 );
 
-wood.addColorStop(0,"#b87935");
-wood.addColorStop(.5,"#744319");
-wood.addColorStop(1,"#b87935");
-
-ctx.fillStyle=wood;
-
-roundRect(
-table.x-14,
-table.y-14,
-table.w+28,
-table.h+28,
-20
-);
-
-ctx.fill();
-
-// Spielfläche
-const green=ctx.createLinearGradient(
+const gold =
+ctx.createLinearGradient(
 table.x,
 table.y,
 table.x+table.w,
 table.y+table.h
 );
 
-green.addColorStop(0,"#087b55");
-green.addColorStop(.5,"#075f43");
-green.addColorStop(1,"#034a35");
+gold.addColorStop(0,"#e9c25c");
+gold.addColorStop(.12,"#85520c");
+gold.addColorStop(.18,"#050505");
+gold.addColorStop(.82,"#050505");
+gold.addColorStop(.92,"#85520c");
+gold.addColorStop(1,"#e7c157");
 
-ctx.fillStyle=green;
-
-roundRect(
-table.x,
-table.y,
-table.w,
-table.h,
-12
-);
-
+ctx.fillStyle=gold;
 ctx.fill();
 
-// kleine Tischmarkierungen
-ctx.strokeStyle="rgba(255,255,255,.10)";
-ctx.lineWidth=1;
+ctx.restore();
 
-ctx.beginPath();
 
-ctx.moveTo(
-table.x+table.w*.25,
-table.y
+/* schwarzer Rahmen */
+
+roundedRect(
+table.x+10,
+table.y+10,
+table.w-20,
+table.h-20,
+35
 );
 
-ctx.lineTo(
-table.x+table.w*.25,
-table.y+table.h
+ctx.fillStyle="#111";
+ctx.fill();
+
+
+/* goldene innere Linie */
+
+ctx.strokeStyle="#d7ad43";
+ctx.lineWidth=5;
+
+roundedRect(
+table.x+25,
+table.y+25,
+table.w-50,
+table.h-50,
+30
 );
 
 ctx.stroke();
 
-drawPockets();
+
+/* grünes/rotes Spielfeld */
+
+const clothGradient =
+ctx.createLinearGradient(
+cloth.x,
+cloth.y,
+cloth.x,
+cloth.y+cloth.h
+);
+
+clothGradient.addColorStop(0,"#087b69");
+clothGradient.addColorStop(.5,"#07947d");
+clothGradient.addColorStop(1,"#056957");
+
+ctx.fillStyle=clothGradient;
+
+ctx.fillRect(
+cloth.x,
+cloth.y,
+cloth.w,
+cloth.h
+);
+
+
+/* Stoffstruktur */
+
+ctx.globalAlpha=.08;
+
+for(let i=0;i<900;i++){
+
+const x =
+cloth.x+
+Math.random()*cloth.w;
+
+const y =
+cloth.y+
+Math.random()*cloth.h;
+
+ctx.fillStyle =
+Math.random()>.5 ?
+"#fff" :
+"#000";
+
+ctx.fillRect(x,y,1,1);
 }
+
+ctx.globalAlpha=1;
+}
+
+
+/* =========================================================
+TASCHEN
+========================================================= */
 
 function drawPockets(){
 
-for(const p of pockets){
+for(const p of pockets()){
 
-const g=ctx.createRadialGradient(
-p.x,p.y,2,
-p.x,p.y,22
+const g =
+ctx.createRadialGradient(
+p.x-8,
+p.y-8,
+3,
+p.x,
+p.y,
+table.pocket
 );
 
 g.addColorStop(0,"#000");
-g.addColorStop(.75,"#030303");
-g.addColorStop(1,"#171717");
-
-ctx.fillStyle=g;
+g.addColorStop(.55,"#000");
+g.addColorStop(.78,"#111");
+g.addColorStop(1,"#555");
 
 ctx.beginPath();
-ctx.arc(p.x,p.y,21,0,Math.PI*2);
+
+ctx.arc(
+p.x,
+p.y,
+table.pocket,
+0,
+Math.PI*2
+);
+
+ctx.fillStyle=g;
 ctx.fill();
+
+ctx.strokeStyle="#080808";
+ctx.lineWidth=8;
+ctx.stroke();
 }
 }
 
-function drawBalls(){
 
-for(const b of balls){
+/* =========================================================
+DIAMANTEN
+========================================================= */
 
-if(!b.active) continue;
+function drawDiamonds(){
+
+ctx.fillStyle="#e4d5b0";
+
+const topY=cloth.y+16;
+const bottomY=cloth.y+cloth.h-16;
+
+const xs=[
+cloth.x+cloth.w*.25,
+cloth.x+cloth.w*.5,
+cloth.x+cloth.w*.75
+];
+
+for(const x of xs){
 
 ctx.save();
 
-// Schatten
-ctx.fillStyle="rgba(0,0,0,.35)";
-ctx.beginPath();
-ctx.ellipse(
-b.x+4,
-b.y+5,
-ballR,
-ballR*.65,
-0,
-0,
-Math.PI*2
-);
-ctx.fill();
+ctx.translate(x,topY);
+ctx.rotate(Math.PI/4);
 
-// Ball
-const gradient=ctx.createRadialGradient(
-b.x-5,
-b.y-6,
-2,
-b.x,
-b.y,
-ballR
-);
+ctx.fillRect(-5,-5,10,10);
 
-if(b.number===0){
+ctx.restore();
 
-gradient.addColorStop(0,"#ffffff");
-gradient.addColorStop(.65,"#eeeeee");
-gradient.addColorStop(1,"#aaa");
 
-}else{
+ctx.save();
 
-gradient.addColorStop(0,"#ffffff");
-gradient.addColorStop(.18,b.color);
-gradient.addColorStop(1,b.color);
+ctx.translate(x,bottomY);
+ctx.rotate(Math.PI/4);
+
+ctx.fillRect(-5,-5,10,10);
+
+ctx.restore();
+}
 }
 
-ctx.fillStyle=gradient;
 
-ctx.beginPath();
-ctx.arc(
-b.x,
-b.y,
-ballR,
-0,
-Math.PI*2
+/* =========================================================
+OOZ LOGO
+========================================================= */
+
+function drawLogo(){
+
+const x=cloth.x+cloth.w/2;
+const y=cloth.y+cloth.h/2;
+
+ctx.save();
+
+ctx.textAlign="center";
+
+/* Krone */
+
+ctx.fillStyle="#d9a936";
+
+ctx.font="bold 72px Georgia";
+
+ctx.fillText("♛",x,y-85);
+
+
+/* OOZ */
+
+ctx.font="bold 105px Georgia";
+
+ctx.lineWidth=5;
+ctx.strokeStyle="#5e410e";
+
+ctx.strokeText(
+"OOZ",
+x,
+y+20
 );
+
+ctx.fillStyle="#d5a437";
+
+ctx.fillText(
+"OOZ",
+x,
+y+20
+);
+
+
+/* BALL */
+
+ctx.font="bold 48px Georgia";
+
+ctx.fillText(
+"BALL",
+x,
+y+72
+);
+
+
+ctx.restore();
+}
+
+
+/* =========================================================
+SPIELER HUD
+========================================================= */
+
+function drawPlayer(
+side,
+name,
+level
+){
+
+const left =
+side==="left";
+
+const x =
+left ? 35 : W-365;
+
+const avatarX =
+left ? x : x+285;
+
+/* Avatar */
+
+ctx.save();
+
+ctx.fillStyle="#111";
+ctx.strokeStyle="#d8a934";
+ctx.lineWidth=5;
+
+roundedRect(
+avatarX,
+25,
+82,
+82,
+14
+);
+
 ctx.fill();
-
-ctx.strokeStyle="rgba(0,0,0,.35)";
-ctx.lineWidth=1;
-
 ctx.stroke();
 
-if(b.number>0){
 
-ctx.fillStyle="white";
+ctx.fillStyle="#d8a934";
+ctx.font="bold 18px Arial";
+ctx.textAlign="center";
+
+ctx.fillText(
+left ? "OOZ" : "G",
+avatarX+41,
+73
+);
+
+
+/* Level */
 
 ctx.beginPath();
+
 ctx.arc(
-b.x,
-b.y,
-5.5,
+left ?
+avatarX+70 :
+avatarX+12,
+31,
+20,
 0,
 Math.PI*2
 );
+
+ctx.fillStyle="#d5a12b";
 ctx.fill();
 
 ctx.fillStyle="#111";
-ctx.font="bold 7px Arial";
+
+ctx.font="bold 14px Arial";
+
+ctx.fillText(
+level,
+left ?
+avatarX+70 :
+avatarX+12,
+36
+);
+
+
+/* Namensbox */
+
+const boxX =
+left ?
+avatarX+92 :
+avatarX-238;
+
+ctx.fillStyle="#090909";
+ctx.strokeStyle="#555";
+ctx.lineWidth=2;
+
+roundedRect(
+boxX,
+40,
+220,
+48,
+10
+);
+
+ctx.fill();
+ctx.stroke();
+
+
+ctx.fillStyle="#fff";
+ctx.font="bold 23px Arial";
+
+ctx.textAlign=
+left ? "left" : "right";
+
+ctx.fillText(
+name,
+left ? boxX+15 : boxX+205,
+70
+);
+
+
+/* sechs Score-Kreise */
+
+for(let i=0;i<6;i++){
+
+const bx =
+left ?
+boxX+18+i*32 :
+boxX+202-i*32;
+
+ctx.beginPath();
+
+ctx.arc(
+bx,
+112,
+12,
+0,
+Math.PI*2
+);
+
+ctx.fillStyle="#050505";
+ctx.fill();
+
+ctx.strokeStyle="#555";
+ctx.lineWidth=2;
+ctx.stroke();
+}
+
+ctx.restore();
+}
+
+
+/* =========================================================
+MITTELER EINSATZ
+========================================================= */
+
+function drawCenterHud(){
+
+ctx.save();
+
+const x=W/2;
+
+ctx.fillStyle="#0b0b0b";
+ctx.strokeStyle="#c59a35";
+ctx.lineWidth=3;
+
+roundedRect(
+x-75,
+20,
+150,
+105,
+15
+);
+
+ctx.fill();
+ctx.stroke();
+
+ctx.fillStyle="#e0b83e";
+
+ctx.font="bold 30px Arial";
+
+ctx.textAlign="center";
+
+ctx.fillText(
+"100K",
+x,
+96
+);
+
+ctx.restore();
+}
+
+
+/* =========================================================
+KUGEL
+========================================================= */
+
+function drawBall(b){
+
+if(b.pocketed) return;
+
+ctx.save();
+
+/* Schatten */
+
+ctx.beginPath();
+
+ctx.arc(
+b.x+3,
+b.y+4,
+BALL_R,
+0,
+Math.PI*2
+);
+
+ctx.fillStyle="rgba(0,0,0,.45)";
+ctx.fill();
+
+
+/* Kugel */
+
+let color="#fff";
+
+if(b.type==="solid")
+color=solidColors[b.number];
+
+if(b.type==="stripe")
+color=stripeColors[b.number];
+
+if(b.type==="eight")
+color="#080808";
+
+const gradient =
+ctx.createRadialGradient(
+b.x-7,
+b.y-8,
+2,
+b.x,
+b.y,
+BALL_R
+);
+
+gradient.addColorStop(0,"#fff");
+gradient.addColorStop(.2,color);
+gradient.addColorStop(1,
+b.type==="cue" ?
+"#bbb" :
+"#111"
+);
+
+if(b.type==="stripe"){
+
+ctx.beginPath();
+
+ctx.arc(
+b.x,
+b.y,
+BALL_R,
+0,
+Math.PI*2
+);
+
+ctx.fillStyle="#fff";
+ctx.fill();
+
+ctx.save();
+
+ctx.beginPath();
+
+ctx.arc(
+b.x,
+b.y,
+BALL_R,
+0,
+Math.PI*2
+);
+
+ctx.clip();
+
+ctx.fillStyle=color;
+
+ctx.fillRect(
+b.x-BALL_R,
+b.y-7,
+BALL_R*2,
+14
+);
+
+ctx.restore();
+
+}else{
+
+ctx.beginPath();
+
+ctx.arc(
+b.x,
+b.y,
+BALL_R,
+0,
+Math.PI*2
+);
+
+ctx.fillStyle=gradient;
+ctx.fill();
+}
+
+
+/* Zahl */
+
+if(b.type!=="cue"){
+
+ctx.beginPath();
+
+ctx.arc(
+b.x,
+b.y,
+8,
+0,
+Math.PI*2
+);
+
+ctx.fillStyle="#fff";
+ctx.fill();
+
+ctx.fillStyle="#111";
+
+ctx.font="bold 8px Arial";
 ctx.textAlign="center";
 ctx.textBaseline="middle";
 
 ctx.fillText(
 b.number,
 b.x,
-b.y+0.5
+b.y+1
 );
 }
 
+
+/* Weiße Kugel */
+
+if(b.type==="cue"){
+
+ctx.fillStyle="#c72525";
+
+ctx.beginPath();
+
+ctx.arc(
+b.x,
+b.y,
+3,
+0,
+Math.PI*2
+);
+
+ctx.fill();
+}
+
+
 ctx.restore();
 }
-}
 
-function drawAim(){
 
-if(!cueBall.active || shooting) return;
+/* =========================================================
+KÖ
+========================================================= */
+
+function drawCue(){
+
+if(!aiming || !cueBall || cueBall.pocketed)
+return;
 
 const dx=aimX-cueBall.x;
 const dy=aimY-cueBall.y;
 
-const len=Math.hypot(dx,dy);
+const d=Math.hypot(dx,dy);
 
-if(len<5) return;
+if(d<1) return;
 
-const nx=dx/len;
-const ny=dy/len;
+const angle=Math.atan2(dy,dx);
 
-const lineLength=160;
+const length=
+210+
+power*230;
 
 ctx.save();
 
-ctx.strokeStyle="rgba(255,255,255,.7)";
-ctx.lineWidth=2;
-ctx.setLineDash([8,7]);
-
-ctx.beginPath();
-
-ctx.moveTo(
+ctx.translate(
 cueBall.x,
 cueBall.y
 );
 
-ctx.lineTo(
-cueBall.x+nx*lineLength,
-cueBall.y+ny*lineLength
+ctx.rotate(angle);
+
+ctx.translate(-length,0);
+
+/* Griff */
+
+const g=
+ctx.createLinearGradient(
+0,0,length,0
 );
 
-ctx.stroke();
+g.addColorStop(0,"#2b1605");
+g.addColorStop(.2,"#8d5c16");
+g.addColorStop(.75,"#e0b94e");
+g.addColorStop(1,"#fff1bd");
 
-ctx.restore();
+ctx.fillStyle=g;
 
-// Queue
-ctx.save();
-
-ctx.strokeStyle="#d7b47b";
-ctx.lineWidth=5;
-
-ctx.beginPath();
-
-ctx.moveTo(
-cueBall.x-nx*55,
-cueBall.y-ny*55
+ctx.fillRect(
+0,
+-4,
+length,
+8
 );
 
-ctx.lineTo(
-cueBall.x-nx*180,
-cueBall.y-ny*180
-);
+ctx.fillStyle="#fff";
 
-ctx.stroke();
+ctx.fillRect(
+length-12,
+-5,
+12,
+10
+);
 
 ctx.restore();
 }
+
+
+/* =========================================================
+ZEICHNEN
+========================================================= */
 
 function draw(){
 
-drawTable();
-drawBalls();
-drawAim();
+ctx.clearRect(
+0,
+0,
+W,
+H
+);
 
-requestAnimationFrame(draw);
+drawTable();
+
+drawPockets();
+
+drawDiamonds();
+
+drawLogo();
+
+drawPlayer(
+"left",
+"Orhan",
+200
+);
+
+drawPlayer(
+"right",
+"Ginevra",
+133
+);
+
+drawCenterHud();
+
+for(const b of balls)
+drawBall(b);
+
+drawCue();
 }
 
-draw();
+
+/* =========================================================
+PHYSIK
+========================================================= */
 
 function updatePhysics(){
 
-if(!shooting) return;
-
-let moving=false;
+moving=false;
 
 for(const b of balls){
 
-if(!b.active) continue;
+if(b.pocketed)
+continue;
 
 b.x+=b.vx;
 b.y+=b.vy;
 
-b.vx*=0.985;
-b.vy*=0.985;
+b.vx*=0.987;
+b.vy*=0.987;
 
-if(Math.abs(b.vx)>0.03 || Math.abs(b.vy)>0.03){
+if(Math.abs(b.vx)<0.015)
+b.vx=0;
+
+if(Math.abs(b.vy)<0.015)
+b.vy=0;
+
+if(
+Math.abs(b.vx)>.02 ||
+Math.abs(b.vy)>.02
+)
 moving=true;
-}else{
+
+
+/* Banden */
+
+if(b.x-BALL_R<cloth.x){
+
+b.x=cloth.x+BALL_R;
+b.vx=Math.abs(b.vx)*.88;
+}
+
+if(b.x+BALL_R>cloth.x+cloth.w){
+
+b.x=cloth.x+cloth.w-BALL_R;
+b.vx=-Math.abs(b.vx)*.88;
+}
+
+if(b.y-BALL_R<cloth.y){
+
+b.y=cloth.y+BALL_R;
+b.vy=Math.abs(b.vy)*.88;
+}
+
+if(b.y+BALL_R>cloth.y+cloth.h){
+
+b.y=cloth.y+cloth.h-BALL_R;
+b.vy=-Math.abs(b.vy)*.88;
+}
+
+
+/* Taschen */
+
+for(const p of pockets()){
+
+const d=Math.hypot(
+b.x-p.x,
+b.y-p.y
+);
+
+if(d<table.pocket-5){
+
+b.pocketed=true;
+
 b.vx=0;
 b.vy=0;
+
+break;
+}
+}
 }
 
-// Bande gauche/droite
-if(
-b.x-ballR<table.x &&
-b.vx<0
-){
-b.x=table.x+ballR;
-b.vx*=-0.88;
-}
 
-if(
-b.x+ballR>table.x+table.w &&
-b.vx>0
-){
-b.x=table.x+table.w-ballR;
-b.vx*=-0.88;
-}
-
-// Bande haut/bas
-if(
-b.y-ballR<table.y &&
-b.vy<0
-){
-b.y=table.y+ballR;
-b.vy*=-0.88;
-}
-
-if(
-b.y+ballR>table.y+table.h &&
-b.vy>0
-){
-b.y=table.y+table.h-ballR;
-b.vy*=-0.88;
-}
-
-checkPocket(b);
-}
-
-collideBalls();
-
-if(!moving){
-
-shooting=false;
-
-for(const b of balls){
-b.vx=0;
-b.vy=0;
-}
-
-statusText.textContent="Dein Stoß 🎱";
-}
-
-requestAnimationFrame(updatePhysics);
-}
-
-function collideBalls(){
+/* Kugel-Kollision */
 
 for(let i=0;i<balls.length;i++){
 
-const a=balls[i];
-
-if(!a.active) continue;
-
 for(let j=i+1;j<balls.length;j++){
 
+const a=balls[i];
 const b=balls[j];
 
-if(!b.active) continue;
+if(
+a.pocketed ||
+b.pocketed
+)
+continue;
 
 const dx=b.x-a.x;
 const dy=b.y-a.y;
 
 const dist=Math.hypot(dx,dy);
-const minDist=ballR*2;
 
-if(dist>0 && dist<minDist){
+const min=BALL_R*2;
+
+if(
+dist>0 &&
+dist<min
+){
 
 const nx=dx/dist;
 const ny=dy/dist;
 
-const overlap=minDist-dist;
+const overlap=min-dist;
 
 a.x-=nx*overlap/2;
 a.y-=ny*overlap/2;
@@ -713,169 +1222,222 @@ a.y-=ny*overlap/2;
 b.x+=nx*overlap/2;
 b.y+=ny*overlap/2;
 
-const dvx=a.vx-b.vx;
-const dvy=a.vy-b.vy;
+const rvx=b.vx-a.vx;
+const rvy=b.vy-a.vy;
 
-const impact=dvx*nx+dvy*ny;
+const rel=
+rvx*nx+
+rvy*ny;
 
-if(impact>0){
+if(rel<0){
 
-a.vx-=impact*nx;
-a.vy-=impact*ny;
+const impulse=-rel;
 
-b.vx+=impact*nx;
-b.vy+=impact*ny;
+a.vx-=impulse*nx;
+a.vy-=impulse*ny;
+
+b.vx+=impulse*nx;
+b.vy+=impulse*ny;
 }
 }
 }
 }
 }
 
-function checkPocket(b){
 
-for(const p of pockets){
+/* =========================================================
+MOUSE / TOUCH
+========================================================= */
 
-const d=Math.hypot(
-b.x-p.x,
-b.y-p.y
-);
+function getMouse(e){
 
-if(d<20){
-
-b.active=false;
-b.vx=0;
-b.vy=0;
-
-if(b.number===0){
-
-statusText.textContent="Weiße Kugel versenkt – neuer Ball!";
-
-setTimeout(()=>{
-
-cueBall.active=true;
-cueBall.x=table.x+table.w*.25;
-cueBall.y=table.y+table.h/2;
-cueBall.vx=0;
-cueBall.vy=0;
-
-},700);
-
-}else{
-
-statusText.textContent=
-"Kugel "+b.number+" versenkt! 🎯";
-}
-
-return;
-}
-}
-}
-
-function shoot(){
-
-if(shooting) return;
-
-const dx=aimX-cueBall.x;
-const dy=aimY-cueBall.y;
-
-const len=Math.hypot(dx,dy);
-
-if(len<5) return;
-
-const nx=dx/len;
-const ny=dy/len;
-
-const power=Number(powerSlider.value);
-
-const speed=power*.105;
-
-cueBall.vx=nx*speed;
-cueBall.vy=ny*speed;
-
-shooting=true;
-
-statusText.textContent="Kugeln bewegen sich… 🎱";
-
-updatePhysics();
-}
-
-function pointerPosition(e){
-
-const rect=canvas.getBoundingClientRect();
+const rect=
+canvas.getBoundingClientRect();
 
 return {
-x:(e.clientX-rect.left)/rect.width*1000,
-y:(e.clientY-rect.top)/rect.height*500
+
+x:
+(e.clientX-rect.left)*
+W/rect.width,
+
+y:
+(e.clientY-rect.top)*
+H/rect.height
 };
 }
 
-canvas.addEventListener("pointermove",e=>{
 
-const p=pointerPosition(e);
+canvas.addEventListener(
+"pointerdown",
+e=>{
+
+if(moving)
+return;
+
+if(cueBall.pocketed)
+return;
+
+const p=getMouse(e);
+
+const d=Math.hypot(
+p.x-cueBall.x,
+p.y-cueBall.y
+);
+
+if(d<80){
+
+aiming=true;
 
 aimX=p.x;
 aimY=p.y;
-});
 
-canvas.addEventListener("pointerdown",e=>{
+canvas.setPointerCapture(e.pointerId);
+}
+}
+);
 
-if(shooting) return;
 
-const p=pointerPosition(e);
+canvas.addEventListener(
+"pointermove",
+e=>{
+
+if(!aiming)
+return;
+
+const p=getMouse(e);
 
 aimX=p.x;
 aimY=p.y;
+
+const d=Math.hypot(
+aimX-cueBall.x,
+aimY-cueBall.y
+);
+
+power=
+Math.max(
+0,
+Math.min(
+1,
+(d-10)/240
+)
+);
+
+powerFill.style.height=
+(10+power*90)+"%";
+
+hint.textContent=
+"Stärke: "+
+Math.round(power*100)+
+"%";
+}
+);
+
+
+canvas.addEventListener(
+"pointerup",
+e=>{
+
+if(!aiming)
+return;
+
+aiming=false;
 
 shoot();
-});
 
-shootButton.addEventListener("click",shoot);
-
-resetButton.addEventListener("click",()=>{
-
-resetGame();
-
-});
-
-powerSlider.addEventListener("input",()=>{
-
-powerText.textContent=
-powerSlider.value+"%";
-
-});
-
-function roundRect(x,y,w,h,r){
-
-ctx.beginPath();
-
-ctx.moveTo(x+r,y);
-
-ctx.arcTo(
-x+w,y,
-x+w,y+h,
-r
+canvas.releasePointerCapture?.(
+e.pointerId
 );
-
-ctx.arcTo(
-x+w,y+h,
-x,y+h,
-r
-);
-
-ctx.arcTo(
-x,y+h,
-x,y,
-r
-);
-
-ctx.arcTo(
-x,y,
-x+w,y,
-r
-);
-
-ctx.closePath();
 }
+);
+
+
+/* =========================================================
+SCHUSS
+========================================================= */
+
+function shoot(){
+
+if(!cueBall)
+return;
+
+const dx=
+aimX-cueBall.x;
+
+const dy=
+aimY-cueBall.y;
+
+const d=
+Math.hypot(dx,dy);
+
+if(d<10)
+return;
+
+const nx=dx/d;
+const ny=dy/d;
+
+const speed=
+3+
+power*14;
+
+cueBall.vx=
+nx*speed;
+
+cueBall.vy=
+ny*speed;
+
+powerFill.style.height="10%";
+
+hint.textContent=
+"OOZ BALL";
+
+power=0;
+}
+
+
+/* =========================================================
+RESPONSIVE SKALIERUNG
+========================================================= */
+
+function resize(){
+
+const scale=
+Math.min(
+window.innerWidth/W,
+window.innerHeight/H
+);
+
+canvas.style.width=
+(W*scale)+"px";
+
+canvas.style.height=
+(H*scale)+"px";
+}
+
+window.addEventListener(
+"resize",
+resize
+);
+
+
+/* =========================================================
+START
+========================================================= */
+
+createRack();
+
+resize();
+
+function loop(){
+
+updatePhysics();
+
+draw();
+
+requestAnimationFrame(loop);
+}
+
+loop();
 
 </script>
 
