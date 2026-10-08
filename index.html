@@ -19,552 +19,978 @@ width: 100%;
 height: 100%;
 overflow: hidden;
 background: #111;
+}
+
+body {
+display: flex;
+align-items: center;
+justify-content: center;
 touch-action: none;
 }
 
 canvas {
 display: block;
-margin: auto;
+touch-action: none;
 }
 </style>
 
-<!-- Phaser 3 -->
-<script src="https://cdn.jsdelivr.net/npm/phaser@3.90.0/dist/phaser.min.js"></script>
+<!-- MATTER.JS -->
+<script src="https://cdn.jsdelivr.net/npm/matter-js@0.20.0/build/matter.min.js"></script>
 
 </head>
 
 <body>
 
+<canvas id="game"></canvas>
+
 <script>
 
 /* =========================================================
 OOZ BALL
-ECHTER OOZ-TISCH + MATTER PHYSICS
+PHYSIK + ORIGINAL TISCHBILD
 ========================================================= */
 
-const TABLE_W = 800;
-const TABLE_H = 400;
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
 
-const BALL_RADIUS = 10;
+const {
+Engine,
+World,
+Bodies,
+Body,
+Composite
+} = Matter;
+
 
 /* =========================================================
-PHASER
+SPIELGRÖSSE
 ========================================================= */
 
-const config = {
+const GAME_W = 1200;
+const GAME_H = 600;
 
-type: Phaser.AUTO,
 
-width: TABLE_W,
-height: TABLE_H,
+/* =========================================================
+ORIGINAL-TISCHBILD
+========================================================= */
 
-backgroundColor: '#111111',
+const tableImage = new Image();
+tableImage.src = "ooz-table.jpg";
 
-scale: {
-mode: Phaser.Scale.FIT,
-autoCenter: Phaser.Scale.CENTER_BOTH
-},
+let imageReady = false;
 
-physics: {
-
-default: 'matter',
-
-matter: {
-
-gravity: {
-x: 0,
-y: 0
-},
-
-enableSleeping: true,
-
-positionIterations: 12,
-velocityIterations: 10
-}
-},
-
-scene: {
-preload: preload,
-create: create,
-update: update
-}
+tableImage.onload = function () {
+imageReady = true;
 };
 
-new Phaser.Game(config);
+
+/* =========================================================
+MATTER ENGINE
+========================================================= */
+
+const engine = Engine.create();
+
+engine.gravity.x = 0;
+engine.gravity.y = 0;
+
+engine.enableSleeping = true;
+
+engine.positionIterations = 12;
+engine.velocityIterations = 10;
 
 
 /* =========================================================
-VARIABLEN
+TISCHGRENZEN
 ========================================================= */
-
-let whiteBall;
-
-let ballGraphic;
-
-let aimGraphic;
-
-let dragging = false;
-
-let dragStartX = 0;
-let dragStartY = 0;
-
-const MAX_DRAG = 220;
-
-const FORCE_SCALE = 0.00008;
-
-
-/* =========================================================
-BILDER LADEN
-========================================================= */
-
-function preload() {
 
 /*
-Dein vorhandenes Bild aus GitHub.
-Dateiname muss exakt sein:
-ooz-table.jpg
+Die Grenzen liegen etwas innerhalb
+des Bildes, damit die Kugeln nicht
+aus dem Tisch verschwinden.
 */
 
-this.load.image(
-'oozTable',
-'ooz-table.jpg'
-);
-}
+const RAIL = 38;
 
-
-/* =========================================================
-SPIEL ERSTELLEN
-========================================================= */
-
-function create() {
-
-/* -----------------------------------------------------
-1. DEIN ECHTER OOZ-TISCH
------------------------------------------------------ */
-
-const tableImage = this.add.image(
-TABLE_W / 2,
-TABLE_H / 2,
-'oozTable'
-);
-
-/*
-Das Bild wird exakt auf unser 800 × 400
-Spielfeld gelegt.
-*/
-
-tableImage.setDisplaySize(
-TABLE_W,
-TABLE_H
-);
-
-tableImage.setDepth(0);
-
-
-/* -----------------------------------------------------
-2. UNSICHTBARE BANDE
------------------------------------------------------ */
-
-const wallOptions = {
-
+const railTop = Bodies.rectangle(
+GAME_W / 2,
+RAIL / 2,
+GAME_W,
+RAIL,
+{
 isStatic: true,
-
-restitution: 1.0,
-
-friction: 0,
-
-frictionStatic: 0
-};
-
-/*
-Oben
-*/
-
-this.matter.add.rectangle(
-TABLE_W / 2,
--5,
-TABLE_W,
-10,
-wallOptions
-);
-
-/*
-Unten
-*/
-
-this.matter.add.rectangle(
-TABLE_W / 2,
-TABLE_H + 5,
-TABLE_W,
-10,
-wallOptions
-);
-
-/*
-Links
-*/
-
-this.matter.add.rectangle(
--5,
-TABLE_H / 2,
-10,
-TABLE_H,
-wallOptions
-);
-
-/*
-Rechts
-*/
-
-this.matter.add.rectangle(
-TABLE_W + 5,
-TABLE_H / 2,
-10,
-TABLE_H,
-wallOptions
-);
-
-
-/* -----------------------------------------------------
-3. WEISSE KUGEL
------------------------------------------------------ */
-
-whiteBall = this.matter.add.circle(
-
-200,
-TABLE_H / 2,
-
-BALL_RADIUS,
-
-{
-
 restitution: 0.92,
-
-friction: 0.01,
-
-frictionAir: 0.025,
-
-density: 0.004,
-
-sleepThreshold: 10
+friction: 0
 }
 );
 
-
-/* -----------------------------------------------------
-4. KUGEL-GRAFIK
------------------------------------------------------ */
-
-ballGraphic = this.add.graphics();
-
-ballGraphic.setDepth(10);
-
-
-/* -----------------------------------------------------
-5. ZIEL-/STOSSLINIE
------------------------------------------------------ */
-
-aimGraphic = this.add.graphics();
-
-aimGraphic.setDepth(9);
-
-
-/* -----------------------------------------------------
-6. MOUSE / TOUCH
------------------------------------------------------ */
-
-this.input.on(
-'pointerdown',
-function(pointer) {
-
-const dx =
-pointer.worldX -
-whiteBall.position.x;
-
-const dy =
-pointer.worldY -
-whiteBall.position.y;
-
-const distance =
-Math.sqrt(dx * dx + dy * dy);
-
-/*
-Nur starten, wenn man die Kugel
-ungefähr trifft.
-*/
-
-if (distance < BALL_RADIUS * 3) {
-
-dragging = true;
-
-dragStartX =
-whiteBall.position.x;
-
-dragStartY =
-whiteBall.position.y;
-}
-}
-);
-
-
-this.input.on(
-'pointermove',
-function(pointer) {
-
-if (!dragging) {
-return;
-}
-
-drawAimLine(
-pointer.worldX,
-pointer.worldY
-);
-}
-);
-
-
-this.input.on(
-'pointerup',
-function(pointer) {
-
-if (!dragging) {
-return;
-}
-
-dragging = false;
-
-aimGraphic.clear();
-
-shoot(
-pointer.worldX,
-pointer.worldY
-);
-}
-);
-}
-
-
-/* =========================================================
-STOß
-========================================================= */
-
-function shoot(targetX, targetY) {
-
-const dx =
-targetX -
-whiteBall.position.x;
-
-const dy =
-targetY -
-whiteBall.position.y;
-
-let distance =
-Math.sqrt(dx * dx + dy * dy);
-
-if (distance < 5) {
-return;
-}
-
-/*
-Maximale Stärke begrenzen
-*/
-
-distance =
-Math.min(
-distance,
-MAX_DRAG
-);
-
-const factor =
-distance /
-Math.sqrt(dx * dx + dy * dy);
-
-const limitedDX =
-dx * factor;
-
-const limitedDY =
-dy * factor;
-
-
-/*
-Gegenrichtung des Ziehens.
-*/
-
-const forceX =
--limitedDX *
-FORCE_SCALE;
-
-const forceY =
--limitedDY *
-FORCE_SCALE;
-
-
-thisMatterApplyForce(
-forceX,
-forceY
-);
-}
-
-
-/* =========================================================
-FORCE
-========================================================= */
-
-function thisMatterApplyForce(
-forceX,
-forceY
-) {
-
-whiteBall.isSleeping = false;
-
-Phaser.Physics.Matter.Matter.Body.applyForce(
-
-whiteBall,
-
-whiteBall.position,
-
+const railBottom = Bodies.rectangle(
+GAME_W / 2,
+GAME_H - RAIL / 2,
+GAME_W,
+RAIL,
 {
-x: forceX,
-y: forceY
+isStatic: true,
+restitution: 0.92,
+friction: 0
 }
 );
+
+const railLeft = Bodies.rectangle(
+RAIL / 2,
+GAME_H / 2,
+RAIL,
+GAME_H,
+{
+isStatic: true,
+restitution: 0.92,
+friction: 0
+}
+);
+
+const railRight = Bodies.rectangle(
+GAME_W - RAIL / 2,
+GAME_H / 2,
+RAIL,
+GAME_H,
+{
+isStatic: true,
+restitution: 0.92,
+friction: 0
+}
+);
+
+World.add(engine.world, [
+railTop,
+railBottom,
+railLeft,
+railRight
+]);
+
+
+/* =========================================================
+KUGELN
+========================================================= */
+
+const BALL_R = 15;
+
+
+/*
+GENAU EINE WEISSE KUGEL
+*/
+
+const cueBall = Bodies.circle(
+300,
+300,
+BALL_R,
+{
+restitution: 0.96,
+friction: 0.002,
+frictionAir: 0.018,
+density: 0.001,
+slop: 0.01
+}
+);
+
+cueBall.label = "cueBall";
+
+World.add(engine.world, cueBall);
+
+
+/* =========================================================
+13 OBJECT BALLS
+6 GANZE
+6 HALBE
+1 SCHWARZE 8
+========================================================= */
+
+const balls = [];
+
+const colors = [
+"#f5c400",
+"#0055ff",
+"#e63939",
+"#8b22b8",
+"#ff7b00",
+"#159447"
+];
+
+const stripeColors = [
+"#f5c400",
+"#0055ff",
+"#e63939",
+"#8b22b8",
+"#ff7b00",
+"#159447"
+];
+
+
+/* =========================================================
+13 POSITIONEN
+========================================================= */
+
+/*
+1
+2 3
+4 5 6
+7 8 9 10
+11 12
+13
+
+8 = SCHWARZ
+*/
+
+const rackPositions = [
+
+{x: 930, y: 300},
+
+{x: 957, y: 285},
+{x: 957, y: 315},
+
+{x: 984, y: 270},
+{x: 984, y: 300},
+{x: 984, y: 330},
+
+{x: 1011, y: 257},
+{x: 1011, y: 283},
+{x: 1011, y: 317},
+{x: 1011, y: 343},
+
+{x: 1038, y: 285},
+{x: 1038, y: 315},
+
+{x: 1065, y: 300}
+];
+
+
+/* =========================================================
+ERZEUGE 13 KUGELN
+========================================================= */
+
+for (let i = 0; i < 13; i++) {
+
+const p = rackPositions[i];
+
+const ball = Bodies.circle(
+p.x,
+p.y,
+BALL_R,
+{
+restitution: 0.96,
+friction: 0.002,
+frictionAir: 0.018,
+density: 0.001,
+slop: 0.01
+}
+);
+
+ball.label = "objectBall";
+
+/*
+Kugel 8 ist Position 8
+im Rack.
+*/
+
+if (i === 7) {
+ball.ballType = "eight";
+ball.number = 8;
+}
+else if (i < 6) {
+ball.ballType = "solid";
+ball.number = i + 1;
+}
+else {
+ball.ballType = "stripe";
+ball.number = i + 1;
+}
+
+balls.push(ball);
+
+World.add(engine.world, ball);
 }
 
 
 /* =========================================================
-AIM-LINIE
+SCHUSS
 ========================================================= */
 
-function drawAimLine(
-pointerX,
-pointerY
-) {
+let aiming = false;
+let aimX = 0;
+let aimY = 0;
 
-aimGraphic.clear();
-
-const ballX =
-whiteBall.position.x;
-
-const ballY =
-whiteBall.position.y;
+const MAX_DRAG = 260;
 
 
-let dx =
-pointerX - ballX;
+/* =========================================================
+SPIELFLÄCHE SKALIEREN
+========================================================= */
 
-let dy =
-pointerY - ballY;
+let scale = 1;
+let offsetX = 0;
+let offsetY = 0;
+
+function resize() {
+
+const screenW = window.innerWidth;
+const screenH = window.innerHeight;
+
+scale = Math.min(
+screenW / GAME_W,
+screenH / GAME_H
+);
+
+canvas.width = GAME_W * scale;
+canvas.height = GAME_H * scale;
+
+offsetX = (screenW - canvas.width) / 2;
+offsetY = (screenH - canvas.height) / 2;
+
+canvas.style.width = canvas.width + "px";
+canvas.style.height = canvas.height + "px";
+}
+
+window.addEventListener("resize", resize);
+
+resize();
 
 
-let distance =
-Math.sqrt(dx * dx + dy * dy);
+/* =========================================================
+POINTER KOORDINATEN
+========================================================= */
+
+function getGamePosition(e) {
+
+const rect = canvas.getBoundingClientRect();
+
+return {
+x: (e.clientX - rect.left) / scale,
+y: (e.clientY - rect.top) / scale
+};
+}
 
 
-if (distance < 1) {
+/* =========================================================
+POINTER DOWN
+========================================================= */
+
+canvas.addEventListener("pointerdown", function(e) {
+
+e.preventDefault();
+
+/*
+Nicht schießen solange Kugeln rollen
+*/
+
+if (isMoving()) {
 return;
 }
 
+const p = getGamePosition(e);
+
+const dx = p.x - cueBall.position.x;
+const dy = p.y - cueBall.position.y;
+
+const distance = Math.sqrt(dx * dx + dy * dy);
+
+/*
+Nur starten wenn man nahe
+an der weißen Kugel beginnt.
+*/
+
+if (distance < 70) {
+
+aiming = true;
+
+aimX = p.x;
+aimY = p.y;
+
+canvas.setPointerCapture(e.pointerId);
+}
+});
+
+
+/* =========================================================
+POINTER MOVE
+========================================================= */
+
+canvas.addEventListener("pointermove", function(e) {
+
+if (!aiming) {
+return;
+}
+
+e.preventDefault();
+
+const p = getGamePosition(e);
+
+aimX = p.x;
+aimY = p.y;
+});
+
+
+/* =========================================================
+POINTER UP
+========================================================= */
+
+canvas.addEventListener("pointerup", function(e) {
+
+if (!aiming) {
+return;
+}
+
+e.preventDefault();
+
+const p = getGamePosition(e);
+
+aimX = p.x;
+aimY = p.y;
+
+shoot();
+
+aiming = false;
+});
+
+
+/* =========================================================
+SCHUSS-FUNKTION
+========================================================= */
+
+function shoot() {
+
+const dx = aimX - cueBall.position.x;
+const dy = aimY - cueBall.position.y;
+
+let distance = Math.sqrt(dx * dx + dy * dy);
+
+if (distance < 8) {
+return;
+}
+
+/*
+Maximale Stärke
+*/
 
 if (distance > MAX_DRAG) {
-
-const scale =
-MAX_DRAG /
-distance;
-
-dx *= scale;
-dy *= scale;
+distance = MAX_DRAG;
 }
+
+/*
+Normalisierte Richtung
+*/
+
+const length = Math.sqrt(dx * dx + dy * dy);
+
+const nx = dx / length;
+const ny = dy / length;
 
 
 /*
-Linie zeigt die spätere Stoßrichtung.
+WICHTIG:
+
+Der Ball fliegt genau
+entgegen der Ziehrichtung.
 */
 
-aimGraphic.lineStyle(
-2,
-0xffffff,
-0.8
+const power = distance * 0.085;
+
+
+Body.setVelocity(
+cueBall,
+{
+x: -nx * power,
+y: -ny * power
+}
 );
 
-aimGraphic.beginPath();
-
-aimGraphic.moveTo(
-ballX,
-ballY
-);
-
-aimGraphic.lineTo(
-ballX - dx,
-ballY - dy
-);
-
-aimGraphic.strokePath();
+Body.setAngularVelocity(cueBall, 0);
 }
 
 
 /* =========================================================
-UPDATE
+PRÜFEN OB KUGELN NOCH ROLLEN
 ========================================================= */
 
-function update() {
+function isMoving() {
 
-if (!whiteBall) {
-return;
+const allBodies = Composite.allBodies(engine.world);
+
+for (const body of allBodies) {
+
+if (body.isStatic) {
+continue;
+}
+
+const vx = body.velocity.x;
+const vy = body.velocity.y;
+
+const speed = Math.sqrt(
+vx * vx + vy * vy
+);
+
+if (speed > 0.15) {
+return true;
+}
+}
+
+return false;
 }
 
 
-/* Kugel zeichnen */
+/* =========================================================
+ZEICHNEN
+========================================================= */
 
-ballGraphic.clear();
+function draw() {
+
+ctx.clearRect(
+0,
+0,
+GAME_W,
+GAME_H
+);
+
+
+/*
+TISCHBILD
+*/
+
+if (imageReady) {
+
+ctx.drawImage(
+tableImage,
+0,
+0,
+GAME_W,
+GAME_H
+);
+
+} else {
+
+ctx.fillStyle = "#064d43";
+
+ctx.fillRect(
+0,
+0,
+GAME_W,
+GAME_H
+);
+}
+
+
+/*
+AIM-LINIE
+*/
+
+if (aiming) {
+
+const dx = aimX - cueBall.position.x;
+const dy = aimY - cueBall.position.y;
+
+const length = Math.sqrt(
+dx * dx + dy * dy
+);
+
+if (length > 0) {
+
+const nx = dx / length;
+const ny = dy / length;
+
+const lineLength = 220;
+
+ctx.beginPath();
+
+ctx.moveTo(
+cueBall.position.x,
+cueBall.position.y
+);
+
+ctx.lineTo(
+cueBall.position.x - nx * lineLength,
+cueBall.position.y - ny * lineLength
+);
+
+ctx.strokeStyle = "rgba(255,255,255,0.85)";
+ctx.lineWidth = 2;
+
+ctx.stroke();
+}
+}
+
+
+/*
+OBJECT BALLS
+*/
+
+for (let i = 0; i < balls.length; i++) {
+
+drawBall(
+balls[i],
+i
+);
+}
+
+
+/*
+WEISSE KUGEL
+*/
+
+drawCueBall();
+}
+
+
+/* =========================================================
+WEISSE KUGEL ZEICHNEN
+========================================================= */
+
+function drawCueBall() {
+
+const x = cueBall.position.x;
+const y = cueBall.position.y;
+
+ctx.save();
+
+/*
+Schatten
+*/
+
+ctx.beginPath();
+
+ctx.arc(
+x + 2,
+y + 3,
+BALL_R,
+0,
+Math.PI * 2
+);
+
+ctx.fillStyle = "rgba(0,0,0,0.35)";
+ctx.fill();
+
+
+/*
+Kugel
+*/
+
+const gradient = ctx.createRadialGradient(
+x - 5,
+y - 5,
+2,
+x,
+y,
+BALL_R
+);
+
+gradient.addColorStop(0, "#ffffff");
+gradient.addColorStop(0.7, "#eeeeee");
+gradient.addColorStop(1, "#bdbdbd");
+
+ctx.beginPath();
+
+ctx.arc(
+x,
+y,
+BALL_R,
+0,
+Math.PI * 2
+);
+
+ctx.fillStyle = gradient;
+ctx.fill();
+
+ctx.restore();
+}
+
+
+/* =========================================================
+FARBIGE KUGEL
+========================================================= */
+
+function drawBall(ball, index) {
+
+const x = ball.position.x;
+const y = ball.position.y;
+
+ctx.save();
 
 
 /*
 Schatten
 */
 
-ballGraphic.fillStyle(
-0x000000,
-0.25
+ctx.beginPath();
+
+ctx.arc(
+x + 2,
+y + 3,
+BALL_R,
+0,
+Math.PI * 2
 );
 
-ballGraphic.fillCircle(
-whiteBall.position.x + 2,
-whiteBall.position.y + 2,
-BALL_RADIUS + 1
-);
+ctx.fillStyle = "rgba(0,0,0,0.35)";
+ctx.fill();
 
 
 /*
-Weiße Kugel
+8er Kugel
 */
 
-ballGraphic.fillStyle(
-0xffffff,
-1
+if (ball.ballType === "eight") {
+
+const gradient = ctx.createRadialGradient(
+x - 5,
+y - 5,
+2,
+x,
+y,
+BALL_R
 );
 
-ballGraphic.fillCircle(
-whiteBall.position.x,
-whiteBall.position.y,
-BALL_RADIUS
+gradient.addColorStop(0, "#555");
+gradient.addColorStop(0.55, "#151515");
+gradient.addColorStop(1, "#000");
+
+ctx.beginPath();
+
+ctx.arc(
+x,
+y,
+BALL_R,
+0,
+Math.PI * 2
 );
+
+ctx.fillStyle = gradient;
+ctx.fill();
+
+/*
+weiße 8
+*/
+
+ctx.beginPath();
+
+ctx.arc(
+x,
+y,
+6,
+0,
+Math.PI * 2
+);
+
+ctx.fillStyle = "#fff";
+ctx.fill();
+
+ctx.fillStyle = "#111";
+
+ctx.font = "bold 7px Arial";
+ctx.textAlign = "center";
+ctx.textBaseline = "middle";
+
+ctx.fillText(
+"8",
+x,
+y
+);
+
+ctx.restore();
+
+return;
+}
 
 
 /*
-Kleiner Glanzpunkt
+Farbe
 */
 
-ballGraphic.fillStyle(
-0xffffff,
-0.9
+let color;
+
+if (ball.ballType === "solid") {
+
+color =
+colors[
+(ball.number - 1) % colors.length
+];
+
+} else {
+
+color =
+stripeColors[
+(ball.number - 1) % stripeColors.length
+];
+}
+
+
+/*
+Kugel
+*/
+
+const gradient = ctx.createRadialGradient(
+x - 5,
+y - 5,
+2,
+x,
+y,
+BALL_R
 );
 
-ballGraphic.fillCircle(
-whiteBall.position.x - 3,
-whiteBall.position.y - 3,
-2
+gradient.addColorStop(0, "#ffffff");
+gradient.addColorStop(0.12, color);
+gradient.addColorStop(0.8, color);
+gradient.addColorStop(1, "#222");
+
+
+ctx.beginPath();
+
+ctx.arc(
+x,
+y,
+BALL_R,
+0,
+Math.PI * 2
+);
+
+ctx.fillStyle = gradient;
+ctx.fill();
+
+
+/*
+Streifenkugel
+*/
+
+if (ball.ballType === "stripe") {
+
+ctx.save();
+
+ctx.beginPath();
+
+ctx.arc(
+x,
+y,
+BALL_R,
+0,
+Math.PI * 2
+);
+
+ctx.clip();
+
+ctx.fillStyle = "#f4f4f4";
+
+ctx.fillRect(
+x - BALL_R,
+y - 5,
+BALL_R * 2,
+10
+);
+
+ctx.restore();
+
+}
+
+
+/*
+Nummer
+*/
+
+ctx.beginPath();
+
+ctx.arc(
+x,
+y,
+5,
+0,
+Math.PI * 2
+);
+
+ctx.fillStyle = "#fff";
+ctx.fill();
+
+
+ctx.fillStyle = "#111";
+
+ctx.font = "bold 6px Arial";
+
+ctx.textAlign = "center";
+ctx.textBaseline = "middle";
+
+ctx.fillText(
+ball.number,
+x,
+y
+);
+
+
+ctx.restore();
+}
+
+
+/* =========================================================
+GAME LOOP
+========================================================= */
+
+let lastTime = performance.now();
+
+function loop(now) {
+
+const delta = Math.min(
+now - lastTime,
+33
+);
+
+lastTime = now;
+
+Engine.update(
+engine,
+delta
+);
+
+/*
+Sehr langsame Kugeln stoppen,
+damit sie nicht ewig rollen.
+*/
+
+const bodies = Composite.allBodies(
+engine.world
+);
+
+for (const body of bodies) {
+
+if (body.isStatic) {
+continue;
+}
+
+const speed = Math.sqrt(
+body.velocity.x * body.velocity.x +
+body.velocity.y * body.velocity.y
+);
+
+if (speed < 0.08) {
+
+Body.setVelocity(
+body,
+{
+x: 0,
+y: 0
+}
+);
+
+Body.setAngularVelocity(
+body,
+0
 );
 }
+}
+
+
+draw();
+
+requestAnimationFrame(loop);
+}
+
+
+/* =========================================================
+START
+========================================================= */
+
+requestAnimationFrame(loop);
 
 </script>
 
