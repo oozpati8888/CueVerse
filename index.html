@@ -2,23 +2,18 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta
-name="viewport"
-content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
->
+<meta name="viewport"
+content="width=device-width,
+initial-scale=1.0,
+maximum-scale=1.0,
+user-scalable=no">
 
-<title>OOZ BALL – Phaser 3 + Matter.js</title>
+<title>OOZ BALL</title>
 
-<!--
-Phaser 3 enthält eine Integration für Matter.js.
-Für diesen ersten Entwicklungsschritt verwenden wir
-ausschließlich Phaser + Matter.
--->
 <script src="https://cdn.jsdelivr.net/npm/phaser@3.90.0/dist/phaser.min.js"></script>
 
 <style>
-html,
-body {
+html, body {
 margin: 0;
 padding: 0;
 width: 100%;
@@ -27,14 +22,9 @@ overflow: hidden;
 background: #111;
 }
 
-body {
-display: flex;
-align-items: center;
-justify-content: center;
-}
-
 canvas {
 display: block;
+margin: auto;
 }
 </style>
 </head>
@@ -43,121 +33,31 @@ display: block;
 
 <script>
 
-/*
-=========================================================
-OOZ BALL – ENTWICKLUNGSSCHRITT 1
+const TABLE_W = 800;
+const TABLE_H = 400;
 
-Technik:
-- HTML5
-- Phaser 3
-- Matter.js über Phaser
-- 2D Billardtisch
-- Exaktes 2:1 Spielfeld
-- Statische Banden
-- Weiße Kugel
-- Drag-to-Shoot Steuerung
-
-Noch NICHT enthalten:
-- weitere Billardkugeln
-- Taschen
-- Spieler
-- Score
-- Fouls
-- Multiplayer
-- komplexe Billardregeln
-
-Dieser Schritt bildet ausschließlich die physikalische
-Grundlage.
-=========================================================
-*/
-
-
-/* =====================================================
-SPIELKONSTANTEN
-===================================================== */
-
-/*
-Reine Spielfläche:
-
-Breite = 800
-Höhe = 400
-
-Damit exakt:
-
-800 / 400 = 2:1
-*/
-const TABLE_WIDTH = 800;
-const TABLE_HEIGHT = 400;
-
-
-/*
-Außenabstand für Rahmen/Banden.
-*/
-const TABLE_MARGIN = 70;
-
-
-/*
-Kugelradius.
-
-Durchmesser = 20 Pixel.
-*/
 const BALL_RADIUS = 10;
 
-
-/*
-Farbe des Tisches.
-*/
-const CLOTH_COLOR = 0x087b68;
-
-
-/*
-Farbe der Banden.
-*/
-const RAIL_COLOR = 0x5c3816;
-
-
-/* =====================================================
-PHASER KONFIGURATION
-===================================================== */
-
 const config = {
-
 type: Phaser.AUTO,
 
-width: TABLE_WIDTH + TABLE_MARGIN * 2,
+width: TABLE_W + 100,
+height: TABLE_H + 100,
 
-height: TABLE_HEIGHT + TABLE_MARGIN * 2,
-
-backgroundColor: "#111111",
+backgroundColor: '#151515',
 
 physics: {
-
-default: "matter",
+default: 'matter',
 
 matter: {
-
-/*
-Keine Schwerkraft.
-
-Billard findet ausschließlich auf einer
-horizontalen Ebene statt.
-*/
 gravity: {
 x: 0,
 y: 0
 },
 
-/*
-Debug kann später zum Testen aktiviert werden:
+enableSleeping: true,
 
-debug: true
-*/
-debug: false,
-
-/*
-Matter läuft mit Kollisionsphysik.
-*/
-enableSleeping: true
+debug: false
 }
 },
 
@@ -167,816 +67,318 @@ update: update
 }
 };
 
-
-/* =====================================================
-SPIEL STARTEN
-===================================================== */
-
 const game = new Phaser.Game(config);
 
+let ball;
+let ballGraphic;
 
-/* =====================================================
-GLOBALE VARIABLEN
-===================================================== */
+let aimGraphic;
 
-let whiteBall;
+let dragging = false;
 
+let startX = 0;
+let startY = 0;
 
-/*
-Anzeige für die Zuglinie.
-*/
-let aimGraphics;
-
-
-/*
-Speichert, ob der Spieler gerade
-die weiße Kugel zieht.
-*/
-let isAiming = false;
-
-
-/*
-Startpunkt des Ziehens.
-*/
-let dragStartX = 0;
-let dragStartY = 0;
-
-
-/*
-Aktuelle Mausposition.
-*/
-let dragCurrentX = 0;
-let dragCurrentY = 0;
-
-
-/*
-Maximale Zugdistanz.
-
-Dadurch kann die Kraft nicht unbegrenzt
-groß werden.
-*/
-const MAX_DRAG_DISTANCE = 200;
-
-
-/*
-Faktor für die Schusskraft.
-
-Dieser Wert wird später beim Balancing
-des Spiels angepasst.
-*/
-const FORCE_SCALE = 0.00005;
-
-
-/* =====================================================
-CREATE
-===================================================== */
+const TABLE_X = 50;
+const TABLE_Y = 50;
 
 function create() {
 
-/*
------------------------------------------------------
-KOORDINATEN DER REINEN SPIELFLÄCHE
------------------------------------------------------
-*/
+const scene = this;
 
-const tableX = TABLE_MARGIN;
-const tableY = TABLE_MARGIN;
+// =========================
+// TISCH
+// =========================
 
-const tableRight =
-tableX + TABLE_WIDTH;
+const table = scene.add.graphics();
 
-const tableBottom =
-tableY + TABLE_HEIGHT;
-
-
-/*
------------------------------------------------------
-TISCHRAHMEN
------------------------------------------------------
-*/
-
-const graphics = this.add.graphics();
-
-
-/*
-Äußerer Rahmen.
-*/
-
-graphics.fillStyle(0x24150a, 1);
-
-graphics.fillRoundedRect(
-tableX - 35,
-tableY - 35,
-TABLE_WIDTH + 70,
-TABLE_HEIGHT + 70,
-20
+// Außenrahmen
+table.fillStyle(0x222222, 1);
+table.fillRect(
+TABLE_X - 25,
+TABLE_Y - 25,
+TABLE_W + 50,
+TABLE_H + 50
 );
 
-
-/*
-Goldene innere Linie.
-*/
-
-graphics.lineStyle(
-5,
-0xd0a33b,
-1
+// Spielfeld
+table.fillStyle(0x176b52, 1);
+table.fillRect(
+TABLE_X,
+TABLE_Y,
+TABLE_W,
+TABLE_H
 );
 
-graphics.strokeRoundedRect(
-tableX - 25,
-tableY - 25,
-TABLE_WIDTH + 50,
-TABLE_HEIGHT + 50,
-15
+// Spielfeldrand
+table.lineStyle(4, 0x3b2414, 1);
+table.strokeRect(
+TABLE_X,
+TABLE_Y,
+TABLE_W,
+TABLE_H
 );
 
+// =========================
+// BANDEN
+// =========================
 
-/*
------------------------------------------------------
-SPIELFELD
------------------------------------------------------
-*/
+const railThickness = 18;
 
-graphics.fillStyle(
-CLOTH_COLOR,
-1
-);
-
-graphics.fillRect(
-tableX,
-tableY,
-TABLE_WIDTH,
-TABLE_HEIGHT
-);
-
-
-/*
-Leichter optischer Verlauf.
-*/
-
-graphics.fillStyle(
-0x0a8f78,
-0.15
-);
-
-graphics.fillRect(
-tableX,
-tableY,
-TABLE_WIDTH,
-TABLE_HEIGHT / 2
-);
-
-
-/*
------------------------------------------------------
-MATTER.JS BANDEN
------------------------------------------------------
-
-Wir erstellen vier statische Rechtecke.
-
-Wichtig:
-
-Die Banden sind STATIC.
-Sie können sich also nicht bewegen.
-
-Die Kugel prallt davon ab.
------------------------------------------------------
-*/
-
-const railThickness = 24;
-
-
-/*
-Obere Bande
-*/
-
-this.matter.add.rectangle(
-
-tableX + TABLE_WIDTH / 2,
-
-tableY - railThickness / 2,
-
-TABLE_WIDTH,
-
+scene.matter.add.rectangle(
+TABLE_X + TABLE_W / 2,
+TABLE_Y - railThickness / 2,
+TABLE_W,
 railThickness,
-
 {
-
 isStatic: true,
-
-restitution: 1.0,
-
+restitution: 1,
 friction: 0
 }
 );
 
-
-/*
-Untere Bande
-*/
-
-this.matter.add.rectangle(
-
-tableX + TABLE_WIDTH / 2,
-
-tableBottom + railThickness / 2,
-
-TABLE_WIDTH,
-
+scene.matter.add.rectangle(
+TABLE_X + TABLE_W / 2,
+TABLE_Y + TABLE_H + railThickness / 2,
+TABLE_W,
 railThickness,
-
 {
-
 isStatic: true,
-
-restitution: 1.0,
-
+restitution: 1,
 friction: 0
 }
 );
 
-
-/*
-Linke Bande
-*/
-
-this.matter.add.rectangle(
-
-tableX - railThickness / 2,
-
-tableY + TABLE_HEIGHT / 2,
-
+scene.matter.add.rectangle(
+TABLE_X - railThickness / 2,
+TABLE_Y + TABLE_H / 2,
 railThickness,
-
-TABLE_HEIGHT,
-
+TABLE_H,
 {
-
 isStatic: true,
-
-restitution: 1.0,
-
+restitution: 1,
 friction: 0
 }
 );
 
-
-/*
-Rechte Bande
-*/
-
-this.matter.add.rectangle(
-
-tableRight + railThickness / 2,
-
-tableY + TABLE_HEIGHT / 2,
-
+scene.matter.add.rectangle(
+TABLE_X + TABLE_W + railThickness / 2,
+TABLE_Y + TABLE_H / 2,
 railThickness,
-
-TABLE_HEIGHT,
-
+TABLE_H,
 {
-
 isStatic: true,
-
-restitution: 1.0,
-
+restitution: 1,
 friction: 0
 }
 );
 
+// =========================
+// WEISSE KUGEL
+// =========================
 
-/*
------------------------------------------------------
-WEISSE KUGEL
------------------------------------------------------
-*/
+const ballX = TABLE_X + 200;
+const ballY = TABLE_Y + TABLE_H / 2;
 
-/*
-Startposition:
-
-Links auf dem Tisch,
-ungefähr auf halber Höhe.
-*/
-
-const ballX =
-tableX + TABLE_WIDTH * 0.22;
-
-const ballY =
-tableY + TABLE_HEIGHT / 2;
-
-
-whiteBall =
-this.matter.add.circle(
-
+ball = scene.matter.add.circle(
 ballX,
 ballY,
-
 BALL_RADIUS,
-
 {
-
-/*
-Physikalische Eigenschaften
-*/
-
 restitution: 0.92,
-
-/*
-Reibung zwischen Kugel
-und Oberfläche.
-*/
-
 friction: 0.01,
-
-/*
-Luftreibung sorgt dafür,
-dass die Kugel langsam ausrollt.
-*/
-
 frictionAir: 0.025,
-
-/*
-Dichte der Kugel.
-*/
-
-density: 0.004,
-
-/*
-Keine Rotation notwendig.
-*/
-
-inertia: Infinity,
-
-/*
-Kugel darf schlafen,
-wenn sie komplett zur Ruhe kommt.
-*/
-
-sleepThreshold: 10
+density: 0.004
 }
 );
 
+// =========================
+// KUGEL ZEICHNEN
+// =========================
 
-/*
------------------------------------------------------
-KUGEL OPTISCH DARSTELLEN
------------------------------------------------------
-*/
+ballGraphic = scene.add.graphics();
 
-const ballGraphics =
-this.add.graphics();
+drawBall();
 
+// =========================
+// ZIELLINIE
+// =========================
 
-/*
-Matter-Körper und Grafik werden miteinander
-verbunden.
+aimGraphic = scene.add.graphics();
 
-Phaser aktualisiert die Position der Grafik
-später in update().
-*/
+// =========================
+// MOUSE / TOUCH
+// =========================
 
-whiteBall.renderSprite = ballGraphics;
-
-
-/*
------------------------------------------------------
-ZIEL-/AIMING-LINIE
------------------------------------------------------
-*/
-
-aimGraphics =
-this.add.graphics();
-
-
-/*
------------------------------------------------------
-MOUSE / POINTER STEUERUNG
------------------------------------------------------
-*/
-
-this.input.on(
-"pointerdown",
+scene.input.on(
+'pointerdown',
 function(pointer) {
 
-/*
-Wenn die Kugel noch rollt,
-darf kein neuer Schuss beginnen.
-*/
+const dx = pointer.worldX - ball.position.x;
+const dy = pointer.worldY - ball.position.y;
 
-if (whiteBall.speed > 0.05) {
+const distance = Math.sqrt(
+dx * dx + dy * dy
+);
+
+if (distance < 35) {
+
+dragging = true;
+
+startX = pointer.worldX;
+startY = pointer.worldY;
+}
+}
+);
+
+scene.input.on(
+'pointermove',
+function(pointer) {
+
+if (!dragging) {
 return;
 }
 
+aimGraphic.clear();
 
-/*
-Abstand Maus -> Kugel
-*/
+aimGraphic.lineStyle(
+3,
+0xffffff,
+0.9
+);
+
+aimGraphic.beginPath();
+
+aimGraphic.moveTo(
+ball.position.x,
+ball.position.y
+);
+
+aimGraphic.lineTo(
+ball.position.x +
+(ball.position.x - pointer.worldX),
+
+ball.position.y +
+(ball.position.y - pointer.worldY)
+);
+
+aimGraphic.strokePath();
+}
+);
+
+scene.input.on(
+'pointerup',
+function(pointer) {
+
+if (!dragging) {
+return;
+}
+
+dragging = false;
+
+aimGraphic.clear();
+
+const dx =
+pointer.worldX - ball.position.x;
+
+const dy =
+pointer.worldY - ball.position.y;
 
 const distance =
-Phaser.Math.Distance.Between(
-
-pointer.worldX,
-pointer.worldY,
-
-whiteBall.position.x,
-whiteBall.position.y
-);
-
-
-/*
-Nur wenn die Maus tatsächlich
-auf bzw. nahe der weißen Kugel ist.
-*/
-
-if (distance <= BALL_RADIUS + 15) {
-
-isAiming = true;
-
-dragStartX =
-whiteBall.position.x;
-
-dragStartY =
-whiteBall.position.y;
-
-dragCurrentX =
-pointer.worldX;
-
-dragCurrentY =
-pointer.worldY;
-}
-}
-);
-
-
-/*
------------------------------------------------------
-POINTER MOVE
------------------------------------------------------
-*/
-
-this.input.on(
-"pointermove",
-function(pointer) {
-
-if (!isAiming) {
-return;
-}
-
-
-dragCurrentX =
-pointer.worldX;
-
-dragCurrentY =
-pointer.worldY;
-
-
-/*
-Linie aktualisieren.
-*/
-
-drawAimLine();
-}
-);
-
-
-/*
------------------------------------------------------
-POINTER UP
------------------------------------------------------
-*/
-
-this.input.on(
-"pointerup",
-function(pointer) {
-
-if (!isAiming) {
-return;
-}
-
-
-/*
-Schuss ausführen.
-*/
-
-shoot();
-
-
-/*
-Ziehen beenden.
-*/
-
-isAiming = false;
-
-
-/*
-Linie entfernen.
-*/
-
-aimGraphics.clear();
-}
-);
-}
-
-
-/* =====================================================
-AIMING-LINIE
-===================================================== */
-
-function drawAimLine() {
-
-aimGraphics.clear();
-
-
-/*
-Zugvektor:
-
-Kugel -> Maus
-*/
-
-let dx =
-dragCurrentX -
-dragStartX;
-
-let dy =
-dragCurrentY -
-dragStartY;
-
-
-let distance =
-Math.sqrt(
-dx * dx +
-dy * dy
-);
-
-
-/*
-Zugdistanz begrenzen.
-*/
-
-if (distance > MAX_DRAG_DISTANCE) {
-
-const factor =
-MAX_DRAG_DISTANCE /
-distance;
-
-dx *= factor;
-dy *= factor;
-
-distance =
-MAX_DRAG_DISTANCE;
-}
-
-
-/*
------------------------------------------------------
-AIM-LINIE
-
-Die Linie zeigt vom weißen Ball
-zum gezogenen Mauspunkt.
-
-Beim Loslassen wird genau die
-entgegengesetzte Richtung verwendet.
------------------------------------------------------
-*/
-
-aimGraphics.lineStyle(
-4,
-0xffffff,
-0.85
-);
-
-
-aimGraphics.beginPath();
-
-aimGraphics.moveTo(
-dragStartX,
-dragStartY
-);
-
-aimGraphics.lineTo(
-dragStartX + dx,
-dragStartY + dy
-);
-
-aimGraphics.strokePath();
-
-
-/*
-Kleiner Kreis am Ende der Linie.
-*/
-
-aimGraphics.fillStyle(
-0xffffff,
-0.8
-);
-
-aimGraphics.fillCircle(
-dragStartX + dx,
-dragStartY + dy,
-5
-);
-}
-
-
-/* =====================================================
-SCHUSS
-===================================================== */
-
-function shoot() {
-
-/*
-Zugvektor.
-*/
-
-let dx =
-dragCurrentX -
-dragStartX;
-
-let dy =
-dragCurrentY -
-dragStartY;
-
-
-let distance =
-Math.sqrt(
-dx * dx +
-dy * dy
-);
-
-
-/*
-Kein Schuss bei praktisch keinem Zug.
-*/
+Math.sqrt(dx * dx + dy * dy);
 
 if (distance < 5) {
 return;
 }
 
+// Schusskraft
+const force = Math.min(
+distance,
+200
+) * 0.00006;
 
-/*
-Maximale Zugdistanz.
-*/
-
-if (distance > MAX_DRAG_DISTANCE) {
-
-const factor =
-MAX_DRAG_DISTANCE /
-distance;
-
-dx *= factor;
-dy *= factor;
-
-distance =
-MAX_DRAG_DISTANCE;
-}
-
-
-/*
------------------------------------------------------
-ENTGEGENGESETZTE RICHTUNG
-
-Maus wird nach rechts gezogen
--> Kugel fliegt nach links.
-
-Maus wird nach oben gezogen
--> Kugel fliegt nach unten.
------------------------------------------------------
-*/
-
-const forceX =
--dx *
-FORCE_SCALE;
-
-const forceY =
--dy *
-FORCE_SCALE;
-
-
-/*
------------------------------------------------------
-MATTER.JS KRAFT
-
-Die Kraft wird im Mittelpunkt der Kugel
-angewendet.
-
-Dadurch erhalten wir einen echten
-physikalischen Impuls anstatt einer
-einfachen Positionsänderung.
------------------------------------------------------
-*/
-
-Phaser.Physics.Matter.Matter.Body.applyForce(
-
-whiteBall,
-
-whiteBall.position,
-
+scene.matter.body.applyForce(
+ball,
+ball.position,
 {
-x: forceX,
-y: forceY
+x: -dx * force,
+y: -dy * force
+}
+);
+}
+);
+
+// =========================
+// TEXT
+// =========================
+
+scene.add.text(
+TABLE_X,
+10,
+'OOZ BALL',
+{
+fontFamily: 'Arial',
+fontSize: '24px',
+color: '#ffffff',
+fontStyle: 'bold'
 }
 );
 }
 
 
-/* =====================================================
-UPDATE
-===================================================== */
+function drawBall() {
+
+ballGraphic.clear();
+
+// Schatten
+ballGraphic.fillStyle(
+0x000000,
+0.25
+);
+
+ballGraphic.fillCircle(
+ball.position.x + 2,
+ball.position.y + 2,
+BALL_RADIUS + 1
+);
+
+// Kugel
+ballGraphic.fillStyle(
+0xffffff,
+1
+);
+
+ballGraphic.fillCircle(
+ball.position.x,
+ball.position.y,
+BALL_RADIUS
+);
+
+// kleiner Glanzpunkt
+ballGraphic.fillStyle(
+0xffffff,
+0.8
+);
+
+ballGraphic.fillCircle(
+ball.position.x - 3,
+ball.position.y - 3,
+2
+);
+}
+
 
 function update() {
 
-/*
------------------------------------------------------
-WEISSE KUGEL ZEICHNEN
------------------------------------------------------
-*/
+if (!ball) {
+return;
+}
 
-const graphics =
-whiteBall.renderSprite;
-
-
-graphics.clear();
-
-
-/*
-Schatten
-*/
-
-graphics.fillStyle(
-0x000000,
-0.30
-);
-
-graphics.fillCircle(
-whiteBall.position.x + 3,
-whiteBall.position.y + 4,
-BALL_RADIUS
-);
-
-
-/*
-Weiße Kugel
-*/
-
-const gradient =
-graphics.createRadialGradient(
-whiteBall.position.x - 4,
-whiteBall.position.y - 5,
-1,
-
-whiteBall.position.x,
-whiteBall.position.y,
-BALL_RADIUS
-);
-
-
-gradient.addColorStop(
-0,
-"#ffffff"
-);
-
-gradient.addColorStop(
-0.7,
-"#eeeeee"
-);
-
-gradient.addColorStop(
-1,
-"#999999"
-);
-
-
-graphics.fillStyle(
-gradient
-);
-
-
-graphics.fillCircle(
-whiteBall.position.x,
-whiteBall.position.y,
-BALL_RADIUS
-);
-
-
-/*
-Kleiner roter Punkt als Markierung.
-Kann später entfernt werden.
-*/
-
-graphics.fillStyle(
-0xc62828
-);
-
-graphics.fillCircle(
-whiteBall.position.x,
-whiteBall.position.y,
-2
-);
+drawBall();
 }
 
 </script>
 
 </body>
 </html>
+
