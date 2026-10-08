@@ -20,7 +20,7 @@ padding: 0;
 width: 100%;
 height: 100%;
 overflow: hidden;
-background: #080b12;
+background: #101218;
 }
 
 canvas {
@@ -34,67 +34,61 @@ margin: auto;
 
 <script>
 
-/* =====================================================
+/* =========================================================
 OOZ BALL
-QUEUE SYSTEM
-===================================================== */
+SAUBERE STOßMECHANIK
+========================================================= */
 
 const GAME_W = 1000;
-const GAME_H = 560;
+const GAME_H = 600;
 
-const TABLE_X = 90;
-const TABLE_Y = 80;
+const TABLE_X = 100;
+const TABLE_Y = 100;
 
-const TABLE_W = 820;
-const TABLE_H = 410;
+const TABLE_W = 800;
+const TABLE_H = 400;
 
-const BALL_R = 12;
-
+const RAIL = 24;
 const POCKET_R = 25;
 
-const RAIL = 22;
+const BALL_R = 11;
 
 
-/* =====================================================
-VARIABLES
-===================================================== */
+/* =========================================================
+VARIABLEN
+========================================================= */
 
-let ball;
-let ballGraphic;
+let ball = null;
 
-let aimGraphic;
-let cueGraphic;
-let powerGraphic;
+let ballGraphic = null;
+let tableGraphic = null;
 
-let aiming = false;
+let aimGraphic = null;
+let cueGraphic = null;
+let powerGraphic = null;
 
-let shotDirection = {
-x: 1,
-y: 0
-};
+let dragging = false;
 
-let pullDistance = 0;
+let aimX = 1;
+let aimY = 0;
 
-const MAX_PULL = 190;
+let power = 0;
 
-const CUE_LENGTH = 250;
-
-const CUE_TIP_GAP = 3;
+const MAX_POWER = 180;
 
 
-/* =====================================================
+/* =========================================================
 PHASER
-===================================================== */
+========================================================= */
 
 const config = {
 
 type: Phaser.AUTO,
 
 width: GAME_W,
-
 height: GAME_H,
 
-backgroundColor: '#080b12',
+backgroundColor: '#101218',
 
 physics: {
 
@@ -124,233 +118,96 @@ update: update
 new Phaser.Game(config);
 
 
-/* =====================================================
+/* =========================================================
 CREATE
-===================================================== */
+========================================================= */
 
 function create() {
 
 const scene = this;
 
 
-/* =================================================
-TABLE
-================================================= */
+/* TABLE */
 
-const table = scene.add.graphics();
+tableGraphic =
+scene.add.graphics();
 
-
-/* Schatten */
-
-table.fillStyle(
-0x000000,
-0.45
-);
-
-table.fillRoundedRect(
-TABLE_X - 32,
-TABLE_Y - 32,
-TABLE_W + 64,
-TABLE_H + 64,
-20
-);
+drawTable(scene);
 
 
-/* Außenrahmen */
-
-table.fillStyle(
-0x171717,
-1
-);
-
-table.fillRoundedRect(
-TABLE_X - 27,
-TABLE_Y - 27,
-TABLE_W + 54,
-TABLE_H + 54,
-16
-);
-
-
-/* Goldkante */
-
-table.lineStyle(
-4,
-0xd4ad55,
-1
-);
-
-table.strokeRoundedRect(
-TABLE_X - 22,
-TABLE_Y - 22,
-TABLE_W + 44,
-TABLE_H + 44,
-13
-);
-
-
-/* Bande */
-
-table.fillStyle(
-0x452719,
-1
-);
-
-table.fillRoundedRect(
-TABLE_X - 17,
-TABLE_Y - 17,
-TABLE_W + 34,
-TABLE_H + 34,
-10
-);
-
-
-/* Tuch */
-
-table.fillStyle(
-0x08705a,
-1
-);
-
-table.fillRect(
-TABLE_X,
-TABLE_Y,
-TABLE_W,
-TABLE_H
-);
-
-
-/* leichte Tuchkante */
-
-table.lineStyle(
-3,
-0x075541,
-1
-);
-
-table.strokeRect(
-TABLE_X,
-TABLE_Y,
-TABLE_W,
-TABLE_H
-);
-
-
-/* =================================================
-POCKETS
-================================================= */
-
-drawPocket(
-scene,
-TABLE_X,
-TABLE_Y
-);
-
-drawPocket(
-scene,
-TABLE_X + TABLE_W / 2,
-TABLE_Y
-);
-
-drawPocket(
-scene,
-TABLE_X + TABLE_W,
-TABLE_Y
-);
-
-drawPocket(
-scene,
-TABLE_X,
-TABLE_Y + TABLE_H
-);
-
-drawPocket(
-scene,
-TABLE_X + TABLE_W / 2,
-TABLE_Y + TABLE_H
-);
-
-drawPocket(
-scene,
-TABLE_X + TABLE_W,
-TABLE_Y + TABLE_H
-);
-
-
-/* =================================================
-RAILS
-================================================= */
+/* RAILS */
 
 createRails(scene);
 
 
-/* =================================================
-WHITE BALL
-================================================= */
+/* BALL */
 
-ball = scene.matter.add.circle(
+ball =
+scene.matter.add.circle(
 
-TABLE_X + 230,
+TABLE_X + 250,
 
 TABLE_Y + TABLE_H / 2,
 
 BALL_R,
 
 {
+
 restitution: 0.94,
 
-friction: 0.005,
+friction: 0.001,
 
-frictionAir: 0.008,
+frictionStatic: 0,
 
-density: 0.002
+frictionAir: 0.002,
+
+density: 0.004
 }
 );
 
 
-/* Kugelgrafik */
+/* BALL GRAPHIC */
 
 ballGraphic =
 scene.add.graphics();
 
 
-drawBall();
-
-
-/* =================================================
-AIM
-================================================= */
+/* AIM */
 
 aimGraphic =
 scene.add.graphics();
 
 
-/* =================================================
-QUEUE
-================================================= */
+/* CUE */
 
 cueGraphic =
 scene.add.graphics();
 
 
-/* =================================================
-POWER
-================================================= */
+/* POWER */
 
 powerGraphic =
 scene.add.graphics();
 
 
-drawPowerBar();
+/* STARTING AIM */
+
+aimX = 1;
+
+aimY = 0;
 
 
-/* =================================================
-INPUT
-================================================= */
+/* INPUT */
 
 scene.input.on(
 'pointerdown',
 function(pointer) {
+
+if (!ball) {
+return;
+}
+
+/* Während die Kugel läuft nicht schlagen */
 
 if (isMoving()) {
 return;
@@ -365,7 +222,6 @@ const dy =
 pointer.worldY -
 ball.position.y;
 
-
 const distance =
 Math.sqrt(
 dx * dx +
@@ -373,17 +229,17 @@ dy * dy
 );
 
 
-/*
-* Der Spieler kann in der Nähe
-* der weißen Kugel beginnen.
-*/
+/* Nur nahe an der weißen Kugel starten */
 
-if (distance < 100) {
+if (distance <= 45) {
 
-aiming = true;
+dragging = true;
+
+power = 0;
 
 updateAim(pointer);
 }
+
 }
 );
 
@@ -392,11 +248,12 @@ scene.input.on(
 'pointermove',
 function(pointer) {
 
-if (!aiming) {
+if (!dragging) {
 return;
 }
 
 updateAim(pointer);
+
 }
 );
 
@@ -405,11 +262,13 @@ scene.input.on(
 'pointerup',
 function(pointer) {
 
-if (!aiming) {
+if (!dragging) {
 return;
 }
 
-aiming = false;
+updateAim(pointer);
+
+dragging = false;
 
 shoot();
 
@@ -417,742 +276,285 @@ shoot();
 );
 
 
-/* =================================================
-LOGO
-================================================= */
+/* TOUCH */
+
+scene.input.addPointer(2);
+
+
+/* LOGO */
 
 scene.add.text(
 
 TABLE_X,
 
-30,
+48,
 
 'OOZ BALL',
 
 {
+
 fontFamily: 'Arial',
 
-fontSize: '25px',
+fontSize: '28px',
 
 fontStyle: 'bold',
 
-color: '#d8b45c'
+color: '#d8b56a'
 }
 );
 
 
 scene.add.text(
 
-TABLE_X + TABLE_W - 70,
+TABLE_X + TABLE_W - 65,
 
-34,
+52,
 
 '8 BALL',
 
 {
+
 fontFamily: 'Arial',
 
 fontSize: '14px',
-
-fontStyle: 'bold',
 
 color: '#ffffff',
 
 alpha: 0.65
 }
 );
+
 }
 
 
-/* =====================================================
-AIM SYSTEM
-===================================================== */
+/* =========================================================
+TABLE
+========================================================= */
 
-function updateAim(pointer) {
+function drawTable(scene) {
 
-const dx =
-pointer.worldX -
-ball.position.x;
-
-const dy =
-pointer.worldY -
-ball.position.y;
-
-
-const distance =
-Math.sqrt(
-dx * dx +
-dy * dy
-);
-
-
-if (distance < 1) {
-return;
-}
-
-
-/*
-* Richtung vom Maus/Fingerpunkt
-* zur Kugel.
-*
-* Das ist die Schussrichtung.
-*/
-
-shotDirection.x =
--dx / distance;
-
-shotDirection.y =
--dy / distance;
-
-
-/*
-* Abstand, wie weit der Queue
-* zurückgezogen wurde.
-*/
-
-pullDistance =
-Math.min(
-distance,
-MAX_PULL
-);
-
-
-drawAim();
-
-drawCue();
-
-drawPowerBar();
-}
-
-
-/* =====================================================
-AIM LINE
-===================================================== */
-
-function drawAim() {
-
-aimGraphic.clear();
-
-
-const lineLength = 520;
-
-
-const endX =
-ball.position.x +
-shotDirection.x *
-lineLength;
-
-
-const endY =
-ball.position.y +
-shotDirection.y *
-lineLength;
-
-
-/* äußere Linie */
-
-aimGraphic.lineStyle(
-5,
-0x000000,
-0.35
-);
-
-aimGraphic.beginPath();
-
-aimGraphic.moveTo(
-ball.position.x,
-ball.position.y
-);
-
-aimGraphic.lineTo(
-endX,
-endY
-);
-
-aimGraphic.strokePath();
-
-
-/* Hauptlinie */
-
-aimGraphic.lineStyle(
-2,
-0xffffff,
-0.92
-);
-
-aimGraphic.beginPath();
-
-aimGraphic.moveTo(
-ball.position.x,
-ball.position.y
-);
-
-aimGraphic.lineTo(
-endX,
-endY
-);
-
-aimGraphic.strokePath();
-
-
-/* Zielkreis */
-
-aimGraphic.lineStyle(
-2,
-0xffffff,
-0.8
-);
-
-aimGraphic.strokeCircle(
-ball.position.x,
-ball.position.y,
-22
-);
-
-
-aimGraphic.lineStyle(
-1,
-0xffffff,
-0.45
-);
-
-aimGraphic.strokeCircle(
-ball.position.x,
-ball.position.y,
-17
-);
-}
-
-
-/* =====================================================
-PREMIUM QUEUE
-===================================================== */
-
-function drawCue() {
-
-cueGraphic.clear();
-
-
-/*
-* Queue-Spitze befindet sich IMMER
-* hinter der Kugel.
-*/
-
-const tipX =
-ball.position.x -
-shotDirection.x *
-(BALL_R + CUE_TIP_GAP + pullDistance);
-
-
-const tipY =
-ball.position.y -
-shotDirection.y *
-(BALL_R + CUE_TIP_GAP + pullDistance);
-
-
-/*
-* Queue-Ende
-*/
-
-const buttX =
-tipX -
-shotDirection.x *
-CUE_LENGTH;
-
-
-const buttY =
-tipY -
-shotDirection.y *
-CUE_LENGTH;
-
-
-/*
-* Winkel
-*/
-
-const angle =
-Math.atan2(
-shotDirection.y,
-shotDirection.x
-);
-
-
-/*
-* Quer-Vektor
-*/
-
-const nx =
--Math.sin(angle);
-
-const ny =
-Math.cos(angle);
-
-
-/* =================================================
-QUEUE SHADOW
-================================================= */
-
-cueGraphic.lineStyle(
-12,
-0x000000,
-0.28
-);
-
-cueGraphic.beginPath();
-
-cueGraphic.moveTo(
-buttX + nx * 2,
-buttY + ny * 2
-);
-
-cueGraphic.lineTo(
-tipX + nx * 2,
-tipY + ny * 2
-);
-
-cueGraphic.strokePath();
-
-
-/* =================================================
-SHAFT
-================================================= */
-
-cueGraphic.lineStyle(
-7,
-0xe5c79a,
-1
-);
-
-cueGraphic.beginPath();
-
-cueGraphic.moveTo(
-buttX,
-buttY
-);
-
-cueGraphic.lineTo(
-tipX,
-tipY
-);
-
-cueGraphic.strokePath();
-
-
-/* heller Mittelstreifen */
-
-cueGraphic.lineStyle(
-2,
-0xffffff,
-0.65
-);
-
-cueGraphic.beginPath();
-
-cueGraphic.moveTo(
-buttX + nx * 2,
-buttY + ny * 2
-);
-
-cueGraphic.lineTo(
-tipX + nx * 2,
-tipY + ny * 2
-);
-
-cueGraphic.strokePath();
-
-
-/* =================================================
-FERRULE
-================================================= */
-
-const ferruleStartX =
-tipX -
-shotDirection.x * 18;
-
-const ferruleStartY =
-tipY -
-shotDirection.y * 18;
-
-
-cueGraphic.lineStyle(
-8,
-0xf2f2e8,
-1
-);
-
-cueGraphic.beginPath();
-
-cueGraphic.moveTo(
-ferruleStartX,
-ferruleStartY
-);
-
-cueGraphic.lineTo(
-tipX,
-tipY
-);
-
-cueGraphic.strokePath();
-
-
-/* =================================================
-TIP
-================================================= */
-
-cueGraphic.lineStyle(
-5,
-0x29313c,
-1
-);
-
-cueGraphic.beginPath();
-
-cueGraphic.moveTo(
-tipX,
-tipY
-);
-
-cueGraphic.lineTo(
-tipX +
-shotDirection.x * 5,
-
-tipY +
-shotDirection.y * 5
-);
-
-cueGraphic.strokePath();
-
-
-/* =================================================
-BUTT CAP
-================================================= */
-
-cueGraphic.lineStyle(
-11,
-0x181b20,
-1
-);
-
-cueGraphic.beginPath();
-
-cueGraphic.moveTo(
-buttX -
-shotDirection.x * 4,
-
-buttY -
-shotDirection.y * 4
-);
-
-cueGraphic.lineTo(
-buttX,
-buttY
-);
-
-cueGraphic.strokePath();
-
-
-/* gold ring */
-
-const ringX =
-buttX +
-shotDirection.x * 22;
-
-const ringY =
-buttY +
-shotDirection.y * 22;
-
-
-cueGraphic.lineStyle(
-3,
-0xd4ad55,
-1
-);
-
-cueGraphic.beginPath();
-
-cueGraphic.moveTo(
-ringX + nx * 7,
-ringY + ny * 7
-);
-
-cueGraphic.lineTo(
-ringX - nx * 7,
-ringY - ny * 7
-);
-
-cueGraphic.strokePath();
-}
-
-
-/* =====================================================
-POWER BAR
-===================================================== */
-
-function drawPowerBar() {
-
-powerGraphic.clear();
-
-
-const x = 30;
-
-const y = TABLE_Y;
-
-const w = 20;
-
-const h = TABLE_H;
-
-
-/* Rahmen */
-
-powerGraphic.fillStyle(
-0x171717,
-1
-);
-
-powerGraphic.fillRoundedRect(
-x,
-y,
-w,
-h,
-8
-);
-
-
-/* Goldrahmen */
-
-powerGraphic.lineStyle(
-2,
-0xd4ad55,
-1
-);
-
-powerGraphic.strokeRoundedRect(
-x,
-y,
-w,
-h,
-8
-);
-
-
-const amount =
-pullDistance /
-MAX_PULL;
-
-
-const fill =
-h *
-amount;
-
-
-if (fill > 0) {
-
-powerGraphic.fillStyle(
-0xd4ad55,
-1
-);
-
-powerGraphic.fillRect(
-
-x + 4,
-
-y + h - fill - 4,
-
-w - 8,
-
-fill
-);
-}
-}
-
-
-/* =====================================================
-SHOOT
-===================================================== */
-
-function shoot() {
-
-if (pullDistance < 8) {
-
-drawCue();
-
-return;
-}
-
-
-/*
-* Queue verschwindet beim Stoß.
-*/
-
-cueGraphic.clear();
-
-
-aimGraphic.clear();
-
-
-/*
-* Geschwindigkeit.
-*
-* Deutlich schneller als vorher.
-*/
-
-const minSpeed = 3.5;
-
-const maxSpeed = 20;
-
-
-const strength =
-pullDistance /
-MAX_PULL;
-
-
-const speed =
-minSpeed +
-(maxSpeed - minSpeed) *
-strength;
-
-
-/*
-* Direkte Geschwindigkeit
-* für sauberes Pool-Gefühl.
-*/
-
-thisMatterSetVelocity(
-speed
-);
-
-
-pullDistance = 0;
-
-drawPowerBar();
-}
-
-
-/* =====================================================
-SET VELOCITY
-===================================================== */
-
-function thisMatterSetVelocity(speed) {
-
-const MatterLib =
-Phaser.Physics.Matter.Matter;
-
-// Kugel unbedingt aufwecken
-MatterLib.Sleeping.set(
-ball,
-false
-);
-
-// Geschwindigkeit setzen
-MatterLib.Body.setVelocity(
-
-ball,
-
-{
-x: shotDirection.x * speed,
-y: shotDirection.y * speed
-}
-);
-
-// Noch einmal sicherstellen,
-// dass sie nicht schläft
-MatterLib.Sleeping.set(
-ball,
-false
-);
-}
-
-
-
-/* =====================================================
-BALL
-===================================================== */
-
-function drawBall() {
-
-ballGraphic.clear();
+const g =
+tableGraphic;
 
 
 /* Schatten */
 
-ballGraphic.fillStyle(
+g.fillStyle(
 0x000000,
-0.28
+0.45
 );
 
-ballGraphic.fillCircle(
+g.fillRoundedRect(
 
-ball.position.x + 3,
+TABLE_X - 38,
 
-ball.position.y + 3,
+TABLE_Y - 38,
 
-BALL_R + 2
+TABLE_W + 76,
+
+TABLE_H + 76,
+
+22
 );
 
 
-/* Kugel */
+/* Außenrahmen */
 
-ballGraphic.fillStyle(
-0xf4f4f4,
+g.fillStyle(
+0x151515,
 1
 );
 
-ballGraphic.fillCircle(
+g.fillRoundedRect(
 
-ball.position.x,
+TABLE_X - 30,
 
-ball.position.y,
+TABLE_Y - 30,
 
-BALL_R
+TABLE_W + 60,
+
+TABLE_H + 60,
+
+18
 );
 
 
-/* Highlight */
+/* Goldkante */
 
-ballGraphic.fillStyle(
-0xffffff,
+g.lineStyle(
+
+4,
+
+0xc9a34a,
+
 1
 );
 
-ballGraphic.fillCircle(
+g.strokeRoundedRect(
 
-ball.position.x - 3,
+TABLE_X - 26,
 
-ball.position.y - 3,
+TABLE_Y - 26,
 
-3
+TABLE_W + 52,
+
+TABLE_H + 52,
+
+15
 );
+
+
+/* Holz */
+
+g.fillStyle(
+0x3d2418,
+1
+);
+
+g.fillRoundedRect(
+
+TABLE_X - 19,
+
+TABLE_Y - 19,
+
+TABLE_W + 38,
+
+TABLE_H + 38,
+
+12
+);
+
+
+/* Tuch */
+
+g.fillStyle(
+0x08705d,
+1
+);
+
+g.fillRect(
+
+TABLE_X,
+
+TABLE_Y,
+
+TABLE_W,
+
+TABLE_H
+);
+
+
+/* Tuchkante */
+
+g.lineStyle(
+
+3,
+
+0x06483d,
+
+1
+);
+
+g.strokeRect(
+
+TABLE_X,
+
+TABLE_Y,
+
+TABLE_W,
+
+TABLE_H
+);
+
+
+/* dezenter Mittelbereich */
+
+g.lineStyle(
+
+1,
+
+0x59a99a,
+
+0.18
+);
+
+g.lineBetween(
+
+TABLE_X + TABLE_W / 2,
+
+TABLE_Y,
+
+TABLE_X + TABLE_W / 2,
+
+TABLE_Y + TABLE_H
+);
+
+
+/* Taschen */
+
+drawPocket(
+scene,
+TABLE_X,
+TABLE_Y
+);
+
+drawPocket(
+scene,
+TABLE_X + TABLE_W / 2,
+TABLE_Y
+);
+
+drawPocket(
+scene,
+TABLE_X + TABLE_W,
+TABLE_Y
+);
+
+drawPocket(
+scene,
+TABLE_X,
+TABLE_Y + TABLE_H
+);
+
+drawPocket(
+scene,
+TABLE_X + TABLE_W / 2,
+TABLE_Y + TABLE_H
+);
+
+drawPocket(
+scene,
+TABLE_X + TABLE_W,
+TABLE_Y + TABLE_H
+);
+
 }
 
 
-/* =====================================================
+/* =========================================================
 POCKET
-===================================================== */
+========================================================= */
 
-function drawPocket(
-scene,
-x,
-y
-) {
+function drawPocket(scene, x, y) {
 
 const g =
 scene.add.graphics();
 
 
 g.fillStyle(
-0x050505,
+0x000000,
 1
 );
 
 g.fillCircle(
 x,
 y,
-POCKET_R + 5
+POCKET_R + 6
 );
 
 
 g.fillStyle(
-0x000000,
+0x050505,
 1
 );
 
@@ -1165,7 +567,7 @@ POCKET_R
 
 g.lineStyle(
 2,
-0x303030,
+0x252525,
 1
 );
 
@@ -1174,24 +576,25 @@ x,
 y,
 POCKET_R
 );
+
 }
 
 
-/* =====================================================
+/* =========================================================
 RAILS
-===================================================== */
+========================================================= */
 
 function createRails(scene) {
 
 const gap =
-POCKET_R * 2.3;
+POCKET_R * 2.1;
 
 
 const half =
 TABLE_W / 2;
 
 
-/* TOP */
+/* OBEN LINKS */
 
 addRail(
 
@@ -1207,6 +610,8 @@ half - gap,
 RAIL
 );
 
+
+/* OBEN RECHTS */
 
 addRail(
 
@@ -1224,7 +629,7 @@ RAIL
 );
 
 
-/* BOTTOM */
+/* UNTEN LINKS */
 
 addRail(
 
@@ -1243,6 +648,8 @@ RAIL
 );
 
 
+/* UNTEN RECHTS */
+
 addRail(
 
 scene,
@@ -1261,27 +668,11 @@ RAIL
 );
 
 
-/* LEFT */
-
-const side =
-TABLE_H / 2 -
-gap;
+const sideHalf =
+TABLE_H / 2;
 
 
-addRail(
-
-scene,
-
-TABLE_X - RAIL / 2,
-
-TABLE_Y +
-side / 2,
-
-RAIL,
-
-side
-);
-
+/* LINKS OBEN */
 
 addRail(
 
@@ -1290,16 +681,33 @@ scene,
 TABLE_X - RAIL / 2,
 
 TABLE_Y +
-TABLE_H -
-side / 2,
+(sideHalf - gap) / 2,
 
 RAIL,
 
-side
+sideHalf - gap
 );
 
 
-/* RIGHT */
+/* LINKS UNTEN */
+
+addRail(
+
+scene,
+
+TABLE_X - RAIL / 2,
+
+TABLE_Y +
+sideHalf +
+(sideHalf - gap) / 2,
+
+RAIL,
+
+sideHalf - gap
+);
+
+
+/* RECHTS OBEN */
 
 addRail(
 
@@ -1310,13 +718,15 @@ TABLE_W +
 RAIL / 2,
 
 TABLE_Y +
-side / 2,
+(sideHalf - gap) / 2,
 
 RAIL,
 
-side
+sideHalf - gap
 );
 
+
+/* RECHTS UNTEN */
 
 addRail(
 
@@ -1327,19 +737,20 @@ TABLE_W +
 RAIL / 2,
 
 TABLE_Y +
-TABLE_H -
-side / 2,
+sideHalf +
+(sideHalf - gap) / 2,
 
 RAIL,
 
-side
+sideHalf - gap
 );
+
 }
 
 
-/* =====================================================
+/* =========================================================
 MATTER RAIL
-===================================================== */
+========================================================= */
 
 function addRail(
 scene,
@@ -1365,15 +776,462 @@ isStatic: true,
 
 restitution: 0.96,
 
-friction: 0
+friction: 0,
+
+frictionStatic: 0
 }
 );
+
+}
+
+
+/* =========================================================
+AIM
+========================================================= */
+
+function updateAim(pointer) {
+
+if (!ball) {
+return;
+}
+
+
+const dx =
+pointer.worldX -
+ball.position.x;
+
+const dy =
+pointer.worldY -
+ball.position.y;
+
+
+const distance =
+Math.sqrt(
+dx * dx +
+dy * dy
+);
+
+
+if (distance < 0.001) {
+return;
+}
+
+
+/*
+WICHTIG:
+
+Der Finger/Mauszeiger befindet sich
+HINTER der weißen Kugel.
+
+Die Kugel läuft genau in die
+entgegengesetzte Richtung.
+*/
+
+aimX =
+-dx / distance;
+
+aimY =
+-dy / distance;
+
+
+power =
+Math.min(
+distance,
+MAX_POWER
+);
+
+
+drawAim();
+
+}
+
+
+/* =========================================================
+AIM + CUE
+========================================================= */
+
+function drawAim() {
+
+aimGraphic.clear();
+
+cueGraphic.clear();
+
+powerGraphic.clear();
+
+
+if (!ball) {
+return;
 }
 
 
 /* =====================================================
-MOVING?
+ZIELLINIE
 ===================================================== */
+
+const aimLength = 360;
+
+
+const targetX =
+ball.position.x +
+aimX * aimLength;
+
+const targetY =
+ball.position.y +
+aimY * aimLength;
+
+
+aimGraphic.lineStyle(
+
+2,
+
+0xffffff,
+
+0.75
+);
+
+
+aimGraphic.beginPath();
+
+
+aimGraphic.moveTo(
+
+ball.position.x,
+
+ball.position.y
+);
+
+
+aimGraphic.lineTo(
+
+targetX,
+
+targetY
+);
+
+
+aimGraphic.strokePath();
+
+
+/* =====================================================
+KÖ
+
+Die Spitze sitzt knapp HINTER
+der weißen Kugel.
+
+Der Kö wird beim Zurückziehen
+länger nach hinten bewegt.
+===================================================== */
+
+
+const tipDistance =
+BALL_R + 3;
+
+
+const cueLength =
+150 +
+power * 0.75;
+
+
+const tipX =
+ball.position.x -
+aimX * tipDistance;
+
+const tipY =
+ball.position.y -
+aimY * tipDistance;
+
+
+const buttX =
+ball.position.x -
+aimX * (tipDistance + cueLength);
+
+const buttY =
+ball.position.y -
+aimY * (tipDistance + cueLength);
+
+
+/* Schatten */
+
+cueGraphic.lineStyle(
+
+10,
+
+0x000000,
+
+0.25
+);
+
+
+cueGraphic.lineBetween(
+
+buttX + 3,
+
+buttY + 3,
+
+tipX + 3,
+
+tipY + 3
+);
+
+
+/* dunkler Griff */
+
+cueGraphic.lineStyle(
+
+8,
+
+0x24150d,
+
+1
+);
+
+
+cueGraphic.lineBetween(
+
+buttX,
+
+buttY,
+
+tipX,
+
+tipY
+);
+
+
+/* Holz */
+
+cueGraphic.lineStyle(
+
+5,
+
+0xd6a45b,
+
+1
+);
+
+
+cueGraphic.lineBetween(
+
+buttX,
+
+buttY,
+
+tipX,
+
+tipY
+);
+
+
+/* helle Mittellinie */
+
+cueGraphic.lineStyle(
+
+2,
+
+0xffe2a2,
+
+0.9
+);
+
+
+cueGraphic.lineBetween(
+
+buttX,
+
+buttY,
+
+tipX,
+
+tipY
+);
+
+
+/* Spitze */
+
+cueGraphic.lineStyle(
+
+6,
+
+0xf0e4d2,
+
+1
+);
+
+
+cueGraphic.lineBetween(
+
+tipX,
+
+tipY,
+
+tipX + aimX * 9,
+
+tipY + aimY * 9
+);
+
+
+/* Griffende */
+
+cueGraphic.fillStyle(
+
+0x111111,
+
+1
+);
+
+
+cueGraphic.fillCircle(
+
+buttX,
+
+buttY,
+
+5
+);
+
+
+/* =====================================================
+KRAFTANZEIGE
+===================================================== */
+
+if (dragging) {
+
+const barX = 35;
+const barY = 160;
+const barH = 260;
+const barW = 14;
+
+
+powerGraphic.fillStyle(
+
+0x111111,
+
+0.85
+);
+
+
+powerGraphic.fillRoundedRect(
+
+barX,
+barY,
+barW,
+barH,
+7
+);
+
+
+const amount =
+power / MAX_POWER;
+
+
+const fillH =
+barH * amount;
+
+
+powerGraphic.fillStyle(
+
+0xd4a73c,
+
+1
+);
+
+
+powerGraphic.fillRoundedRect(
+
+barX + 2,
+
+barY +
+barH -
+fillH +
+2,
+
+barW - 4,
+
+fillH - 4,
+
+5
+);
+
+}
+
+}
+
+
+/* =========================================================
+SHOOT
+========================================================= */
+
+function shoot() {
+
+if (!ball) {
+return;
+}
+
+
+if (power < 4) {
+
+power = 0;
+
+drawAim();
+
+return;
+}
+
+
+/*
+Die Richtung ist bereits normalisiert.
+
+Dadurch gibt es KEINE
+ungewollte Seitwärtsbewegung.
+*/
+
+
+const speed =
+power * 0.075;
+
+
+thisMatterSetVelocity(
+
+aimX * speed,
+
+aimY * speed
+);
+
+
+power = 0;
+
+drawAim();
+
+}
+
+
+/* =========================================================
+VELOCITY
+========================================================= */
+
+function thisMatterSetVelocity(vx, vy) {
+
+if (!ball) {
+return;
+}
+
+
+Matter.Body.setVelocity(
+
+ball,
+
+{
+x: vx,
+y: vy
+}
+);
+
+}
+
+
+/* =========================================================
+MOVING
+========================================================= */
 
 function isMoving() {
 
@@ -1392,13 +1250,112 @@ ball.velocity.y;
 return Math.sqrt(
 vx * vx +
 vy * vy
-) > 0.15;
+) > 0.05;
+
 }
 
 
-/* =====================================================
+/* =========================================================
+BALL GRAPHIC
+========================================================= */
+
+function drawBall() {
+
+if (!ball) {
+return;
+}
+
+
+ballGraphic.clear();
+
+
+/* Schatten */
+
+ballGraphic.fillStyle(
+
+0x000000,
+
+0.28
+);
+
+
+ballGraphic.fillCircle(
+
+ball.position.x + 2,
+
+ball.position.y + 2,
+
+BALL_R + 2
+);
+
+
+/* Kugel */
+
+ballGraphic.fillStyle(
+
+0xf8f8f8,
+
+1
+);
+
+
+ballGraphic.fillCircle(
+
+ball.position.x,
+
+ball.position.y,
+
+BALL_R
+);
+
+
+/* Glanz */
+
+ballGraphic.fillStyle(
+
+0xffffff,
+
+0.95
+);
+
+
+ballGraphic.fillCircle(
+
+ball.position.x - 3,
+
+ball.position.y - 3,
+
+2.5
+);
+
+
+/* kleines Zentrum */
+
+ballGraphic.lineStyle(
+
+1,
+
+0xd8d8d8,
+
+0.8
+);
+
+
+ballGraphic.strokeCircle(
+
+ball.position.x,
+
+ball.position.y,
+
+BALL_R
+);
+
+}
+
+
+/* =========================================================
 UPDATE
-===================================================== */
+========================================================= */
 
 function update() {
 
@@ -1407,19 +1364,57 @@ return;
 }
 
 
+/*
+Sehr langsame Restbewegung
+komplett entfernen.
+*/
+
+const vx =
+ball.velocity.x;
+
+const vy =
+ball.velocity.y;
+
+
+const speed =
+Math.sqrt(
+vx * vx +
+vy * vy
+);
+
+
+if (
+speed > 0 &&
+speed < 0.06
+) {
+
+Matter.Body.setVelocity(
+
+ball,
+
+{
+x: 0,
+y: 0
+}
+);
+
+}
+
+
 drawBall();
 
 
 /*
-* Queue nur anzeigen,
-* wenn wir gerade zielen.
+Kö und Zielhilfe nur während
+des Zielens anzeigen.
 */
 
-if (aiming) {
+if (dragging) {
 
-drawCue();
+drawAim();
 
 }
+
 }
 
 </script>
