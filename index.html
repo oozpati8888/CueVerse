@@ -2,72 +2,96 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport"
-content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>OOZ BALL</title>
 
 <style>
+* {
+box-sizing: border-box;
+}
+
 html, body {
 margin: 0;
 padding: 0;
 width: 100%;
-height: 100%;
-background: #111;
-overflow: hidden;
-touch-action: none;
-user-select: none;
--webkit-user-select: none;
+min-height: 100%;
+background: #07101e;
+color: white;
+font-family: Arial, sans-serif;
+}
+
+body {
+display: flex;
+flex-direction: column;
+align-items: center;
+overflow-x: hidden;
 }
 
 #table {
 position: relative;
 width: min(100vw, 1536px);
 aspect-ratio: 2 / 1;
-
-margin: auto;
-
 background-image: url("12726D74-5ECA-4F59-958C-EC7D2F0B4C3D.png");
 background-size: 100% 100%;
 background-repeat: no-repeat;
-
 overflow: hidden;
+touch-action: none;
 }
 
 #gameCanvas {
 position: absolute;
-left: 0;
-top: 0;
-
+inset: 0;
+display: block;
 width: 100%;
 height: 100%;
-
-display: block;
+z-index: 2;
+touch-action: none;
 }
 
-#power {
-position: absolute;
-left: 50%;
-bottom: 12px;
-transform: translateX(-50%);
+#controls {
+width: min(100vw, 1536px);
+padding: 12px;
+background: #101b2c;
+text-align: center;
+}
 
-width: 180px;
-height: 10px;
+#status {
+color: #f0d28a;
+margin-bottom: 8px;
+font-size: 14px;
+}
 
-border: 1px solid rgba(255,255,255,.6);
-border-radius: 20px;
-
-background: rgba(0,0,0,.55);
-
+#powerTrack {
+height: 9px;
+max-width: 400px;
+margin: 8px auto;
+background: #29364a;
+border: 1px solid #bda56b;
+border-radius: 8px;
 overflow: hidden;
-
-z-index: 10;
 }
 
 #powerFill {
 width: 0%;
 height: 100%;
-background: linear-gradient(90deg, #777, #fff);
+background: linear-gradient(90deg, #58d6ce, #e7bd65, #ef633d);
+}
+
+#instructions {
+font-size: 12px;
+color: #d5dbe6;
+line-height: 1.5;
+}
+
+button {
+background: linear-gradient(#e6cf8c, #9c7635);
+color: #111827;
+border: 1px solid #f7e7b4;
+border-radius: 7px;
+padding: 9px 18px;
+font-weight: bold;
+margin: 5px;
+cursor: pointer;
 }
 </style>
 </head>
@@ -76,26 +100,37 @@ background: linear-gradient(90deg, #777, #fff);
 
 <div id="table">
 <canvas id="gameCanvas" width="1536" height="768"></canvas>
+</div>
 
-<div id="power">
+<div id="controls">
+<div id="status">OOZ BALL · Bereit zum Spielen</div>
+
+<div id="powerTrack">
 <div id="powerFill"></div>
+</div>
+
+<button id="resetButton">NEU STARTEN</button>
+
+<div id="instructions">
+Ziehe mit Maus oder Finger von der weißen Kugel nach hinten,
+um zu zielen und die Stoßstärke einzustellen. Loslassen stößt die Kugel.
 </div>
 </div>
 
 <script>
+"use strict";
+
+/* =====================================
+OOZ BALL – GRUNDEINSTELLUNGEN
+===================================== */
 
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
-
+const statusText = document.getElementById("status");
 const powerFill = document.getElementById("powerFill");
 
 const W = 1536;
 const H = 768;
-
-
-/* =========================================================
-BILLARD-TISCH
-========================================================= */
 
 const TABLE = {
 left: 82,
@@ -104,582 +139,39 @@ top: 78,
 bottom: 690
 };
 
-
-/* =========================================================
-KUGELN
-========================================================= */
-
 const BALL_RADIUS = 18;
+const DIAMETER = BALL_RADIUS * 2;
+
+const FRICTION = 0.986;
+const MAX_POWER = 15;
+const MAX_DRAG = 150;
 
 let balls = [];
-
 let cueBall = null;
-
 let aiming = false;
-
 let aimX = 0;
 let aimY = 0;
+let shotInProgress = false;
 
-let shotPower = 0;
-
-let mouseX = 0;
-let mouseY = 0;
-
-
-/* =========================================================
-FARBEN
-========================================================= */
-
-const ballColors = {
-1: "#f5d21f",
-2: "#1748d1",
-3: "#d51e25",
-4: "#7213a8",
-5: "#ed6a16",
-6: "#158b45",
-7: "#7c211c",
-
-9: "#f5d21f",
-10: "#1748d1",
-11: "#d51e25",
-12: "#7213a8",
-13: "#ed6a16",
-14: "#158b45",
-15: "#7c211c"
+const COLORS = {
+1: "#f5d32c",
+2: "#2455d8",
+3: "#d83232",
+4: "#753cc5",
+5: "#f18a28",
+6: "#23944f",
+7: "#8b2525",
+8: "#111111",
+9: "#f5d32c",
+10: "#2455d8",
+11: "#d83232",
+12: "#753cc5",
+13: "#f18a28",
+14: "#23944f",
+15: "#8b2525"
 };
 
-
-/* =========================================================
-KUGEL ERSTELLEN
-========================================================= */
-
-function createBall(x, y, number, type) {
-
-const ball = {
-x: x,
-y: y,
-
-vx: 0,
-vy: 0,
-
-number: number,
-
-type: type,
-
-radius: BALL_RADIUS,
-angle:0,
-active: true
-};
-
-balls.push(ball);
-
-return ball;
-}
-
-
-/* =========================================================
-STANDARD 8-BALL RACK
-========================================================= */
-
-function setupBalls() {
-
-balls = [];
-
-/*
-Das Dreieck steht rechts.
-
-1
-2 3
-4 8 5
-6 9 10 7
-11 12 13 14 15
-
-= 15 Objektkugeln
-+ weiße Kugel
-*/
-
-const startX = 1130;
-const startY = 384;
-
-const spacingX = BALL_RADIUS * 1.72;
-const spacingY = BALL_RADIUS * 1.98;
-
-const rack = [
-[1],
-
-[2, 3],
-
-[4, 8, 5],
-
-[6, 9, 10, 7],
-
-[11, 12, 13, 14, 15]
-];
-
-rack.forEach((row, rowIndex) => {
-
-const x = startX + rowIndex * spacingX;
-
-const total = row.length;
-
-const firstY =
-startY - ((total - 1) * spacingY / 2);
-
-row.forEach((number, index) => {
-
-const y = startY + index * spacingY;
-
-let type;
-
-if (number === 8) {
-type = "eight";
-}
-else if (number >= 1 && number <= 7) {
-type = "solid";
-}
-else {
-type = "stripe";
-}
-
-createBall(x, y, number, type);
-});
-});
-
-
-/*
-Weiße Kugel links
-*/
-
-cueBall = createBall(
-430,
-startY,
-0,
-"cue"
-);
-}
-
-
-/* =========================================================
-KUGEL-ZEICHNEN
-========================================================= */
-function drawBall(ball) {
-
-if (!ball.active) return;
-
-ctx.save();
-
-/* Kugelposition */
-ctx.translate(ball.x, ball.y);
-
-/* echte sichtbare Rotation */
-ctx.rotate(ball.angle);
-
-
-/* Schatten */
-
-ctx.beginPath();
-
-ctx.arc(
-3,
-4,
-ball.radius + 1,
-0,
-Math.PI * 2
-);
-
-ctx.fillStyle = "rgba(0,0,0,.40)";
-ctx.fill();
-
-
-/* Kugel */
-
-const gradient = ctx.createRadialGradient(
--6,
--7,
-2,
-0,
-0,
-ball.radius
-);
-
-
-if (ball.type === "cue") {
-
-gradient.addColorStop(0, "#ffffff");
-gradient.addColorStop(.55, "#eeeeee");
-gradient.addColorStop(1, "#bdbdbd");
-
-}
-
-else if (ball.type === "eight") {
-
-gradient.addColorStop(0, "#555555");
-gradient.addColorStop(.4, "#151515");
-gradient.addColorStop(1, "#000000");
-
-}
-
-else {
-
-const color = ballColors[ball.number];
-
-gradient.addColorStop(0, "#ffffff");
-gradient.addColorStop(.18, color);
-gradient.addColorStop(.72, color);
-gradient.addColorStop(1, "#111111");
-}
-
-
-ctx.beginPath();
-
-ctx.arc(
-0,
-0,
-ball.radius,
-0,
-Math.PI * 2
-);
-
-ctx.fillStyle = gradient;
-
-ctx.fill();
-
-
-/* Streifen */
-
-if (ball.type === "stripe") {
-
-ctx.save();
-
-ctx.beginPath();
-
-ctx.arc(
-0,
-0,
-ball.radius,
-0,
-Math.PI * 2
-);
-
-ctx.clip();
-
-ctx.fillStyle = "#f4f4f4";
-
-ctx.fillRect(
--ball.radius,
--7,
-ball.radius * 2,
-14
-);
-
-ctx.restore();
-}
-
-
-/* Nummer */
-
-if (ball.number !== 0) {
-
-ctx.beginPath();
-
-ctx.arc(
-0,
-0,
-7,
-0,
-Math.PI * 2
-);
-
-ctx.fillStyle = "#ffffff";
-
-ctx.fill();
-
-
-ctx.fillStyle =
-ball.type === "eight"
-? "#000000"
-: "#111111";
-
-ctx.font = "bold 8px Arial";
-
-ctx.textAlign = "center";
-
-ctx.textBaseline = "middle";
-
-ctx.fillText(
-ball.number,
-0,
-1
-);
-}
-
-
-/* Glanz */
-
-ctx.beginPath();
-
-ctx.arc(
--6,
--7,
-3,
-0,
-Math.PI * 2
-);
-
-ctx.fillStyle =
-"rgba(255,255,255,.75)";
-
-ctx.fill();
-
-
-ctx.restore();
-}
-
-
-
-
-/* =========================================================
-AIM-LINIE
-========================================================= */
-
-function drawAim() {
-
-if (!aiming || !cueBall || !cueBall.active) {
-return;
-}
-
-const dx = aimX - cueBall.x;
-const dy = aimY - cueBall.y;
-
-const distance = Math.sqrt(dx * dx + dy * dy);
-
-if (distance < 1) return;
-
-const nx = dx / distance;
-const ny = dy / distance;
-
-
-/*
-Richtung umkehren:
-Wir ziehen zurück und schießen nach vorne.
-*/
-
-const shootX = -nx;
-const shootY = -ny;
-
-
-/*
-Ziel-Linie
-*/
-
-ctx.save();
-
-ctx.setLineDash([12, 10]);
-
-ctx.lineWidth = 2;
-
-ctx.strokeStyle = "rgba(255,255,255,.75)";
-
-ctx.beginPath();
-
-ctx.moveTo(
-cueBall.x,
-cueBall.y
-);
-
-ctx.lineTo(
-cueBall.x + shootX * 500,
-cueBall.y + shootY * 500
-);
-
-ctx.stroke();
-
-ctx.restore();
-
-
-/*
-Queue
-*/
-
-const cueLength = 230 + shotPower * 1.5;
-
-const startX =
-cueBall.x - shootX * cueLength;
-
-const startY =
-cueBall.y - shootY * cueLength;
-
-ctx.save();
-
-ctx.lineWidth = 9;
-
-ctx.lineCap = "round";
-
-ctx.strokeStyle = "#d2a34a";
-
-ctx.beginPath();
-
-ctx.moveTo(
-startX,
-startY
-);
-
-ctx.lineTo(
-cueBall.x - shootX * 28,
-cueBall.y - shootY * 28
-);
-
-ctx.stroke();
-
-
-ctx.lineWidth = 4;
-
-ctx.strokeStyle = "#f1d78b";
-
-ctx.beginPath();
-
-ctx.moveTo(
-startX,
-startY
-);
-
-ctx.lineTo(
-cueBall.x - shootX * 28,
-cueBall.y - shootY * 28
-);
-
-ctx.stroke();
-
-ctx.restore();
-}
-
-
-/* =========================================================
-KUGEL-KOLLISION
-========================================================= */
-
-function collideBalls(a, b) {
-
-if (!a.active || !b.active) return;
-
-const dx = b.x - a.x;
-const dy = b.y - a.y;
-
-const distance = Math.sqrt(dx * dx + dy * dy);
-
-const minDistance =
-a.radius + b.radius;
-
-if (distance === 0) return;
-
-if (distance >= minDistance) return;
-
-
-/*
-Normal
-*/
-
-const nx = dx / distance;
-const ny = dy / distance;
-
-
-/*
-Überlappung korrigieren
-*/
-
-const overlap =
-minDistance - distance;
-
-a.x -= nx * overlap / 2;
-a.y -= ny * overlap / 2;
-
-b.x += nx * overlap / 2;
-b.y += ny * overlap / 2;
-
-
-/*
-Relativgeschwindigkeit
-*/
-
-const rvx = b.vx - a.vx;
-const rvy = b.vy - a.vy;
-
-const relativeVelocity =
-rvx * nx + rvy * ny;
-
-
-/*
-Wenn sie sich bereits voneinander entfernen
-*/
-
-if (relativeVelocity > 0) {
-return;
-}
-
-
-/*
-Elastischer Stoß
-*/
-
-const restitution = 0.98;
-
-const impulse =
--(1 + restitution) *
-relativeVelocity / 2;
-
-
-const ix = impulse * nx;
-const iy = impulse * ny;
-
-
-a.vx -= ix;
-a.vy -= iy;
-
-b.vx += ix;
-b.vy += iy;
-}
-
-
-/* =========================================================
-BANDEN
-========================================================= */
-
-function updateWalls(ball) {
-
-const r = ball.radius;
-
-if (ball.x - r < TABLE.left) {
-
-ball.x = TABLE.left + r;
-
-ball.vx = Math.abs(ball.vx) * .92;
-}
-
-
-if (ball.x + r > TABLE.right) {
-
-ball.x = TABLE.right - r;
-
-ball.vx = -Math.abs(ball.vx) * .92;
-}
-
-
-if (ball.y - r < TABLE.top) {
-
-ball.y = TABLE.top + r;
-
-ball.vy = Math.abs(ball.vy) * .92;
-}
-
-
-if (ball.y + r > TABLE.bottom) {
-
-ball.y = TABLE.bottom - r;
-
-ball.vy = -Math.abs(ball.vy) * .92;
-}  
-
-const pockets = [
+const POCKETS = [
 { x: TABLE.left, y: TABLE.top },
 { x: (TABLE.left + TABLE.right) / 2, y: TABLE.top },
 { x: TABLE.right, y: TABLE.top },
@@ -688,394 +180,550 @@ const pockets = [
 { x: TABLE.right, y: TABLE.bottom }
 ];
 
-for (const pocket of pockets) {
+/* =====================================
+KUGELN ERZEUGEN
+===================================== */
+
+function createBall(x, y, number, type) {
+const ball = {
+x,
+y,
+vx: 0,
+vy: 0,
+number,
+type,
+radius: BALL_RADIUS,
+active: true
+};
+
+balls.push(ball);
+return ball;
+}
+
+function setupBalls() {
+balls = [];
+
+/*
+Klassisches 15-Kugel-Dreieck.
+Die schwarze 8 liegt in der Mitte.
+*/
+
+const rack = [
+[1],
+[2, 3],
+[4, 8, 5],
+[6, 9, 10, 7],
+[11, 12, 13, 14, 15]
+];
+
+const startX = 1120;
+const startY = 384;
+const spacingX = BALL_RADIUS * Math.sqrt(3);
+const spacingY = BALL_RADIUS * 2.04;
+
+rack.forEach((row, rowIndex) => {
+row.forEach((number, index) => {
+const x = startX + rowIndex * spacingX;
+const y = startY +
+(index - (row.length - 1) / 2) * spacingY;
+
+let type;
+
+if (number === 8) {
+type = "eight";
+} else if (number >= 1 && number <= 7) {
+type = "solid";
+} else {
+type = "stripe";
+}
+
+createBall(x, y, number, type);
+});
+});
+
+/*
+Weiße Spielkugel links.
+*/
+
+cueBall = createBall(430, 384, 0, "cue");
+
+aiming = false;
+shotInProgress = false;
+powerFill.style.width = "0%";
+
+updateStatus();
+}
+
+/* =====================================
+REALISTISCHE KUGELDARSTELLUNG
+===================================== */
+
+function drawBall(ball) {
+if (!ball.active) return;
+
+const r = ball.radius;
+const color = ball.type === "cue"
+? "#ffffff"
+: COLORS[ball.number];
+
+ctx.save();
+
+/* Schatten */
+ctx.beginPath();
+ctx.ellipse(
+ball.x + 3,
+ball.y + 5,
+r * 1.02,
+r * 0.78,
+0,
+0,
+Math.PI * 2
+);
+ctx.fillStyle = "rgba(0,0,0,0.48)";
+ctx.fill();
+
+/* Kugelkontur */
+ctx.beginPath();
+ctx.arc(ball.x, ball.y, r, 0, Math.PI * 2);
+ctx.fillStyle = "#080b12";
+ctx.fill();
+
+ctx.save();
+ctx.beginPath();
+ctx.arc(ball.x, ball.y, r - 1, 0, Math.PI * 2);
+ctx.clip();
+
+/* Grundfarbe mit Licht und Schatten */
+const gradient = ctx.createRadialGradient(
+ball.x - r * 0.38,
+ball.y - r * 0.48,
+1,
+ball.x + r * 0.15,
+ball.y + r * 0.2,
+r * 1.35
+);
+
+if (ball.type === "cue") {
+gradient.addColorStop(0, "#ffffff");
+gradient.addColorStop(0.65, "#eeeeee");
+gradient.addColorStop(1, "#aeb5c2");
+} else {
+gradient.addColorStop(0, "#ffffff");
+gradient.addColorStop(0.18, color);
+gradient.addColorStop(0.72, color);
+gradient.addColorStop(1, "#10131a");
+}
+
+ctx.fillStyle = gradient;
+ctx.fillRect(ball.x - r, ball.y - r, r * 2, r * 2);
+
+/* Breiter Farbstreifen */
+if (ball.type === "stripe") {
+ctx.fillStyle = "#f8f8f5";
+ctx.fillRect(
+ball.x - r,
+ball.y - r * 0.48,
+r * 2,
+r * 0.96
+);
+
+ctx.fillStyle = color;
+ctx.fillRect(
+ball.x - r,
+ball.y - r * 0.29,
+r * 2,
+r * 0.58
+);
+}
+
+ctx.restore();
+
+/* Nummernkreis */
+if (ball.type !== "cue") {
+ctx.beginPath();
+ctx.arc(
+ball.x,
+ball.y,
+r * 0.43,
+0,
+Math.PI * 2
+);
+
+ctx.fillStyle = "#ffffff";
+ctx.fill();
+
+ctx.strokeStyle = "rgba(0,0,0,0.35)";
+ctx.lineWidth = 0.8;
+ctx.stroke();
+
+ctx.fillStyle = "#111111";
+ctx.font = "bold 12px Arial";
+ctx.textAlign = "center";
+ctx.textBaseline = "middle";
+ctx.fillText(
+String(ball.number),
+ball.x,
+ball.y + 0.5
+);
+}
+
+/* Glanzpunkt */
+ctx.beginPath();
+ctx.ellipse(
+ball.x - r * 0.36,
+ball.y - r * 0.48,
+r * 0.24,
+r * 0.12,
+-0.55,
+0,
+Math.PI * 2
+);
+
+ctx.fillStyle = "rgba(255,255,255,0.82)";
+ctx.fill();
+
+/* Randreflexion */
+ctx.beginPath();
+ctx.arc(
+ball.x,
+ball.y,
+r - 1,
+0,
+Math.PI * 2
+);
+
+ctx.strokeStyle = "rgba(255,255,255,0.23)";
+ctx.lineWidth = 1;
+ctx.stroke();
+
+ctx.restore();
+}
+
+/* =====================================
+ZIELLINIE UND QUEUE
+===================================== */
+
+function drawAim() {
+if (!aiming || !cueBall || !cueBall.active) return;
+
+const dx = cueBall.x - aimX;
+const dy = cueBall.y - aimY;
+const distance = Math.hypot(dx, dy);
+
+if (distance < 2) return;
+
+const nx = dx / distance;
+const ny = dy / distance;
+const power = Math.min(distance, MAX_DRAG) / MAX_DRAG;
+
+/* Dünne Ziellinie */
+ctx.save();
+
+ctx.beginPath();
+ctx.moveTo(cueBall.x, cueBall.y);
+ctx.lineTo(
+cueBall.x + nx * 260,
+cueBall.y + ny * 260
+);
+
+ctx.setLineDash([7, 7]);
+ctx.strokeStyle = "rgba(255,255,255,0.85)";
+ctx.lineWidth = 2;
+ctx.stroke();
+ctx.setLineDash([]);
+
+/* Queue hinter der weißen Kugel */
+const back = 35 + power * 65;
+const frontX = cueBall.x - nx * back;
+const frontY = cueBall.y - ny * back;
+const tailX = frontX - nx * 235;
+const tailY = frontY - ny * 235;
+
+ctx.lineCap = "round";
+
+ctx.beginPath();
+ctx.moveTo(tailX, tailY);
+ctx.lineTo(frontX, frontY);
+ctx.lineWidth = 8;
+ctx.strokeStyle = "#5a361f";
+ctx.stroke();
+
+ctx.beginPath();
+ctx.moveTo(tailX, tailY);
+ctx.lineTo(frontX, frontY);
+ctx.lineWidth = 3;
+ctx.strokeStyle = "#d8b879";
+ctx.stroke();
+
+ctx.beginPath();
+ctx.moveTo(
+cueBall.x - nx * 20,
+cueBall.y - ny * 20
+);
+ctx.lineTo(frontX, frontY);
+ctx.lineWidth = 3;
+ctx.strokeStyle = "#eee0c1";
+ctx.stroke();
+
+ctx.restore();
+
+powerFill.style.width = (power * 100) + "%";
+}
+
+/* =====================================
+TASCHEN
+===================================== */
+
+function checkPockets(ball) {
+for (const pocket of POCKETS) {
 const dx = ball.x - pocket.x;
 const dy = ball.y - pocket.y;
-const distance = Math.sqrt(dx * dx + dy * dy);
 
-if (distance < 34) {
+if (Math.hypot(dx, dy) < 31) {
 ball.active = false;
 ball.vx = 0;
 ball.vy = 0;
-return;
+
+if (ball.type === "cue") {
+statusText.textContent =
+"Weiße Kugel versenkt – NEU STARTEN drücken.";
+}
+
+return true;
 }
 }
 
+return false;
+}
 
+/* =====================================
+BANDEN UND BEWEGUNG
+===================================== */
 
-/* =========================================================
-PHYSIK
-========================================================= */
+function updateWalls(ball) {
+const r = ball.radius;
+
+if (checkPockets(ball)) return;
+
+if (ball.x - r < TABLE.left) {
+ball.x = TABLE.left + r;
+ball.vx = Math.abs(ball.vx) * 0.92;
+}
+
+if (ball.x + r > TABLE.right) {
+ball.x = TABLE.right - r;
+ball.vx = -Math.abs(ball.vx) * 0.92;
+}
+
+if (ball.y - r < TABLE.top) {
+ball.y = TABLE.top + r;
+ball.vy = Math.abs(ball.vy) * 0.92;
+}
+
+if (ball.y + r > TABLE.bottom) {
+ball.y = TABLE.bottom - r;
+ball.vy = -Math.abs(ball.vy) * 0.92;
+}
+}
 
 function updatePhysics() {
+const activeBalls = balls.filter(ball => ball.active);
 
-const friction = 0.94;
-
-balls.forEach(ball => {
-
-if (!ball.active) return;
-
+for (const ball of activeBalls) {
 ball.x += ball.vx;
-const distanceMoved = Math.sqrt(
-  ball.vx * ball.vx +
-  ball.vy * ball.vy
-  );
-  ball.angle += distanceMoved / ball.radius;
-
 ball.y += ball.vy;
 
+ball.vx *= FRICTION;
+ball.vy *= FRICTION;
 
-/*
-Reibung
-*/
-
-ball.vx *= friction;
-ball.vy *= friction;
-
-
-/*
-sehr langsame Kugeln stoppen
-*/
-
-if (
-Math.abs(ball.vx) < 0.015 &&
-Math.abs(ball.vy) < 0.015
-) {
-ball.vx = 0;
-ball.vy = 0;
-}
-
+if (Math.abs(ball.vx) < 0.025) ball.vx = 0;
+if (Math.abs(ball.vy) < 0.025) ball.vy = 0;
 
 updateWalls(ball);
-});
+}
 
+/* Kugel-Kugel-Zusammenstöße */
+const movingBalls = balls.filter(ball => ball.active);
 
-/*
-Alle Kugeln gegeneinander
-*/
+for (let i = 0; i < movingBalls.length; i++) {
+for (let j = i + 1; j < movingBalls.length; j++) {
+const a = movingBalls[i];
+const b = movingBalls[j];
 
-for (let i = 0; i < balls.length; i++) {
+let dx = b.x - a.x;
+let dy = b.y - a.y;
+let distance = Math.hypot(dx, dy);
 
-for (let j = i + 1; j < balls.length; j++) {
+if (distance === 0) {
+dx = 0.01;
+distance = 0.01;
+}
 
-collideBalls(
-balls[i],
-balls[j]
+if (distance >= DIAMETER) continue;
+
+const nx = dx / distance;
+const ny = dy / distance;
+const overlap = DIAMETER - distance;
+
+/* Überlappung korrigieren */
+a.x -= nx * overlap * 0.5;
+a.y -= ny * overlap * 0.5;
+b.x += nx * overlap * 0.5;
+b.y += ny * overlap * 0.5;
+
+/* Nur bei Annäherung Impuls übertragen */
+const relativeX = b.vx - a.vx;
+const relativeY = b.vy - a.vy;
+const relativeVelocity =
+relativeX * nx + relativeY * ny;
+
+if (relativeVelocity < 0) {
+const impulse = -relativeVelocity * 0.96;
+
+a.vx -= impulse * nx;
+a.vy -= impulse * ny;
+b.vx += impulse * nx;
+b.vy += impulse * ny;
+}
+}
+}
+
+shotInProgress = balls.some(ball =>
+ball.active &&
+(Math.abs(ball.vx) > 0.03 || Math.abs(ball.vy) > 0.03)
 );
-}
-}
+
+if (!shotInProgress && !aiming) {
+powerFill.style.width = "0%";
 }
 
+updateStatus();
+}
 
-/* =========================================================
-ALLES ZEICHNEN
-========================================================= */
+/* =====================================
+ZEICHNEN
+===================================== */
 
 function draw() {
+ctx.clearRect(0, 0, W, H);
 
-ctx.clearRect(
-0,
-0,
-W,
-H
-);
+/* Kugeln zeichnen */
+for (const ball of balls) {
+drawBall(ball);
+}
 
-
-/*
-Kugeln
-*/
-
-balls.forEach(drawBall);
-
-
-/*
-Aim / Queue
-*/
-
+/* Queue und Ziellinie darüber zeichnen */
 drawAim();
 }
 
+function updateStatus() {
+const remaining = balls.filter(ball =>
+ball.active && ball.type !== "cue"
+).length;
 
-/* =========================================================
-SPIEL-LOOP
-========================================================= */
+if (cueBall && !cueBall.active) return;
 
-function gameLoop() {
-
-updatePhysics();
-
-draw();
-
-requestAnimationFrame(gameLoop);
+if (shotInProgress) {
+statusText.textContent =
+"OOZ BALL · Kugeln in Bewegung · Verbleibend: " +
+remaining;
+} else if (!aiming) {
+statusText.textContent =
+"OOZ BALL · Bereit · Verbleibende Objektkugeln: " +
+remaining;
+}
 }
 
-
-/* =========================================================
-POINTER POSITION
-========================================================= */
+/* =====================================
+MAUS UND TOUCH
+===================================== */
 
 function getPointerPosition(event) {
-
-const rect =
-canvas.getBoundingClientRect();
-
-const source =
-event.touches
-? event.touches[0]
-: event;
-
-const x =
-(source.clientX - rect.left)
-* W / rect.width;
-
-const y =
-(source.clientY - rect.top)
-* H / rect.height;
+const rect = canvas.getBoundingClientRect();
 
 return {
-x: x,
-y: y
+x: (event.clientX - rect.left) * W / rect.width,
+y: (event.clientY - rect.top) * H / rect.height
 };
 }
 
-
-/* =========================================================
-START SCHUSS
-========================================================= */
-
 function pointerDown(event) {
+if (!cueBall || !cueBall.active || shotInProgress) return;
 
-event.preventDefault();
+const p = getPointerPosition(event);
 
-const p =
-getPointerPosition(event);
-
-mouseX = p.x;
-mouseY = p.y;
-
-
-/*
-Nur wenn die weiße Kugel stillsteht
-*/
-
-if (
-Math.abs(cueBall.vx) > .1 ||
-Math.abs(cueBall.vy) > .1
-) {
-return;
-}
-
-
-const dx =
-p.x - cueBall.x;
-
-const dy =
-p.y - cueBall.y;
-
-const distance =
-Math.sqrt(dx * dx + dy * dy);
-
-
-/*
-Finger muss in der Nähe
-der weißen Kugel starten
-*/
-
-if (distance < 70) {
-
+aimX = p.x;
+aimY = p.y;
 aiming = true;
 
-aimX = p.x;
-aimY = p.y;
-
-shotPower = 0;
+canvas.setPointerCapture(event.pointerId);
+draw();
 }
-}
-
-
-/* =========================================================
-ZIELEN
-========================================================= */
 
 function pointerMove(event) {
-
-event.preventDefault();
-
 if (!aiming) return;
 
-const p =
-getPointerPosition(event);
-
+const p = getPointerPosition(event);
 aimX = p.x;
 aimY = p.y;
 
-
-const dx =
-aimX - cueBall.x;
-
-const dy =
-aimY - cueBall.y;
-
-const distance =
-Math.sqrt(dx * dx + dy * dy);
-
-
-/*
-Je weiter zurückgezogen,
-desto stärker der Stoß.
-*/
-
-shotPower =
-Math.min(
-distance,
-350
-);
-
-powerFill.style.width =
-(shotPower / 350 * 100) + "%";
+draw();
 }
 
-
-/* =========================================================
-SCHUSS
-========================================================= */
-
-function pointerUp(event) {
-
-event.preventDefault();
-
+function pointerUp() {
 if (!aiming) return;
 
 aiming = false;
 
-
-const dx =
-aimX - cueBall.x;
-
-const dy =
-aimY - cueBall.y;
-
-const distance =
-Math.sqrt(dx * dx + dy * dy);
-
-if (distance < 8) {
-
-shotPower = 0;
-
-powerFill.style.width = "0%";
-
+if (!cueBall || !cueBall.active) {
+draw();
 return;
 }
 
+const dx = cueBall.x - aimX;
+const dy = cueBall.y - aimY;
+const distance = Math.hypot(dx, dy);
 
-/*
-Ziehrichtung
-*/
+if (distance > 5) {
+const power = Math.min(distance, MAX_DRAG) / MAX_DRAG;
+const strength = power * MAX_POWER;
 
-const nx =
-dx / distance;
+cueBall.vx = (dx / distance) * strength;
+cueBall.vy = (dy / distance) * strength;
 
-const ny =
-dy / distance;
-
-
-/*
-Schussrichtung ist entgegengesetzt
-*/
-
-const shootX = -nx;
-const shootY = -ny;
-
-
-/*
-MAXIMALE SCHUSSKRAFT
-*/
-
-const power =
-Math.min(
-shotPower,
-350
-);
-
-
-/*
-Geschwindigkeit
-
-350 * .10 = 35 Pixel pro Frame
-Das ist deutlich kräftiger.
-*/
-
-const velocity =
-power * 0.50;
-
-
-cueBall.vx =
-shootX * velocity;
-
-cueBall.vy =
-shootY * velocity;
-
-
-shotPower = 0;
-
-powerFill.style.width = "0%";
+shotInProgress = true;
 }
 
-
-/* =========================================================
-TOUCH
-========================================================= */
-
-canvas.addEventListener(
-"touchstart",
-pointerDown,
-{ passive: false }
-);
-
-canvas.addEventListener(
-"touchmove",
-pointerMove,
-{ passive: false }
-);
-
-canvas.addEventListener(
-"touchend",
-pointerUp,
-{ passive: false }
-);
-
-
-/* =========================================================
-MOUSE
-========================================================= */
-
-canvas.addEventListener(
-"mousedown",
-pointerDown
-);
-
-canvas.addEventListener(
-"mousemove",
-pointerMove
-);
-
-canvas.addEventListener(
-"mouseup",
-pointerUp
-);
-
-
-/* =========================================================
-START
-========================================================= */
-
-setupBalls();
-
+powerFill.style.width = "0%";
 draw();
+}
 
+canvas.addEventListener("pointerdown", pointerDown);
+canvas.addEventListener("pointermove", pointerMove);
+canvas.addEventListener("pointerup", pointerUp);
+canvas.addEventListener("pointercancel", pointerUp);
+
+document.getElementById("resetButton").addEventListener(
+"click",
+setupBalls
+);
+
+/* =====================================
+SPIELSCHLEIFE
+===================================== */
+
+function gameLoop() {
+updatePhysics();
+draw();
+requestAnimationFrame(gameLoop);
+}
+
+/* START */
+setupBalls();
+draw();
 gameLoop();
 
 </script>
-
 </body>
 </html>
+
