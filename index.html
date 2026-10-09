@@ -142,7 +142,7 @@ bottom: 690
 const BALL_RADIUS = 18;
 const DIAMETER = BALL_RADIUS * 2;
 
-const FRICTION = 0.992;
+const FRICTION = 0.975;
 const MAX_POWER = 45;
 const MAX_DRAG = 220;
 
@@ -259,7 +259,7 @@ REALISTISCHE KUGELDARSTELLUNG
 ===================================== */
 
 function drawBall(ball) {
-if (!ball.active) return;
+if (!ball.active && !ball.pocketing) return;
 
 const r = ball.radius;
 const color = ball.type === "cue"
@@ -475,25 +475,24 @@ TASCHEN
 ===================================== */
 
 function checkPockets(ball) {
-for (const pocket of POCKETS) {
-const dx = ball.x - pocket.x;
-const dy = ball.y - pocket.y;
+    for (const pocket of POCKETS) {
+        const dx = ball.x - pocket.x;
+        const dy = ball.y - pocket.y;
+        const distance = Math.hypot(dx, dy);
 
-if (Math.hypot(dx, dy) < 31) {
-ball.active = false;
-ball.vx = 0;
-ball.vy = 0;
+        if (distance < 31 && !ball.pocketing) {
+            ball.pocketing = true;
+            ball.pocketScale = 1;
+            ball.vx = 0;
+            ball.vy = 0;
+            ball.pocketX = pocket.x;
+            ball.pocketY = pocket.y;
+            return true;
+        }
+    }
 
-if (ball.type === "cue") {
-statusText.textContent =
-"Weiße Kugel versenkt – NEU STARTEN drücken.";
+    return false;
 }
-
-return true;
-}
-}
-
-return false;
 }
 
 /* =====================================
