@@ -143,7 +143,7 @@ const BALL_RADIUS = 18;
 const DIAMETER = BALL_RADIUS * 2;
 
 const FRICTION = 0.992;
-const MAX_POWER = 28;
+const MAX_POWER = 45;
 const MAX_DRAG = 220;
 
 let balls = [];
@@ -532,6 +532,8 @@ const activeBalls = balls.filter(ball => ball.active);
 for (const ball of activeBalls) {
 ball.x += ball.vx;
 ball.y += ball.vy;
+  
+ball.angle = (ball.angle || 0) + Math.hypot(ball.vy) / ball.radius;
 
 ball.vx *= FRICTION;
 ball.vy *= FRICTION;
