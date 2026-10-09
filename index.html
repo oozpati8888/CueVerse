@@ -677,8 +677,30 @@ if (ball.y + r > TABLE.bottom) {
 ball.y = TABLE.bottom - r;
 
 ball.vy = -Math.abs(ball.vy) * .92;
+}  
+
+const pockets = [
+{ x: TABLE.left, y: TABLE.top },
+{ x: (TABLE.left + TABLE.right) / 2, y: TABLE.top },
+{ x: TABLE.right, y: TABLE.top },
+{ x: TABLE.left, y: TABLE.bottom },
+{ x: (TABLE.left + TABLE.right) / 2, y: TABLE.bottom },
+{ x: TABLE.right, y: TABLE.bottom }
+];
+
+for (const pocket of pockets) {
+const dx = ball.x - pocket.x;
+const dy = ball.y - pocket.y;
+const distance = Math.sqrt(dx * dx + dy * dy);
+
+if (distance < 34) {
+ball.active = false;
+ball.vx = 0;
+ball.vy = 0;
+return;
 }
 }
+
 
 
 /* =========================================================
@@ -984,7 +1006,7 @@ Das ist deutlich kräftiger.
 */
 
 const velocity =
-power * 0.35;
+power * 0.50;
 
 
 cueBall.vx =
