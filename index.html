@@ -317,8 +317,11 @@ ctx.fillRect(-r, -r * 0.29, r * 2, r * 0.58);
 
 ctx.restore();
 
-/* Nummernkreis */
+/* Nummernkreis – dreht sich mit der Kugel */
 if (ball.type !== "cue") {
+ctx.save();
+ctx.rotate(ball.angle || 0);
+
 ctx.beginPath();
 ctx.arc(0, 0, r * 0.43, 0, Math.PI * 2);
 ctx.fillStyle = "#ffffff";
@@ -329,7 +332,10 @@ ctx.font = "bold 12px Arial";
 ctx.textAlign = "center";
 ctx.textBaseline = "middle";
 ctx.fillText(String(ball.number), 0, 0.5);
+
+ctx.restore();
 }
+
 
 /* Glanzpunkt */
 ctx.beginPath();
