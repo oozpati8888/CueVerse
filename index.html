@@ -593,7 +593,9 @@ ball.y += ball.vy;
 
 /* Sichtbare Rollrotation */
 ball.angle = (ball.angle || 0) +
-Math.hypot(ball.vx, ball.vy) / ball.radius;
+Math.hypot(ball.vx, ball.vy) / ball.radius *
+Math.sign(ball.vx || ball.vy || 1);
+
 
 ball.vx *= FRICTION;
 ball.vy *= FRICTION;
