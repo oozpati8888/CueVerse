@@ -2,6 +2,12 @@ name: Build OOZ BALL Android APK
 
 on:
 workflow_dispatch:
+push:
+paths:
+- ".github/workflows/main.yml"
+- "index.html"
+- "ooz-table.jpg"
+- "12726D74-5ECA-4F59-958C-EC7D2F0B4C3D.png"
 
 permissions:
 contents: read
