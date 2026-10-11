@@ -135,7 +135,7 @@ const BALL_RADIUS = 18;
 
 /* Stärkerer Stoß, kontrolliertes Ausrollen */
 const MAX_POWER = 85;
-const MAX_DRAG = 115;
+const MAX_DRAG = 190;
 const FRICTION = 0.975;
 const WALL_BOUNCE = 0.92;
 const BALL_BOUNCE = 0.99;
@@ -381,9 +381,9 @@ ctx.setLineDash([]);
 
 // Queue: weiter hinter die weiße Kugel zurückziehen
 const tipGap = 7;
-const tipX = cueBall.x - nx * (BALL_RADIUS + tipGap + power * 22);
-const tipY = cueBall.y - ny * (BALL_RADIUS + tipGap + power * 22);
-const cueLength = 290;
+const tipX = cueBall.x - nx * (BALL_RADIUS + tipGap + power * 65);
+const tipY = cueBall.y - ny * (BALL_RADIUS + tipGap + power * 65);
+const cueLength = 365;
 const tailX = tipX - nx * cueLength;
 const tailY = tipY - ny * cueLength;
 
