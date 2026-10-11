@@ -136,7 +136,7 @@ const BALL_RADIUS = 18;
 /* Stärkerer Stoß, kontrolliertes Ausrollen */
 const MAX_POWER = 60;
 const MAX_DRAG = 115;
-const FRICTION = 0.993;
+const FRICTION = 0.982;
 const WALL_BOUNCE = 0.92;
 const BALL_BOUNCE = 0.99;
 
@@ -598,8 +598,8 @@ Math.hypot(ball.vx, ball.vy) / ball.radius;
 ball.vx *= FRICTION;
 ball.vy *= FRICTION;
 
-if (Math.abs(ball.vx) < 0.035) ball.vx = 0;
-if (Math.abs(ball.vy) < 0.035) ball.vy = 0;
+if (Math.abs(ball.vx) < 0.08) ball.vx = 0;
+if (Math.abs(ball.vy) < 0.08) ball.vy = 0;
 
 updateWalls(ball);
 }
