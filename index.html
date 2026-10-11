@@ -317,9 +317,10 @@ ctx.fillRect(-r, -r * 0.29, r * 2, r * 0.58);
 
 ctx.restore();
 
-/* Nummernkreis – dreht sich mit der Kugel */
+/* Nummernkreis rollt mit der Kugel */
 if (ball.type !== "cue") {
 ctx.save();
+
 ctx.rotate(ball.angle || 0);
 
 ctx.beginPath();
@@ -331,7 +332,7 @@ ctx.fillStyle = "#111111";
 ctx.font = "bold 12px Arial";
 ctx.textAlign = "center";
 ctx.textBaseline = "middle";
-ctx.fillText(String(ball.number), 0, 0.5);
+ctx.fillText(String(ball.number), 0, 0);
 
 ctx.restore();
 }
@@ -597,11 +598,9 @@ continue;
 ball.x += ball.vx;
 ball.y += ball.vy;
 
-/* Sichtbare Rollrotation */
-ball.angle = (ball.angle || 0) +
-Math.hypot(ball.vx, ball.vy) / ball.radius *
-Math.sign(ball.vx || ball.vy || 1);
-
+/* Rollbewegung abhängig von der tatsächlichen Richtung */
+const rollDistance = Math.hypot(ball.vx, ball.vy);
+ball.angle = (ball.angle || 0) + rollDistance / ball.radius;
 
 ball.vx *= FRICTION;
 ball.vy *= FRICTION;
