@@ -1,7 +1,11 @@
+
 name: Build OOZ BALL Android APK
 
 on:
 workflow_dispatch:
+
+permissions:
+contents: read
 
 jobs:
 build:
@@ -24,11 +28,9 @@ npm init -y
 npm install @capacitor/core @capacitor/android
 npm install --save-dev @capacitor/cli
 mkdir www
-
 cp ../index.html www/index.html
 cp ../ooz-table.jpg www/ooz-table.jpg
 cp ../12726D74-5ECA-4F59-958C-EC7D2F0B4C3D.png www/12726D74-5ECA-4F59-958C-EC7D2F0B4C3D.png
-
 npx cap init "OOZ BALL" "com.oozball.app" --web-dir www
 npx cap add android
 npx cap sync android
