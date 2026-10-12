@@ -247,6 +247,8 @@ let cueBall = null;
 let aiming = false;
 let aimX = 0;
 let aimY = 0;
+let cueDirX = -1;
+let cueDirY = 0;
 let shotInProgress = false;
 
 /* =========================================
@@ -481,11 +483,11 @@ function drawAim() {
   // Goldener Kö: dauerhaft sichtbar, beim Zielen zurückgezogen
   const tipGap = 7;
   const pullback = power * 95;
-  const tipX = cueBall.x - nx * (BALL_RADIUS + tipGap + pullback);
-  const tipY = cueBall.y - ny * (BALL_RADIUS + tipGap + pullback);
+ const tipX = cueBall.x + cueDirX * (BALL_RADIUS + tipGap + pullback);
+const tipY = cueBall.y + cueDirY * (BALL_RADIUS + tipGap + pullback);
   const cueLength = 450;
-  const tailX = tipX - nx * cueLength;
-  const tailY = tipY - ny * cueLength;
+  const tailX = tipX - cueDirX * cueLength;
+const tailY = tipY - cueDirY * cueLength;
 
   ctx.lineCap = "round";
 
@@ -835,6 +837,10 @@ return;
 const dx = cueBall.x - aimX;
 const dy = cueBall.y - aimY;
 const distance = Math.hypot(dx, dy);
+if (distance > 5) {
+cueDirX = dx / distance;
+cueDirY = dy / distance;
+}
 
 if (distance > 5) {
 const power = Math.min(distance, MAX_DRAG) / MAX_DRAG;
