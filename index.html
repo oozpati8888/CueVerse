@@ -483,8 +483,8 @@ const tipX = cueBall.x - nx * (BALL_RADIUS + tipGap + pullback);
 const tipY = cueBall.y - ny * (BALL_RADIUS + tipGap + pullback);
 
 const cueLength = 450;
-const tailX = tipX - ny * cueLength;
-const tailY = tipY - nx * cueLength;
+const tailX = tipX - nx * cueLength;
+const tailY = tipY - ny * cueLength;
 
 ctx.lineCap = "round";
 
