@@ -447,140 +447,115 @@ ZIELLINIE UND QUEUE
 ========================================= */
 
 function drawAim() {
-  if (!cueBall || !cueBall.active) return;
+if (!cueBall || !cueBall.active) return;
 
-  // Die Stoßrichtung bleibt erhalten, auch wenn gerade nicht gezogen wird.
-  let dx = aiming ? cueBall.x - aimX : 1;
-  let dy = aiming ? cueBall.y - aimY : 0;
-  let distance = Math.hypot(dx, dy);
+// Stoßrichtung bestimmen
+let dx = aiming ? cueBall.x - aimX : cueDirX;
+let dy = aiming ? cueBall.y - aimY : cueDirY;
+let distance = Math.hypot(dx, dy);
 
-  if (distance < 2) {
-    dx = 1;
-    dy = 0;
-    distance = 1;
-  }
-
-  const nx = dx / distance;
-  const ny = dy / distance;
-  const power = aiming
-    ? Math.min(distance, MAX_DRAG) / MAX_DRAG
-    : 0;
-
-  ctx.save();
-
-  // Dezente Ziellinie nur während des Zielens
-  if (aiming) {
-    ctx.beginPath();
-    ctx.moveTo(cueBall.x, cueBall.y);
-    ctx.lineTo(cueBall.x + nx * 300, cueBall.y + ny * 300);
-    ctx.setLineDash([7, 8]);
-    ctx.strokeStyle = "rgba(255, 225, 150, 0.9)";
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    ctx.setLineDash([]);
-  }
-
-  // Goldener Kö: dauerhaft sichtbar, beim Zielen zurückgezogen
-  const tipGap = 7;
-  const pullback = power * 95;
- const tipX = cueBall.x + cueDirX * (BALL_RADIUS + tipGap + pullback);
-const tipY = cueBall.y + cueDirY * (BALL_RADIUS + tipGap + pullback);
-  const cueLength = 450;
-  const tailX = tipX - cueDirX * cueLength;
-const tailY = tipY - cueDirY * cueLength;
-
-  ctx.lineCap = "round";
-
-  // Schatten
-  ctx.beginPath();
-  ctx.moveTo(tailX + 3, tailY + 4);
-  ctx.lineTo(tipX + 3, tipY + 4);
-  ctx.strokeStyle = "rgba(0,0,0,0.65)";
-  ctx.lineWidth = 14;
-  ctx.stroke();
-
-  // Dunkler Griff
-  ctx.beginPath();
-  ctx.moveTo(tailX, tailY);
-  ctx.lineTo(tipX, tipY);
-  ctx.strokeStyle = "#35200e";
-  ctx.lineWidth = 11;
-  ctx.stroke();
-
-  // Mehrschichtiger Goldglanz
-  const gold = ctx.createLinearGradient(tailX, tailY, tipX, tipY);
-  gold.addColorStop(0, "#704511");
-  gold.addColorStop(0.18, "#fff0a6");
-  gold.addColorStop(0.36, "#b98223");
-  gold.addColorStop(0.55, "#fff7cf");
-  gold.addColorStop(0.76, "#c28b2d");
-  gold.addColorStop(1, "#fff0b0");
-
-  ctx.beginPath();
-  ctx.moveTo(tailX, tailY);
-  ctx.lineTo(tipX, tipY);
-  ctx.strokeStyle = gold;
-  ctx.lineWidth = 7;
-  ctx.stroke();
-
-  // Feine Mittelader
-  ctx.beginPath();
-  ctx.moveTo(tailX, tailY);
-  ctx.lineTo(tipX, tipY);
-  ctx.strokeStyle = "rgba(255,255,235,0.9)";
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
-
-  // Dekorative Goldringe
-  for (const t of [0.12, 0.18, 0.24, 0.78, 0.84]) {
-    const x = tailX + (tipX - tailX) * t;
-    const y = tailY + (tipY - tailY) * t;
-
-    ctx.beginPath();
-    ctx.arc(x, y, 5, 0, Math.PI * 2);
-    ctx.strokeStyle = "#fff0ad";
-    ctx.lineWidth = 2;
-    ctx.stroke();
-  }
-
-  // Federartige Verzierungen am Griffende
-  for (let i = -2; i <= 2; i++) {
-    const spread = i * 5;
-    const baseX = tailX - ny * spread;
-    const baseY = tailY + nx * spread;
-    const endX = baseX - nx * 25 - ny * i * 7;
-    const endY = baseY - ny * 25 + nx * i * 7;
-
-    ctx.beginPath();
-    ctx.moveTo(baseX, baseY);
-    ctx.quadraticCurveTo(
-      baseX - nx * 12 - ny * i * 4,
-      baseY - ny * 12 + nx * i * 4,
-      endX,
-      endY
-    );
-    ctx.strokeStyle = i % 2 === 0 ? "#fff0ad" : "#c58a28";
-    ctx.lineWidth = 3;
-    ctx.stroke();
-  }
-
-  // Helle Kö-Spitze nahe der weißen Kugel
-  ctx.beginPath();
-  ctx.moveTo(tipX, tipY);
-  ctx.lineTo(
-    cueBall.x - nx * (BALL_RADIUS + 2),
-    cueBall.y - ny * (BALL_RADIUS + 2)
-  );
-  ctx.strokeStyle = "#f5e8c8";
-  ctx.lineWidth = 3;
-  ctx.stroke();
-
-  ctx.restore();
-
-  if (aiming) {
-    powerFill.style.width = (power * 100) + "%";
-  }
+if (distance < 0.001) {
+dx = -1;
+dy = 0;
+distance = 1;
 }
+
+const nx = dx / distance;
+const ny = dy / distance;
+
+// Richtung für den nächsten Stoß speichern
+if (aiming && distance > 5) {
+cueDirX = nx;
+cueDirY = ny;
+}
+
+const power = aiming
+? Math.min(distance, MAX_DRAG) / MAX_DRAG
+: 0;
+
+ctx.save();
+
+// Kö-Spitze bleibt immer HINTER der weißen Kugel
+const tipGap = 7;
+const pullback = power * 95;
+
+const tipX = cueBall.x - nx * (BALL_RADIUS + tipGap + pullback);
+const tipY = cueBall.y - ny * (BALL_RADIUS + tipGap + pullback);
+
+const cueLength = 450;
+const tailX = tipX - nx * cueLength;
+const tailY = tipY - ny * cueLength;
+
+ctx.lineCap = "round";
+
+// Schatten
+ctx.beginPath();
+ctx.moveTo(tailX + 3, tailY + 4);
+ctx.lineTo(tipX + 3, tipY + 4);
+ctx.strokeStyle = "rgba(0,0,0,0.65)";
+ctx.lineWidth = 14;
+ctx.stroke();
+
+// Dunkler Griff
+ctx.beginPath();
+ctx.moveTo(tailX, tailY);
+ctx.lineTo(tipX, tipY);
+ctx.strokeStyle = "#35200e";
+ctx.lineWidth = 11;
+ctx.stroke();
+
+// Goldener Kö
+const gold = ctx.createLinearGradient(tailX, tailY, tipX, tipY);
+gold.addColorStop(0, "#704511");
+gold.addColorStop(0.18, "#fff0a6");
+gold.addColorStop(0.36, "#b98223");
+gold.addColorStop(0.55, "#fff7cf");
+gold.addColorStop(0.76, "#c28b2d");
+gold.addColorStop(1, "#fff0b0");
+
+ctx.beginPath();
+ctx.moveTo(tailX, tailY);
+ctx.lineTo(tipX, tipY);
+ctx.strokeStyle = gold;
+ctx.lineWidth = 7;
+ctx.stroke();
+
+// Feine Mittelader
+ctx.beginPath();
+ctx.moveTo(tailX, tailY);
+ctx.lineTo(tipX, tipY);
+ctx.strokeStyle = "rgba(255,255,235,0.9)";
+ctx.lineWidth = 1.5;
+ctx.stroke();
+
+// Goldringe
+for (const t of [0.12, 0.18, 0.24, 0.78, 0.84]) {
+const x = tailX + (tipX - tailX) * t;
+const y = tailY + (tipY - tailY) * t;
+
+ctx.beginPath();
+ctx.arc(x, y, 5, 0, Math.PI * 2);
+ctx.strokeStyle = "#fff0ad";
+ctx.lineWidth = 2;
+ctx.stroke();
+}
+
+// Helle Kö-Spitze
+ctx.beginPath();
+ctx.moveTo(tipX, tipY);
+ctx.lineTo(
+cueBall.x - nx * (BALL_RADIUS + 2),
+cueBall.y - ny * (BALL_RADIUS + 2)
+);
+ctx.strokeStyle = "#f5e8c8";
+ctx.lineWidth = 3;
+ctx.stroke();
+
+ctx.restore();
+
+powerFill.style.width = (power * 100) + "%";
+}
+
 
 
 
