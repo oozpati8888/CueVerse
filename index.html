@@ -447,7 +447,7 @@ ZIELLINIE UND QUEUE
 ========================================= */
 
 function drawAim() {
-if (!cueBall || !cueBall.active) return;
+if (!cueBall || !cueBall.active || !aiming) return;
 
 // Stoßrichtung bestimmen
 let dx = aiming ? cueBall.x - aimX : cueDirX;
