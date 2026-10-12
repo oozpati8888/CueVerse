@@ -480,13 +480,13 @@ const tipGap = 7;
 const pullback = power * 95;
 
 // Die Kö-Spitze bleibt hinter der weißen Kugel
-const tipX = cueBall.x + nx * (BALL_RADIUS + tipGap + pullback);
-const tipY = cueBall.y + ny * (BALL_RADIUS + tipGap + pullback);
+const tipX = cueBall.x - nx * (BALL_RADIUS + tipGap + pullback);
+const tipY = cueBall.y - ny * (BALL_RADIUS + tipGap + pullback);
 
 // Kö-Ende: vom Ball weg nach hinten verlängern
 const cueLength = 450;
-const tailX = cueBall.x + nx * (BALL_RADIUS + tipGap + pullback + cueLength);
-const tailY = cueBall.y + ny * (BALL_RADIUS + tipGap + pullback + cueLength);
+const tailX = cueBall.x - nx * (BALL_RADIUS + tipGap + pullback + cueLength);
+const tailY = cueBall.y - ny * (BALL_RADIUS + tipGap + pullback + cueLength);
 
 
 ctx.lineCap = "round";
