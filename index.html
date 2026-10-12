@@ -23,6 +23,34 @@ flex-direction: column;
 align-items: center;
 overflow-x: hidden;
 }
+#gameLayout {
+display: flex;
+align-items: center;
+justify-content: center;
+gap: 12px;
+width: 100%;
+max-width: 1536px;
+margin: 0 auto;
+}
+
+#gameLayout #powerSliderPanel {
+position: relative;
+left: auto;
+top: auto;
+transform: none;
+flex: 0 0 46px;
+width: 46px;
+height: 300px;
+min-height: 180px;
+}
+
+#gameLayout #table {
+flex: 1 1 auto;
+min-width: 0;
+width: auto;
+}
+
+  
 
 #table {
 position: relative;
@@ -51,12 +79,24 @@ padding: 12px;
 text-align: center;
 }
 #powerSliderPanel {
-width: min(400px, 90%);
-margin: 10px auto;
-padding: 10px;
-border: 1px solid #bda56b;
-border-radius: 10px;
-background: #101b2b;
+position: absolute;
+left: 12px;
+top: 50%;
+transform: translateY(-50%);
+width: 46px;
+height: 42%;
+min-height: 180px;
+margin: 0;
+padding: 8px 5px;
+border: 2px solid #bda56b;
+border-radius: 12px;
+background: linear-gradient(90deg, #101827, #26364b, #101827);
+box-shadow: 0 0 12px rgba(218, 177, 85, 0.35);
+z-index: 5;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
 }
 
 #powerSliderLabel {
@@ -116,14 +156,16 @@ cursor: pointer;
 
 <body>
 
-<div id="table">
-<canvas id="gameCanvas" width="1536" height="768"></canvas>
-</div>
+<div id="gameLayout">
 <div id="powerSliderPanel">
 <div id="powerSliderLabel">STOSSKRAFT</div>
 <input id="powerSlider" type="range" min="0" max="100" value="0">
 </div>
 
+<div id="table">
+<canvas id="gameCanvas" width="1536" height="768"></canvas>
+</div>
+</div>
   
 
 <div id="controls">
