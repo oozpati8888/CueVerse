@@ -50,6 +50,27 @@ background: #101b2b;
 padding: 12px;
 text-align: center;
 }
+#powerSliderPanel {
+width: min(400px, 90%);
+margin: 10px auto;
+padding: 10px;
+border: 1px solid #bda56b;
+border-radius: 10px;
+background: #101b2b;
+}
+
+#powerSliderLabel {
+color: #ead08a;
+font-size: 13px;
+font-weight: bold;
+margin-bottom: 8px;
+}
+
+#powerSlider {
+width: 100%;
+accent-color: #d9b45e;
+cursor: pointer;
+}
 
 #status {
 color: #ead08a;
@@ -98,6 +119,12 @@ cursor: pointer;
 <div id="table">
 <canvas id="gameCanvas" width="1536" height="768"></canvas>
 </div>
+<div id="powerSliderPanel">
+<div id="powerSliderLabel">STOSSKRAFT</div>
+<input id="powerSlider" type="range" min="0" max="100" value="0">
+</div>
+
+  
 
 <div id="controls">
 <div id="status">OOZ BALL · BEREIT</div>
@@ -135,6 +162,7 @@ const BALL_RADIUS = 18;
 
 /* Stärkerer Stoß, kontrolliertes Ausrollen */
 const MAX_POWER = 110;
+ const powerSlider = document.getElementById("powerSlider"); 
 const MAX_DRAG = 190;
 const FRICTION = 0.975;
 const WALL_BOUNCE = 0.92;
@@ -758,7 +786,7 @@ const distance = Math.hypot(dx, dy);
 
 if (distance > 5) {
 const power = Math.min(distance, MAX_DRAG) / MAX_DRAG;
-const strength = power * MAX_POWER;
+const strength = power * MAX_POWER * (Number(powerSlider.value) / 100);
 
 cueBall.vx = (dx / distance) * strength;
 cueBall.vy = (dy / distance) * strength;
