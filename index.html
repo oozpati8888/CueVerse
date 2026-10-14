@@ -554,6 +554,61 @@ ctx.strokeStyle = "#f5e8c8";
 ctx.lineWidth = 3;
 ctx.stroke();
 
+// OOZ BALL – Zielhilfe
+let hitBall = null;
+let hitDistance = Infinity;
+
+for (const ball of balls) {
+if (!ball.active || ball === cueBall) continue;
+
+const bx = ball.x - cueBall.x;
+const by = ball.y - cueBall.y;
+const projection = bx * nx + by * ny;
+
+if (projection <= 0) continue;
+
+const perpendicular = Math.abs(bx * ny - by * nx);
+
+if (perpendicular <= BALL_RADIUS * 2 &&
+projection < hitDistance) {
+hitBall = ball;
+hitDistance = projection;
+}
+}
+
+if (hitBall) {
+const ghostX = hitBall.x - nx * BALL_RADIUS * 2;
+const ghostY = hitBall.y - ny * BALL_RADIUS * 2;
+
+// Gestrichelte Linie zum idealen Treffpunkt
+ctx.beginPath();
+ctx.setLineDash([7, 6]);
+ctx.moveTo(cueBall.x, cueBall.y);
+ctx.lineTo(ghostX, ghostY);
+ctx.strokeStyle = "rgba(255,255,255,0.85)";
+ctx.lineWidth = 2;
+ctx.stroke();
+ctx.setLineDash([]);
+
+// Markierung des idealen Treffpunkts
+ctx.beginPath();
+ctx.arc(ghostX, ghostY, BALL_RADIUS, 0, Math.PI * 2);
+ctx.strokeStyle = "#bdefff";
+ctx.lineWidth = 2;
+ctx.stroke();
+
+// Goldene Stoßrichtung der getroffenen Kugel
+ctx.beginPath();
+ctx.moveTo(hitBall.x, hitBall.y);
+ctx.lineTo(
+hitBall.x + nx * 220,
+hitBall.y + ny * 220
+);
+ctx.strokeStyle = "#ffd700";
+ctx.lineWidth = 2;
+ctx.stroke();
+}
+
 ctx.restore();
 
 powerFill.style.width = (power * 100) + "%";
