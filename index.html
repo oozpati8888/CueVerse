@@ -601,8 +601,9 @@ ctx.stroke();
 ctx.beginPath();
 ctx.moveTo(hitBall.x, hitBall.y);
 ctx.lineTo(
-hitBall.x + nx * 220,
-hitBall.y + ny * 220
+hitBall.x + (hitBall.x - cueBall.x) / Math.hypot(hitBall.x - cueBall.x, hitBall.y - cueBall.y) * 220,
+hitBall.y + (hitBall.y - cueBall.y) / Math.hypot(hitBall.x - cueBall.x, hitBall.y - cueBall.y) * 220
+
 );
 ctx.strokeStyle = "#ffd700";
 ctx.lineWidth = 2;
