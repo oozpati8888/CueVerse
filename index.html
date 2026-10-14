@@ -570,6 +570,7 @@ if (projection <= 0) continue;
 const perpendicular = Math.abs(bx * ny - by * nx);
 
 if (perpendicular <= BALL_RADIUS * 2 &&
+projection > 0 &&
 projection < hitDistance) {
 hitBall = ball;
 hitDistance = projection;
@@ -599,12 +600,17 @@ ctx.stroke();
 
 // Goldene Stoßrichtung der getroffenen Kugel
 ctx.beginPath();
-ctx.moveTo(hitBall.x, hitBall.y);
-ctx.lineTo(
-hitBall.x + (hitBall.x - cueBall.x) / Math.hypot(hitBall.x - cueBall.x, hitBall.y - cueBall.y) * 220,
-hitBall.y + (hitBall.y - cueBall.y) / Math.hypot(hitBall.x - cueBall.x, hitBall.y - cueBall.y) * 220
+ctx.moveTo(hitBall.x, hitBall.y);  
+const outX = hitBall.x - ghostX;
+const outY = hitBall.y - ghostY;
+const outLength = Math.hypot(outX, outY);
 
+ctx.lineTo(
+hitBall.x + (outX / outLength) * 220,
+hitBall.y + (outY / outLength) * 220
 );
+
+
 ctx.strokeStyle = "#ffd700";
 ctx.lineWidth = 2;
 ctx.stroke();
