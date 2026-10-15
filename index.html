@@ -672,13 +672,21 @@ ball.x += (ball.pocketX - ball.x) * 0.24;
 ball.y += (ball.pocketY - ball.y) * 0.24;
 
 if (ball.pocketScale <= 0) {
-ball.pocketScale = 0;
 ball.pocketing = false;
-ball.active = false;
 
 if (ball.type === "cue") {
-statusText.textContent =
-"Weiße Kugel versenkt · NEU STARTEN drücken";
+ball.pocketScale = 1;
+ball.x = 430;
+ball.y = 384;
+ball.vx = 0;
+ball.vy = 0;
+ball.active = true;
+aiming = false;
+shotInProgress = false;
+statusText.textContent = "Weiße Kugel zurückgesetzt";
+} else {
+ball.pocketScale = 0;
+ball.active = false;
 }
 }
 }
