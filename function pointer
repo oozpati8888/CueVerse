@@ -807,7 +807,7 @@ const relativeVelocity =
 relativeX * nx + relativeY * ny;
 
 if (relativeVelocity < 0) {
-const impulse = -relativeVelocity * BALL_BOUNCE;
+const impulse = -(1 + BALL_BOUNCE) * relativeVelocity / 2;
 
 a.vx -= impulse * nx;
 a.vy -= impulse * ny;
