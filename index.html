@@ -279,6 +279,8 @@ return ball;
 
 function setupBalls() {
 balls = [];
+gameOver = false;
+currentPlayer = 1;  
 
 /* 15 Objektkugeln: 7 Volle, 7 Halbe und die schwarze 8 */
 const rack = [
@@ -675,6 +677,18 @@ ball.y += (ball.pocketY - ball.y) * 0.24;
 
 if (ball.pocketScale <= 0) {
 ball.pocketing = false;
+if (ball.type === "eight") {
+gameOver = true;
+ball.active = false;
+ball.pocketScale = 0;
+
+statusText.textContent =
+currentPlayer === 1
+? "SPIEL 2 BEENDET!"
+: "SPIEL 1 BEENDET!";
+
+return;
+}
 
 if (ball.type === "cue") {
 ball.pocketScale = 1;
@@ -876,7 +890,7 @@ y: (event.clientY - rect.top) * H / rect.height
 }
 
 function pointerDown(event) {
-if (!cueBall || !cueBall.active || shotInProgress) return;
+if (gameOver || !cueBall || !cueBall.active || shotInProgress) return;
 
 const p = getPointerPosition(event);
 aimX = p.x;
