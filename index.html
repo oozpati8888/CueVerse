@@ -569,13 +569,25 @@ if (projection <= 0) continue;
 
 const perpendicular = Math.abs(bx * ny - by * nx);
 
-if (perpendicular <= BALL_RADIUS * 2 &&
-projection > 0 &&
-projection < hitDistance) {
-hitBall = ball;
-hitDistance = projection;
+if (perpendicular <= BALL_RADIUS * 2 && projection > 0) {
+
+    // Exakten Abstand bis zum Kugelkontakt berechnen
+    const offset = Math.sqrt(
+        Math.pow(BALL_RADIUS * 2, 2) -
+        Math.pow(perpendicular, 2)
+    );
+
+    const actualHitDistance = projection - offset;
+
+    // Nur Treffer vor der weißen Kugel berücksichtigen
+    if (actualHitDistance >= 0 &&
+        actualHitDistance < hitDistance) {
+
+        hitBall = ball;
+        hitDistance = actualHitDistance;
+    }
 }
-}
+
 
 if (hitBall) {
 const ghostX = hitBall.x - nx * BALL_RADIUS * 24;
