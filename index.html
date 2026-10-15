@@ -907,7 +907,7 @@ cueDirY = dy / distance;
 
 if (distance > 5) {
 const power = Math.min(distance, MAX_DRAG) / MAX_DRAG;
-const strength = power * MAX_POWER * (Number(powerSlider.value) / 100);
+const strength = power * MAX_POWER;
 
 cueBall.vx = (dx / distance) * strength;
 cueBall.vy = (dy / distance) * strength;
