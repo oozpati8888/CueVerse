@@ -590,8 +590,8 @@ if (perpendicular <= BALL_RADIUS * 2 && projection > 0) {
 
 
 if (hitBall) {
-const ghostX = hitBall.x - nx * BALL_RADIUS * 24;
-const ghostY = hitBall.y - ny * BALL_RADIUS * 24;
+const ghostX = hitBall.x - nx * BALL_RADIUS * 2;
+const ghostY = hitBall.y - ny * BALL_RADIUS * 2;
 
 // Gestrichelte Linie zum idealen Treffpunkt
 ctx.beginPath();
