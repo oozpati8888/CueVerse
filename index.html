@@ -578,8 +578,8 @@ hitDistance = projection;
 }
 
 if (hitBall) {
-const ghostX = hitBall.y - ny * BALL_RADIUS * 2;
-const ghostY = hitBall.x - nx * BALL_RADIUS * 2;
+const ghostX = hitBall.x - nx * BALL_RADIUS * 24;
+const ghostY = hitBall.y - ny * BALL_RADIUS * 24;
 
 // Gestrichelte Linie zum idealen Treffpunkt
 ctx.beginPath();
