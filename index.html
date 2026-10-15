@@ -504,6 +504,7 @@ ctx.beginPath();
 ctx.moveTo(tailX, tailY);
 ctx.lineTo(tipX, tipY);
 ctx.strokeStyle = "#35200e";
+  
 ctx.lineWidth = 11;
 ctx.stroke();
 
@@ -587,7 +588,7 @@ if (perpendicular <= BALL_RADIUS * 2 && projection > 0) {
         hitDistance = actualHitDistance;
     }
 }
-
+}
 
 if (hitBall) {
 const ghostX = hitBall.x - nx * BALL_RADIUS * 2;
