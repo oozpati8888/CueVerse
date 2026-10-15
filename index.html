@@ -616,7 +616,7 @@ ctx.beginPath();
 ctx.moveTo(hitBall.x, hitBall.y);  
 const outX = hitBall.x - ghostX;
 const outY = hitBall.y - ghostY;
-const outLength = Math.hypot(outX, outY);
+const outLength = Math.max(0.001, Math.hypot(outX, outY));
 
 ctx.lineTo(
 hitBall.x + (outX / outLength) * 220,
