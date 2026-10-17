@@ -801,47 +801,137 @@ PHYSIK
 ========================================= */
 
 function updatePhysics() {
+// Taschenanimationen nur einmal pro Frame aktualisieren
 for (const ball of balls) {
-if (!ball.active) continue;
-
-if (ball.pocketing) {
+if (ball.active && ball.pocketing) {
 updatePocketAnimation(ball);
-continue;
+}
 }
 
+// Bewegungsschritte an die schnellste Kugel anpassen
+const movingBalls = balls.filter(
+ball => ball.active && !ball.pocketing
+);
+
+const maxSpeed = movingBalls.reduce(
+(max, ball) =>
+Math.max(max, Math.hypot(ball.vx, ball.vy)),
+0
+);
 
 const steps = Math.max(
 1,
-Math.ceil(Math.hypot(ball.vx, ball.vy) / ball.radius)
+Math.ceil(maxSpeed / 8)
 );
 
-for (let step = 0; step < steps; step++) {
-ball.x += ball.vx / steps;
-ball.y += ball.vy / steps;
-}
+const frictionPerStep = Math.pow(FRICTION, 1 / steps);
 
-/* Rollrichtung aus der tatsächlichen Bewegung berechnen */
-const rollDistance = Math.hypot(ball.vx, ball.vy);
+// Bewegung UND Kollisionen in jedem Teilschritt berechnen
+for (let step = 0; step < steps; step++) {
+
+for (const ball of balls) {
+if (!ball.active || ball.pocketing) continue;
+
+const moveX = ball.vx / steps;
+const moveY = ball.vy / steps;
+
+ball.x += moveX;
+ball.y += moveY;
+
+const rollDistance = Math.hypot(moveX, moveY);
 
 if (rollDistance > 0.001) {
-    const movementAngle = Math.atan2(ball.vy, ball.vx);
-
-    if (ball.rollAngle === undefined) {
-    ball.rollAngle = ball.angle || 0;
-    }
-
-    ball.rollAngle += rollDistance / ball.radius;
-    ball.angle = ball.rollAngle;
-    ball.movementAngle = movementAngle;
+if (ball.rollAngle === undefined) {
+ball.rollAngle = ball.angle || 0;
 }
-ball.vx *= FRICTION;
-ball.vy *= FRICTION;
+
+ball.rollAngle += rollDistance / ball.radius;
+ball.angle = ball.rollAngle;
+ball.movementAngle = Math.atan2(moveY, moveX);
+}
+
+ball.vx *= frictionPerStep;
+ball.vy *= frictionPerStep;
 
 if (Math.abs(ball.vx) < 0.08) ball.vx = 0;
 if (Math.abs(ball.vy) < 0.08) ball.vy = 0;
 
 updateWalls(ball);
 }
+
+// Kollisionen nach JEDEM Bewegungsschritt prüfen
+const activeBalls = balls.filter(
+ball => ball.active && !ball.pocketing
+);
+
+for (let i = 0; i < activeBalls.length; i++) {
+for (let j = i + 1; j < activeBalls.length; j++) {
+const a = activeBalls[i];
+const b = activeBalls[j];
+
+const dx = b.x - a.x;
+const dy = b.y - a.y;
+const distance = Math.hypot(dx, dy);
+const minimumDistance = a.radius + b.radius;
+
+if (distance >= minimumDistance || distance < 0.0001) {
+continue;
+}
+
+const nx = dx / distance;
+const ny = dy / distance;
+const overlap = minimumDistance - distance;
+
+// Kugeln voneinander trennen
+a.x -= nx * overlap * 0.5;
+a.y -= ny * overlap * 0.5;
+b.x += nx * overlap * 0.5;
+b.y += ny * overlap * 0.5;
+
+// Ersten Kontakt mit einer Objektkugel merken
+if (
+cueBall &&
+shotInProgress &&
+(a === cueBall || b === cueBall)
+) {
+const otherBall = a === cueBall ? b : a;
+
+if (otherBall.type !== "cue") {
+firstContactBall = otherBall;
+}
+}
+
+// Stoßimpuls berechnen
+const relativeX = b.vx - a.vx;
+const relativeY = b.vy - a.vy;
+const relativeVelocity =
+relativeX * nx + relativeY * ny;
+
+if (relativeVelocity < 0) {
+const impulse =
+-(1 + BALL_BOUNCE) * relativeVelocity / 2;
+
+a.vx -= impulse * nx;
+a.vy -= impulse * ny;
+b.vx += impulse * nx;
+b.vy += impulse * ny;
+}
+}
+}
+}
+
+// Prüfen, ob der Stoß noch läuft
+shotInProgress = balls.some(ball =>
+ball.active &&
+!ball.pocketing &&
+(Math.abs(ball.vx) > 0.035 ||
+Math.abs(ball.vy) > 0.035)
+);
+
+updateStatus();
+}
+
+
 
 /* Kugel-Kugel-Kollisionen */
 const activeBalls = balls.filter(
