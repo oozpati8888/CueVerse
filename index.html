@@ -825,26 +825,27 @@ let dx = b.x - a.x;
 let dy = b.y - a.y;
 let distance = Math.hypot(dx, dy);
 
-if (distance === 0) {
-dx = 0.01;
-distance = 0.01;
-}
+if (distance >= a.radius + b.radius) continue;
 
-const minimumDistance = a.radius + b.radius;
-if (distance >= minimumDistance) continue;
+if (distance < 0.0001) {
+dx = 0.0001;
+dy = 0;
+distance = 0.0001;
+}
 
 const nx = dx / distance;
 const ny = dy / distance;
+const minimumDistance = a.radius + b.radius;
 
-/* Überlappung korrigieren */
+/* Kugeln vollständig voneinander trennen */
 const overlap = minimumDistance - distance;
+
 a.x -= nx * overlap * 0.5;
 a.y -= ny * overlap * 0.5;
 b.x += nx * overlap * 0.5;
 b.y += ny * overlap * 0.5;
 
-const relativeX = b.vx - a.vx;
-  /* Ersten Kontakt der weißen Kugel speichern */
+/* Ersten Kontakt der weißen Kugel speichern */
 if (
 cueBall &&
 !firstContactBall &&
@@ -852,16 +853,21 @@ shotInProgress &&
 (a === cueBall || b === cueBall)
 ) {
 const otherBall = a === cueBall ? b : a;
+
 if (otherBall.type !== "cue") {
 firstContactBall = otherBall;
 }
 }
-const relativeY = b.vy - a.vy;
-const relativeVelocity =
-relativeX * nx + relativeY * ny;
 
+/* Geschwindigkeit entlang der Verbindungslinie */
+const relativeX = b.vx - a.vx;
+const relativeY = b.vy - a.vy;
+const relativeVelocity = relativeX * nx + relativeY * ny;
+
+/* Nur reagieren, wenn sich die Kugeln annähern */
 if (relativeVelocity < 0) {
-const impulse = -(1 + BALL_BOUNCE) * relativeVelocity / 2;
+const impulse =
+-(1 + BALL_BOUNCE) * relativeVelocity / 2;
 
 a.vx -= impulse * nx;
 a.vy -= impulse * ny;
@@ -870,6 +876,7 @@ b.vy += impulse * ny;
 }
 }
 }
+
 
 shotInProgress = balls.some(ball =>
 ball.active && !ball.pocketing &&
