@@ -933,76 +933,7 @@ updateStatus();
 
 
 
-/* Kugel-Kugel-Kollisionen */
-const activeBalls = balls.filter(
-ball => ball.active && !ball.pocketing
-);
 
-for (let i = 0; i < activeBalls.length; i++) {
-for (let j = i + 1; j < activeBalls.length; j++) {
-const a = activeBalls[i];
-const b = activeBalls[j];
-
-const dx = b.x - a.x;
-const dy = b.y - a.y;
-const distance = Math.hypot(dx, dy);
-const minimumDistance = a.radius + b.radius;
-
-if (distance >= minimumDistance || distance < 0.0001) {
-continue;
-}
-
-const nx = dx / distance;
-const ny = dy / distance;
-const overlap = minimumDistance - distance;
-
-// Kugeln vollständig auseinanderdrücken
-a.x -= nx * overlap * 0.5;
-a.y -= ny * overlap * 0.5;
-b.x += nx * overlap * 0.5;
-b.y += ny * overlap * 0.5;
-
-// Erste getroffene Objektkugel merken
-if (cueBall && shotInProgress &&
-(a === cueBall || b === cueBall)) {
-const otherBall = a === cueBall ? b : a;
-
-if (otherBall.type !== "cue") {
-firstContactBall = otherBall;
-}
-}
-
-// Geschwindigkeit entlang der Stoßlinie berechnen
-const relativeX = b.vx - a.vx;
-const relativeY = b.vy - a.vy;
-const relativeVelocity = relativeX * nx + relativeY * ny;
-
-// Impuls nur bei Annäherung übertragen
-if (relativeVelocity < 0) {
-const impulse =
--(1 + BALL_BOUNCE) * relativeVelocity / 2;
-
-a.vx -= impulse * nx;
-a.vy -= impulse * ny;
-b.vx += impulse * nx;
-b.vy += impulse * ny;
-}
-}
-}
-
-
-
-
-
-
-shotInProgress = balls.some(ball =>
-ball.active && !ball.pocketing &&
-(Math.abs(ball.vx) > 0.035 ||
-Math.abs(ball.vy) > 0.035)
-);
-
-updateStatus();
-}
 
 /* =========================================
 STATUS UND RENDERING
