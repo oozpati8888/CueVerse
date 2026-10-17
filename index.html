@@ -1097,7 +1097,32 @@ draw();
 }
 
 
+/* KRAFTREGLER MIT KÖ UND STOß VERBINDEN */
+powerSlider.addEventListener("input", function () {
+if (gameOver || !cueBall || !cueBall.active || shotInProgress || ballInHand) {
+return;
+}
 
+const power = Number(powerSlider.value) / 100;
+const distance = Math.max(5, power * MAX_DRAG);
+
+aiming = true;
+
+aimX = cueBall.x - cueDirX * distance;
+aimY = cueBall.y - cueDirY * distance;
+
+powerFill.style.width = powerSlider.value + "%";
+
+draw();
+});
+
+powerSlider.addEventListener("change", function () {
+if (aiming && !shotInProgress && !ballInHand) {
+pointerUp();
+powerSlider.value = 0;
+powerFill.style.width = "0%";
+}
+});
 canvas.addEventListener("pointerdown", pointerDown);
 canvas.addEventListener("pointermove", pointerMove);
 canvas.addEventListener("pointerup", pointerUp);
