@@ -853,37 +853,28 @@ for (let j = i + 1; j < activeBalls.length; j++) {
 const a = activeBalls[i];
 const b = activeBalls[j];
 
-let dx = b.x - a.x;
-let dy = b.y - a.y;
-let distance = Math.hypot(dx, dy);
-
-if (distance < 0.0001) {
-dx = 0.0001;
-dy = 0;
-distance = 0.0001;
-}
-
+const dx = b.x - a.x;
+const dy = b.y - a.y;
+const distance = Math.hypot(dx, dy);
 const minimumDistance = a.radius + b.radius;
 
-/* Keine Kollision, wenn die Kugeln getrennt sind */
-if (distance >= minimumDistance) continue;
+if (distance >= minimumDistance || distance < 0.0001) {
+continue;
+}
 
-/* Überlappung vollständig korrigieren */
 const nx = dx / distance;
 const ny = dy / distance;
 const overlap = minimumDistance - distance;
 
+// Kugeln vollständig auseinanderdrücken
 a.x -= nx * overlap * 0.5;
 a.y -= ny * overlap * 0.5;
 b.x += nx * overlap * 0.5;
 b.y += ny * overlap * 0.5;
 
-/* Erste getroffene Objektkugel merken */
-if (
-cueBall &&
-shotInProgress &&
-(a === cueBall || b === cueBall)
-) {
+// Erste getroffene Objektkugel merken
+if (cueBall && shotInProgress &&
+(a === cueBall || b === cueBall)) {
 const otherBall = a === cueBall ? b : a;
 
 if (otherBall.type !== "cue") {
@@ -891,12 +882,12 @@ firstContactBall = otherBall;
 }
 }
 
-/* Relative Geschwindigkeit entlang der Stoßlinie */
+// Geschwindigkeit entlang der Stoßlinie berechnen
 const relativeX = b.vx - a.vx;
 const relativeY = b.vy - a.vy;
 const relativeVelocity = relativeX * nx + relativeY * ny;
 
-/* Impuls nur übertragen, wenn sich die Kugeln annähern */
+// Impuls nur bei Annäherung übertragen
 if (relativeVelocity < 0) {
 const impulse =
 -(1 + BALL_BOUNCE) * relativeVelocity / 2;
@@ -908,6 +899,8 @@ b.vy += impulse * ny;
 }
 }
 }
+
+
 
 
 
