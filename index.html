@@ -613,15 +613,14 @@ if (hitBall) {
 const ghostX = cueBall.x + nx * hitDistance;
 const ghostY = cueBall.y + ny * hitDistance;
 
-// Gestrichelte Linie zum idealen Treffpunkt
+// Durchgehende weiße Ziellinie
 ctx.beginPath();
-ctx.setLineDash([7, 6]);
+ctx.setLineDash([]);
 ctx.moveTo(cueBall.x, cueBall.y);
 ctx.lineTo(ghostX, ghostY);
-ctx.strokeStyle = "rgba(255,255,255,0.85)";
+ctx.strokeStyle = "#ffffff";
 ctx.lineWidth = 2;
 ctx.stroke();
-ctx.setLineDash([]);
 
 // Markierung des idealen Treffpunkts
 ctx.beginPath();
