@@ -932,7 +932,7 @@ ctx.shadowColor = "#ffd700";
 ctx.shadowBlur = 12;
 ctx.fillStyle = "#ffd700";
 
-ctx.fillText("👆", cueBall.x, cueBall.y - cueBall.radius - 14);
+ctx.fillText("👆", cueBall.x, cueBall.y - cueBall.radius - 25);
 
 ctx.shadowBlur = 0;
 ctx.restore();
@@ -955,7 +955,7 @@ y: (event.clientY - rect.top) * H / rect.height
 }
 
 function pointerDown(event) {
-if (gameOver || !cueBall || !cueBall.active || shotInProgress) return;
+if (gameOver || !cueBall || !cueBall.active || (shotInProgress && !ballInHand)) return;
 
 const p = getPointerPosition(event);
 
