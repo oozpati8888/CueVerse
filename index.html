@@ -790,8 +790,16 @@ updatePocketAnimation(ball);
 continue;
 }
 
-ball.x += ball.vx;
-ball.y += ball.vy;
+
+const steps = Math.max(
+1,
+Math.ceil(Math.hypot(ball.vx, ball.vy) / ball.radius)
+);
+
+for (let step = 0; step < steps; step++) {
+ball.x += ball.vx / steps;
+ball.y += ball.vy / steps;
+}
 
 /* Rollrichtung aus der tatsächlichen Bewegung berechnen */
 const rollDistance = Math.hypot(ball.vx, ball.vy);
