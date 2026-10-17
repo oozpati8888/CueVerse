@@ -969,21 +969,20 @@ if (gameOver || !cueBall || !cueBall.active || shotInProgress) return;
 
 const p = getPointerPosition(event);
 
-// Weiße Kugel bei Ball-in-Hand greifen
+// Beim ersten Antippen die Hand entfernen und den Kö aktivieren
 if (ballInHand) {
-const distance = Math.hypot(p.x - cueBall.x, p.y - cueBall.y);
-
-if (distance <= cueBall.radius * 2) {
-draggingCueBall = true;
-handX = p.x;
-handY = p.y;
+ballInHand = false;
+draggingCueBall = false;
+aimX = p.x;
+aimY = p.y;
+aiming = true;
 canvas.setPointerCapture(event.pointerId);
 draw();
-}
 return;
 }
 
 aimX = p.x;
+  
 aimY = p.y;
 aiming = true;
 
