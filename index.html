@@ -965,7 +965,7 @@ y: (event.clientY - rect.top) * H / rect.height
 }
 
 function pointerDown(event) {
-if (gameOver || !cueBall || !cueBall.active || (shotInProgress) return;
+if (gameOver || !cueBall || !cueBall.active || shotInProgress) return;
 
 const p = getPointerPosition(event);
 
