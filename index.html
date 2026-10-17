@@ -682,10 +682,18 @@ gameOver = true;
 ball.active = false;
 ball.pocketScale = 0;
 
+const winner = currentPlayer === 1 ? 2 : 1;
+
 statusText.textContent =
-currentPlayer === 1
-? "SPIEL 2 BEENDET!"
-: "SPIEL 1 BEENDET!";
+"Spieler " + currentPlayer +
+" hat die schwarze 8 versenkt – Spieler " +
+winner + " hat gewonnen!";
+
+setTimeout(() => {
+setupBalls();
+statusText.textContent = "Neues Spiel – Spieler 1 ist dran";
+draw();
+}, 3000);
 
 return;
 }
