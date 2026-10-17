@@ -926,7 +926,7 @@ ctx.fillText("✋", cueBall.x, cueBall.y - cueBall.radius - 12);
 ctx.restore();
 }
 }
-loop();
+
 
 /* =========================================
 MAUS UND TOUCH
@@ -1055,7 +1055,7 @@ SPIELSCHLEIFE
 ========================================= */
 
 function gameLoop() {
-update();
+updatePhysics();
 draw();
 requestAnimationFrame(gameLoop);
 }
