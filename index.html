@@ -328,6 +328,7 @@ createBall(x, y, number, type);
 });
 
 cueBall = createBall(430, 384, 0, "cue");
+ballInHand = true;
 
 aiming = false;
 shotInProgress = false;
@@ -916,6 +917,13 @@ drawBall(ball);
 }
 
 drawAim();
+if (ballInHand && cueBall && cueBall.active) {
+ctx.save();
+ctx.font = "32px sans-serif";
+ctx.textAlign = "center";
+ctx.textBaseline = "middle";
+ctx.fillText("✋", cueBall.x, cueBall.y - cueBall.radius - 12);
+ctx.restore();
 }
 
 /* =========================================
