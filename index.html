@@ -252,6 +252,16 @@ let cueDirY = 0;
 let shotInProgress = false;
 let gameOver = false;
 let currentPlayer =1;
+  let playerGroups = {
+1: null,
+2: null
+};
+
+let firstContactBall = null;
+let foulThisTurn = false;
+let ballInHand = false;
+let turnPocketedBalls = [];
+let turnMessage = "";
 
 /* =========================================
 KUGELN ERZEUGEN
@@ -693,7 +703,7 @@ setTimeout(() => {
 setupBalls();
 statusText.textContent = "Neues Spiel – Spieler 1 ist dran";
 draw();
-}, 3000);
+}, 5000);
 
 return;
 }
@@ -834,6 +844,18 @@ b.x += nx * overlap * 0.5;
 b.y += ny * overlap * 0.5;
 
 const relativeX = b.vx - a.vx;
+  /* Ersten Kontakt der weißen Kugel speichern */
+if (
+cueBall &&
+!firstContactBall &&
+shotInProgress &&
+(a === cueBall || b === cueBall)
+) {
+const otherBall = a === cueBall ? b : a;
+if (otherBall.type !== "cue") {
+firstContactBall = otherBall;
+}
+}
 const relativeY = b.vy - a.vy;
 const relativeVelocity =
 relativeX * nx + relativeY * ny;
@@ -905,6 +927,7 @@ aimX = p.x;
 aimY = p.y;
 aiming = true;
 
+  
 canvas.setPointerCapture(event.pointerId);
 draw();
 }
@@ -938,6 +961,8 @@ cueDirY = dy / distance;
 }
 
 if (distance > 5) {
+firstContactBall = null;
+foulThisTurn = false; 
 const power = Math.min(distance, MAX_DRAG) / MAX_DRAG;
 const strength = Math.max(1, power * MAX_POWER);
 
