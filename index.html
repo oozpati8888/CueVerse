@@ -609,9 +609,26 @@ if (perpendicular <= BALL_RADIUS * 2 && projection > 0) {
 }
 }
 
-if (hitBall) {
-const ghostX = cueBall.x + nx * hitDistance;
-const ghostY = cueBall.y + ny * hitDistance;
+// Zielhilfe: Kugel oder Bande anzeigen
+let hitDistanceToShow = hitBall ? hitDistance : Infinity;
+
+// Wenn keine Kugel getroffen wird, Schnittpunkt mit der Bande berechnen
+if (!hitBall) {
+const wallDistances = [];
+
+if (nx > 0) wallDistances.push((TABLE.right - cueBall.x) / nx);
+if (nx < 0) wallDistances.push((TABLE.left - cueBall.x) / nx);
+if (ny > 0) wallDistances.push((TABLE.bottom - cueBall.y) / ny);
+if (ny < 0) wallDistances.push((TABLE.top - cueBall.y) / ny);
+
+hitDistanceToShow = Math.min(
+...wallDistances.filter(d => d > 0)
+);
+}
+
+if (Number.isFinite(hitDistanceToShow)) {
+const ghostX = cueBall.x + nx * hitDistanceToShow;
+const ghostY = cueBall.y + ny * hitDistanceToShow;
 
 // Durchgehende weiße Ziellinie
 ctx.beginPath();
@@ -622,16 +639,18 @@ ctx.strokeStyle = "#ffffff";
 ctx.lineWidth = 2;
 ctx.stroke();
 
-// Markierung des idealen Treffpunkts
+// Kreis mit dem Radius einer Kugel
 ctx.beginPath();
 ctx.arc(ghostX, ghostY, BALL_RADIUS, 0, Math.PI * 2);
 ctx.strokeStyle = "#bdefff";
 ctx.lineWidth = 2;
 ctx.stroke();
 
-// Goldene Stoßrichtung der getroffenen Kugel
+// Goldene Richtung nur anzeigen, wenn eine Kugel getroffen wird
+if (hitBall) {
 ctx.beginPath();
-ctx.moveTo(hitBall.x, hitBall.y);  
+ctx.moveTo(hitBall.x, hitBall.y);
+
 const outX = hitBall.x - ghostX;
 const outY = hitBall.y - ghostY;
 const outLength = Math.max(0.001, Math.hypot(outX, outY));
@@ -641,11 +660,12 @@ hitBall.x + (outX / outLength) * 220,
 hitBall.y + (outY / outLength) * 220
 );
 
-
 ctx.strokeStyle = "#ffd700";
 ctx.lineWidth = 2;
 ctx.stroke();
 }
+}
+
 
 ctx.restore();
 
