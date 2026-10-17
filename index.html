@@ -935,26 +935,66 @@ function pointerDown(event) {
 if (gameOver || !cueBall || !cueBall.active || shotInProgress) return;
 
 const p = getPointerPosition(event);
+
+// Weiße Kugel bei Ball-in-Hand greifen
+if (ballInHand) {
+const distance = Math.hypot(p.x - cueBall.x, p.y - cueBall.y);
+
+if (distance <= cueBall.radius * 2) {
+draggingCueBall = true;
+handX = p.x;
+handY = p.y;
+canvas.setPointerCapture(event.pointerId);
+draw();
+}
+return;
+}
+
 aimX = p.x;
 aimY = p.y;
 aiming = true;
 
-  
 canvas.setPointerCapture(event.pointerId);
 draw();
 }
 
 function pointerMove(event) {
+const p = getPointerPosition(event);
+
+if (draggingCueBall && ballInHand) {
+handX = p.x;
+handY = p.y;
+
+cueBall.x = Math.max(
+cueBall.radius,
+Math.min(W - cueBall.radius, p.x)
+);
+cueBall.y = Math.max(
+cueBall.radius,
+Math.min(H - cueBall.radius, p.y)
+);
+
+cueBall.vx = 0;
+cueBall.vy = 0;
+draw();
+return;
+}
+
 if (!aiming) return;
 
-const p = getPointerPosition(event);
 aimX = p.x;
 aimY = p.y;
-
 draw();
 }
 
 function pointerUp() {
+if (draggingCueBall) {
+draggingCueBall = false;
+ballInHand = false;
+draw();
+return;
+}
+
 if (!aiming) return;
 
 aiming = false;
@@ -967,14 +1007,14 @@ return;
 const dx = cueBall.x - aimX;
 const dy = cueBall.y - aimY;
 const distance = Math.hypot(dx, dy);
+
 if (distance > 5) {
 cueDirX = dx / distance;
 cueDirY = dy / distance;
-}
 
-if (distance > 5) {
 firstContactBall = null;
-foulThisTurn = false; 
+foulThisTurn = false;
+
 const power = Math.min(distance, MAX_DRAG) / MAX_DRAG;
 const strength = Math.max(1, power * MAX_POWER);
 
@@ -987,6 +1027,8 @@ shotInProgress = true;
 powerFill.style.width = "0%";
 draw();
 }
+
+
 
 canvas.addEventListener("pointerdown", pointerDown);
 canvas.addEventListener("pointermove", pointerMove);
