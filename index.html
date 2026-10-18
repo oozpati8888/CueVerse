@@ -814,10 +814,10 @@ const r = ball.radius;
 /* Taschen immer vor Banden prüfen */
 if (checkPockets(ball)) return;
 
-if (ball.x - r < TABLE.left &&
-!nearPocketOpening(ball, "left")) {
-ball.x = TABLE.left + r;
-ball.vx = Math.abs(ball.vx) * WALL_BOUNCE;
+if (ball.y - r < TABLE.top &&
+!nearPocketOpening(ball, "top")) {
+ball.y = TABLE.top + r;
+ball.vy = Math.abs(ball.vy) * WALL_BOUNCE;
 }
 
 if (ball.x + r > TABLE.right &&
