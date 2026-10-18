@@ -1097,9 +1097,10 @@ draw();
 }
 
 
-/* KRAFTREGLER MIT KÖ UND STOß VERBINDEN */
+/* KRAFTREGLER MIT KÖ UND STOSS VERBINDEN */
 powerSlider.addEventListener("input", function () {
-if (gameOver || !cueBall || !cueBall.active || shotInProgress || ballInHand) {
+if (gameOver || !cueBall || !cueBall.active ||
+shotInProgress || ballInHand) {
 return;
 }
 
@@ -1114,6 +1115,14 @@ aimY = cueBall.y - cueDirY * distance;
 powerFill.style.width = powerSlider.value + "%";
 
 draw();
+});
+
+powerSlider.addEventListener("change", function () {
+if (aiming && !shotInProgress && !ballInHand) {
+pointerUp();
+powerSlider.value = 0;
+powerFill.style.width = "0%";
+}
 });
 
 powerSlider.addEventListener("change", function () {
