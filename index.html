@@ -1112,8 +1112,8 @@ draw();
 return;
 }
 
-const dx = aimX - cueBall.x;
-const dy = aimY - cueBall.y;
+const dx = cueBall.x - aimX;
+const dy = cueBall.y - aimY;
 const distance = Math.hypot(dx, dy);
 
 if (distance > 5) {
