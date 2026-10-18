@@ -825,7 +825,11 @@ if (ball.x - r < TABLE.left &&
 ball.x = TABLE.left + r;
 ball.vx = Math.abs(ball.vx) * WALL_BOUNCE;
 }
-
+if (ball.x + r > TABLE.right &&
+!nearPocketOpening(ball, "right")) {
+ball.x = TABLE.right - r;
+ball.vx = -Math.abs(ball.vx) * WALL_BOUNCE;
+}
 
 
 if (ball.y + r > TABLE.bottom &&
