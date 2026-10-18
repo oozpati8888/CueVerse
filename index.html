@@ -731,13 +731,18 @@ const dx = ball.x - pocket.x;
 const dy = ball.y - pocket.y;
 const distance = Math.hypot(dx, dy);
 
-if (distance < POCKET_CAPTURE) {
+// Die Kugel muss weiter in die Tasche rollen,
+// bevor die Einloch-Animation beginnt.
+const captureDistance = POCKET_CAPTURE + ball.radius * 0.25;
+
+if (distance < captureDistance) {
 ball.pocketing = true;
 ball.pocketScale = 1;
 ball.pocketX = pocket.x;
 ball.pocketY = pocket.y;
 ball.vx = 0;
 ball.vy = 0;
+
 return true;
 }
 }
