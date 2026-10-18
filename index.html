@@ -1041,7 +1041,7 @@ y: (event.clientY - rect.top) * H / rect.height
 }
 let billiardAudioContext = null;
 
-function playBilliardHit() {
+function playBilliardHit(strength = 0.6) {
 try {
 if (!billiardAudioContext) {
 billiardAudioContext = new (
@@ -1049,32 +1049,69 @@ window.AudioContext || window.webkitAudioContext
 )();
 }
 
-if (billiardAudioContext.state === "suspended") {
-billiardAudioContext.resume();
-}
-
 const ctx = billiardAudioContext;
+
+if (ctx.state === "suspended") {
+ctx.resume();
+}
+
 const now = ctx.currentTime;
+const volume = Math.max(0.15, Math.min(1, strength));
 
-const oscillator = ctx.createOscillator();
-const gain = ctx.createGain();
+// Kurzer, tiefer Queue-Aufprall
+const osc = ctx.createOscillator();
+const body = ctx.createGain();
 
-oscillator.type = "triangle";
-oscillator.frequency.setValueAtTime(900, now);
-oscillator.frequency.exponentialRampToValueAtTime(180, now + 0.07);
+osc.type = "triangle";
+osc.frequency.setValueAtTime(650, now);
+osc.frequency.exponentialRampToValueAtTime(180, now + 0.055);
 
-gain.gain.setValueAtTime(0.9, now);
-gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+body.gain.setValueAtTime(0.0001, now);
+body.gain.exponentialRampToValueAtTime(0.65 * volume, now + 0.003);
+body.gain.exponentialRampToValueAtTime(0.0001, now + 0.11);
 
-oscillator.connect(gain);
-gain.connect(ctx.destination);
+osc.connect(body);
+body.connect(ctx.destination);
+osc.start(now);
+osc.stop(now + 0.12);
 
-oscillator.start(now);
-oscillator.stop(now + 0.09);
+// Helles, knackiges Kontaktgeräusch
+const buffer = ctx.createBuffer(
+1,
+Math.floor(ctx.sampleRate * 0.035),
+ctx.sampleRate
+);
+
+const data = buffer.getChannelData(0);
+
+for (let i = 0; i < data.length; i++) {
+data[i] = (Math.random() * 2 - 1) *
+Math.pow(1 - i / data.length, 3);
+}
+
+const noise = ctx.createBufferSource();
+const filter = ctx.createBiquadFilter();
+const click = ctx.createGain();
+
+noise.buffer = buffer;
+filter.type = "highpass";
+filter.frequency.value = 700;
+
+click.gain.setValueAtTime(0.0001, now);
+click.gain.exponentialRampToValueAtTime(0.45 * volume, now + 0.001);
+click.gain.exponentialRampToValueAtTime(0.0001, now + 0.035);
+
+noise.connect(filter);
+filter.connect(click);
+click.connect(ctx.destination);
+
+noise.start(now);
 } catch (error) {
-console.log("Billard-Sound konnte nicht abgespielt werden:", error);
+console.log("Billard-Sound:", error);
 }
 }
+
+
 
 function pointerDown(event) {
 if (gameOver || !cueBall || !cueBall.active || shotInProgress) return;
