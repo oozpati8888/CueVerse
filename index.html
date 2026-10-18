@@ -245,6 +245,7 @@ const BALL_RADIUS = 18;
 /* Stärkerer Stoß, kontrolliertes Ausrollen */
 const MAX_POWER = 110;
  const powerSlider = document.getElementById("powerSlider"); 
+const powerCue = document.getElementById("powerCue");
 const MAX_DRAG = 190;
 const FRICTION = 0.975;
 const WALL_BOUNCE = 0.92;
@@ -1162,13 +1163,7 @@ powerFill.style.width = "0%";
 }
 });
 
-powerSlider.addEventListener("change", function () {
-if (aiming && !shotInProgress && !ballInHand) {
-pointerUp();
-powerSlider.value = 0;
-powerFill.style.width = "0%";
-}
-});
+
 canvas.addEventListener("pointerdown", pointerDown);
 canvas.addEventListener("pointermove", pointerMove);
 canvas.addEventListener("pointerup", pointerUp);
