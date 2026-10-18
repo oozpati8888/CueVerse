@@ -751,37 +751,29 @@ return false;
 }
 
 function updatePocketAnimation(ball) {
-ball.pocketScale -= POCKET_ANIMATION_SPEED;
+const dx = ball.pocketX - ball.x;
+const dy = ball.pocketY - ball.y;
+const distance = Math.hypot(dx, dy);
 
-/* Kugel sichtbar in die Taschenmitte rollen lassen */
-ball.x += (ball.pocketX - ball.x) * 0.30;
-ball.y += (ball.pocketY - ball.y) * 0.30;
+// Die Kugel sichtbar bis zur Taschenmitte rollen lassen.
+const rollSpeed = 0.30;
 
-if (ball.pocketScale <= 0) {
-ball.pocketing = false;
-if (ball.type === "eight") {
-gameOver = true;
-ball.active = false;
-ball.pocketScale = 0;
-
-const winner = currentPlayer === 1 ? 2 : 1;
-
-statusText.textContent =
-"Spieler " + currentPlayer +
-" hat die schwarze 8 versenkt – Spieler " +
-winner + " hat gewonnen!";
-
-setTimeout(() => {
-setupBalls();
-statusText.textContent = "Neues Spiel – Spieler 1 ist dran";
-draw();
-}, 5000);
-
+if (distance > 1) {
+ball.x += dx * rollSpeed;
+ball.y += dy * rollSpeed;
 return;
 }
 
+// Erst in der Taschenmitte kleiner werden und verschwinden.
+ball.x = ball.pocketX;
+ball.y = ball.pocketY;
+ball.pocketScale -= POCKET_ANIMATION_SPEED;
+
+if (ball.pocketScale <= 0) {
+ball.pocketScale = 0;
+ball.pocketing = false;
+
 if (ball.type === "cue") {
-ball.pocketScale = 1;
 ball.x = 430;
 ball.y = 384;
 ball.vx = 0;
@@ -791,11 +783,14 @@ aiming = false;
 shotInProgress = false;
 statusText.textContent = "Weiße Kugel zurückgesetzt";
 } else {
-ball.pocketScale = 0;
 ball.active = false;
 }
 }
 }
+
+
+
+
 
 /* =========================================
 BANDEN
