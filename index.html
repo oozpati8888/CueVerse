@@ -73,36 +73,6 @@ height: 100%;
 display: block;
 touch-action: none;
 }
-#pocketTray {
-position: absolute;
-right: -145px;
-top: 50%;
-transform: translateY(-50%);
-width: 130px;
-min-height: 100px;
-padding: 10px;
-box-sizing: border-box;
-background: linear-gradient(145deg, #252525, #080808);
-border: 3px solid #bda56b;
-border-radius: 18px;
-box-shadow: 0 0 15px rgba(0, 0, 0, 0.6);
-z-index: 10;
-color: #ead08a;
-text-align: center;
-}
-
-#pocketTrayTitle {
-font-size: 11px;
-font-weight: bold;
-margin-bottom: 10px;
-}
-
-#pocketedBalls {
-display: flex;
-flex-wrap: wrap;
-justify-content: center;
-gap: 5px;
-}  
 
 #controls {
 width: min(100vw, 1536px);
@@ -236,10 +206,6 @@ cursor: pointer;
 
 <div id="table">
 <canvas id="gameCanvas" width="1536" height="768"></canvas>
-
-<div id="pocketTray">
-<div id="pocketTrayTitle">EINGELOCHTE KUGELN</div>
-<div id="pocketedBalls"></div>
 </div>
 </div>
   
@@ -759,27 +725,6 @@ TASCHEN
 Kugeln werden animiert statt sofort gelöscht.
 ========================================= */
 
-
-function addPocketedBall(ball) {
-const tray = document.getElementById("pocketedBalls");
-if (!tray) return;
-
-const item = document.createElement("div");
-item.style.width = "28px";
-item.style.height = "28px";
-item.style.borderRadius = "50%";
-item.style.display = "flex";
-item.style.alignItems = "center";
-item.style.justifyContent = "center";
-item.style.fontSize = "13px";
-item.style.fontWeight = "bold";
-item.style.color = "#ffffff";
-item.style.border = "2px solid #ffffff";
-item.style.boxSizing = "border-box";
-item.style.background = ball.type === "eight" ? "#111111" : "#2455cc";
-item.textContent = ball.type === "eight" ? "8" : String(ball.number ?? "");
-tray.appendChild(item);
-}
 function checkPockets(ball) {
 for (const pocket of POCKETS) {
 const dx = ball.x - pocket.x;
@@ -1249,4 +1194,3 @@ gameLoop();
 </script>
 </body>
 </html>
-
