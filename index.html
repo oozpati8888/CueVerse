@@ -1045,20 +1045,12 @@ if (gameOver || !cueBall || !cueBall.active || shotInProgress) return;
 
 const p = getPointerPosition(event);
 
-// Beim ersten Antippen die Hand entfernen und den Kö aktivieren
 if (ballInHand) {
 ballInHand = false;
 draggingCueBall = false;
-aimX = p.x;
-aimY = p.y;
-aiming = true;
-canvas.setPointerCapture(event.pointerId);
-draw();
-return;
 }
 
 aimX = p.x;
-  
 aimY = p.y;
 aiming = true;
 
