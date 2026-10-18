@@ -753,9 +753,9 @@ return false;
 function updatePocketAnimation(ball) {
 ball.pocketScale -= POCKET_ANIMATION_SPEED;
 
-/* Die Kugel wandert zum Taschenzentrum */
-ball.x += (ball.pocketX - ball.x) * 0.24;
-ball.y += (ball.pocketY - ball.y) * 0.24;
+/* Die Kugel sichtbar in die Taschen rollen lassen */
+ball.x += (ball.pocketX - ball.x) * 0.12;
+ball.y += (ball.pocketY - ball.y) * 0.12;
 
 if (ball.pocketScale <= 0) {
 ball.pocketing = false;
