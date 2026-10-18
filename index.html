@@ -1063,8 +1063,8 @@ oscillator.type = "triangle";
 oscillator.frequency.setValueAtTime(900, now);
 oscillator.frequency.exponentialRampToValueAtTime(180, now + 0.07);
 
-gain.gain.setValueAtTime(0.35, now);
-gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+gain.gain.setValueAtTime(0.9, now);
+gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
 
 oscillator.connect(gain);
 gain.connect(ctx.destination);
