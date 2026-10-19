@@ -944,18 +944,23 @@ firstContactBall = otherBall;
 }
 }
 
-// Stoßimpuls berechnen
+// Stabiler Kugel-Stoßimpuls
 const relativeX = b.vx - a.vx;
 const relativeY = b.vy - a.vy;
+
 const relativeVelocity =
 relativeX * nx + relativeY * ny;
 
-if (relativeVelocity < 0) {
+// Nur reagieren, wenn sich die Kugeln annähern
+if (relativeVelocity < -0.0001) {
+const restitution = BALL_BOUNCE;
+
 const impulse =
--(1 + BALL_BOUNCE) * relativeVelocity / 2;
+-(1 + restitution) * relativeVelocity / 2;
 
 a.vx -= impulse * nx;
 a.vy -= impulse * ny;
+
 b.vx += impulse * nx;
 b.vy += impulse * ny;
 }
