@@ -1077,14 +1077,14 @@ const now = performance.now();
 const lastTime = lastCollisionTimes.get(contactKey) || 0;
 
 // Denselben Kontakt nicht mehrfach auslösen
-if (now - lastTime < 140) return;
+if (now - lastTime < 220) return;
 
 lastCollisionTimes.set(contactKey, now);
 
 // Eigenständige Soundinstanz, damit Klänge
 // sich nicht gegenseitig abschneiden
 const sound = ballCollisionSound.cloneNode();
-sound.volume = 0.35;
+sound.volume = 0.25;
 
 sound.play().catch(error => {
 console.log("Kollisions-Sound:", error);
