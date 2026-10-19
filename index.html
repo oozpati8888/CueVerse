@@ -1070,21 +1070,18 @@ console.log("Anstoß-Sound:", error);
 });
 }
 
-const lastCollisionTimes = new Map();
+let lastCollisionSoundTime = 0;
 
 function playBallCollision(contactKey) {
 const now = performance.now();
-const lastTime = lastCollisionTimes.get(contactKey) || 0;
 
-// Denselben Kontakt nicht mehrfach auslösen
-if (now - lastTime < 220) return;
+// Insgesamt höchstens ein Kollisionssound alle 120 ms
+if (now - lastCollisionSoundTime < 120) return;
 
-lastCollisionTimes.set(contactKey, now);
+lastCollisionSoundTime = now;
 
-// Eigenständige Soundinstanz, damit Klänge
-// sich nicht gegenseitig abschneiden
 const sound = ballCollisionSound.cloneNode();
-sound.volume = 0.25;
+sound.volume = 0.35;
 
 sound.play().catch(error => {
 console.log("Kollisions-Sound:", error);
