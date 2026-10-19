@@ -1048,7 +1048,8 @@ y: (event.clientY - rect.top) * H / rect.height
 let billiardAudioContext = null;
 
 const cueHitSound = new Audio("./ooz_kugelstoss_kurz.wav");
-const ballCollisionSound = null;
+const ballCollisionSound = new Audio("./ooz_kugelstoss_kurz.wav");
+ballCollisionSound.preload = "auto";
 
 cueHitSound.preload = "auto";
 
@@ -1061,7 +1062,10 @@ console.log("Anstoß-Sound:", error);
 }
 
 function playBallCollision() {
-// Wird im nächsten Schritt mit dem kurzen kollisionssound verbunden.
+ballCollisionSound.currentTime = 0;
+ballCollisionSound.play().catch(error => {
+console.log("Kollisions-Sound:", error);
+});
 }
 
 
