@@ -1041,74 +1041,24 @@ y: (event.clientY - rect.top) * H / rect.height
 }
 let billiardAudioContext = null;
 
-function playBilliardHit(strength = 0.6) {
-try {
-if (!billiardAudioContext) {
-billiardAudioContext = new (
-window.AudioContext || window.webkitAudioContext
-)();
+const cueHitSound = new Audio("./anstoss_8ballpool_korrigiert.wav");
+const ballCollisionSound = new Audio("./kollisionen_8ballpool_korrigiert.wav");
+
+cueHitSound.preload = "auto";
+ballCollisionSound.preload = "auto";
+
+function playBilliardHit() {
+cueHitSound.currentTime = 0;
+cueHitSound.play().catch(error => {
+console.log("Anstoß-Sound:", error);
+});
 }
 
-const ctx = billiardAudioContext;
-
-if (ctx.state === "suspended") {
-ctx.resume();
-}
-
-const now = ctx.currentTime;
-const volume = Math.max(0.15, Math.min(1, strength));
-
-// Kurzer, tiefer Queue-Aufprall
-const osc = ctx.createOscillator();
-const body = ctx.createGain();
-
-osc.type = "triangle";
-osc.frequency.setValueAtTime(650, now);
-osc.frequency.exponentialRampToValueAtTime(180, now + 0.055);
-
-body.gain.setValueAtTime(0.0001, now);
-body.gain.exponentialRampToValueAtTime(0.65 * volume, now + 0.003);
-body.gain.exponentialRampToValueAtTime(0.0001, now + 0.11);
-
-osc.connect(body);
-body.connect(ctx.destination);
-osc.start(now);
-osc.stop(now + 0.12);
-
-// Helles, knackiges Kontaktgeräusch
-const buffer = ctx.createBuffer(
-1,
-Math.floor(ctx.sampleRate * 0.035),
-ctx.sampleRate
-);
-
-const data = buffer.getChannelData(0);
-
-for (let i = 0; i < data.length; i++) {
-data[i] = (Math.random() * 2 - 1) *
-Math.pow(1 - i / data.length, 3);
-}
-
-const noise = ctx.createBufferSource();
-const filter = ctx.createBiquadFilter();
-const click = ctx.createGain();
-
-noise.buffer = buffer;
-filter.type = "highpass";
-filter.frequency.value = 700;
-
-click.gain.setValueAtTime(0.0001, now);
-click.gain.exponentialRampToValueAtTime(0.45 * volume, now + 0.001);
-click.gain.exponentialRampToValueAtTime(0.0001, now + 0.035);
-
-noise.connect(filter);
-filter.connect(click);
-click.connect(ctx.destination);
-
-noise.start(now);
-} catch (error) {
-console.log("Billard-Sound:", error);
-}
+function playBallCollision() {
+ballCollisionSound.currentTime = 0;
+ballCollisionSound.play().catch(error => {
+console.log("Kollisions-Sound:", error);
+});
 }
 
 
