@@ -818,17 +818,20 @@ if (ball.y - r < TABLE.top &&
 !nearPocketOpening(ball, "top")) {
 ball.y = TABLE.top + r;
 ball.vy = Math.abs(ball.vy) * WALL_BOUNCE;
+playBallCollision();
 }
 
 if (ball.x - r < TABLE.left &&
 !nearPocketOpening(ball, "left")) {
 ball.x = TABLE.left + r;
 ball.vx = Math.abs(ball.vx) * WALL_BOUNCE;
+playBallCollision();
 }
 if (ball.x + r > TABLE.right &&
 !nearPocketOpening(ball, "right")) {
 ball.x = TABLE.right - r;
 ball.vx = -Math.abs(ball.vx) * WALL_BOUNCE;
+playBallCollision();
 }
 
 
@@ -836,6 +839,7 @@ if (ball.y + r > TABLE.bottom &&
 !nearPocketOpening(ball, "bottom")) {
 ball.y = TABLE.bottom - r;
 ball.vy = -Math.abs(ball.vy) * WALL_BOUNCE;
+playBallCollision();
 }
 }
 
@@ -963,7 +967,7 @@ a.vy -= impulse * ny;
 
 b.vx += impulse * nx;
 b.vy += impulse * ny;
-// playBallCollision();
+playBallCollision();
 }
 }
 }
