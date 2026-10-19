@@ -1061,8 +1061,17 @@ console.log("Anstoß-Sound:", error);
 });
 }
 
+let lastBallCollisionTime = 0;
+
 function playBallCollision() {
+const now = performance.now();
+
+// Sound höchstens einmal alle 70 ms
+if (now - lastBallCollisionTime < 70) return;
+
+lastBallCollisionTime = now;
 ballCollisionSound.currentTime = 0;
+
 ballCollisionSound.play().catch(error => {
 console.log("Kollisions-Sound:", error);
 });
