@@ -818,20 +818,20 @@ if (ball.y - r < TABLE.top &&
 !nearPocketOpening(ball, "top")) {
 ball.y = TABLE.top + r;
 ball.vy = Math.abs(ball.vy) * WALL_BOUNCE;
-playBallCollision();
+playBallCollision("wall-" + ball.number + "-top");
 }
 
 if (ball.x - r < TABLE.left &&
 !nearPocketOpening(ball, "left")) {
 ball.x = TABLE.left + r;
 ball.vx = Math.abs(ball.vx) * WALL_BOUNCE;
-playBallCollision();
+playBallCollision("wall-" + ball.number + "-left");
 }
 if (ball.x + r > TABLE.right &&
 !nearPocketOpening(ball, "right")) {
 ball.x = TABLE.right - r;
 ball.vx = -Math.abs(ball.vx) * WALL_BOUNCE;
-playBallCollision();
+playBallCollision("wall-" + ball.number + "-right");
 }
 
 
@@ -839,7 +839,7 @@ if (ball.y + r > TABLE.bottom &&
 !nearPocketOpening(ball, "bottom")) {
 ball.y = TABLE.bottom - r;
 ball.vy = -Math.abs(ball.vy) * WALL_BOUNCE;
-playBallCollision();
+playBallCollision("wall-" + ball.number + "-bottom");
 }
 }
 
@@ -967,7 +967,12 @@ a.vy -= impulse * ny;
 
 b.vx += impulse * nx;
 b.vy += impulse * ny;
-playBallCollision();
+playBallCollision(
+  "balls-" +
+  Math.min(a.number, b.number) + "-" +
+  Math.max(a.number, b.number)
+  );
+  
 }
 }
 }
@@ -1065,18 +1070,23 @@ console.log("Anstoß-Sound:", error);
 });
 }
 
-let lastBallCollisionTime = 0;
+const lastCollisionTimes = new Map();
 
-function playBallCollision() {
+function playBallCollision(contactKey) {
 const now = performance.now();
+const lastTime = lastCollisionTimes.get(contactKey) || 0;
 
-// Sound höchstens einmal alle 70 ms
-if (now - lastBallCollisionTime < 70) return;
+// Denselben Kontakt nicht mehrfach auslösen
+if (now - lastTime < 50) return;
 
-lastBallCollisionTime = now;
-ballCollisionSound.currentTime = 0;
+lastCollisionTimes.set(contactKey, now);
 
-ballCollisionSound.play().catch(error => {
+// Eigenständige Soundinstanz, damit Klänge
+// sich nicht gegenseitig abschneiden
+const sound = ballCollisionSound.cloneNode();
+sound.volume = 0.65;
+
+sound.play().catch(error => {
 console.log("Kollisions-Sound:", error);
 });
 }
