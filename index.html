@@ -1047,10 +1047,10 @@ y: (event.clientY - rect.top) * H / rect.height
 let billiardAudioContext = null;
 
 const cueHitSound = new Audio("./anstoss_8ballpool_korrigiert.wav");
-const ballCollisionSound = new Audio("./kollisionen_8ballpool_korrigiert.wav");
+const ballCollisionSound = null;
 
 cueHitSound.preload = "auto";
-ballCollisionSound.preload = "auto";
+
 
 function playBilliardHit() {
 cueHitSound.currentTime = 0;
@@ -1060,10 +1060,7 @@ console.log("Anstoß-Sound:", error);
 }
 
 function playBallCollision() {
-ballCollisionSound.currentTime = 0;
-ballCollisionSound.play().catch(error => {
-console.log("Kollisions-Sound:", error);
-});
+// Kugelkollision-Sound vorerst deaktiviert
 }
 
 
