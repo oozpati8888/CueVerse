@@ -1050,30 +1050,52 @@ ballCollisionSound.preload = "auto";
 cueHitSound.preload = "auto";
 
 
+
+const SOUND = {
+    CUE: new Audio("./sfx/cue.mp3"),
+    COLLISION: new Audio("./sfx/collision.mp3"),
+    BUMPER: new Audio("./sfx/bumper.mp3"),
+    POCKET: new Audio("./sfx/pocket.mp3"),
+    WHIP: new Audio("./sfx/whip.mp3"),
+    WIN: new Audio("./sfx/win.mp3"),
+    LOSE: new Audio("./sfx/lose.mp3"),
+};
+
+SOUND.WHIP.volume = 0.3;
+
+for (const sound of Object.values(SOUND)) {
+    sound.preload = "auto";
+}
+
 function playBilliardHit() {
-cueHitSound.currentTime = 0;
-cueHitSound.play().catch(error => {
-console.log("Anstoß-Sound:", error);
-});
+    SOUND.CUE.currentTime = 0;
+    SOUND.CUE.play().catch(() => {});
 }
 
 let lastCollisionSoundTime = 0;
 
 function playBallCollision(contactKey) {
-const now = performance.now();
+    const now = performance.now();
 
-// Insgesamt höchstens ein Kollisionssound alle 120 ms
-if (now - lastCollisionSoundTime < 120) return;
+    // Verhindert zu häufige Kollisionsgeräusche
+    if (now - lastCollisionSoundTime < 70) return;
 
-lastCollisionSoundTime = now;
+    lastCollisionSoundTime = now;
 
-const sound = ballCollisionSound.cloneNode();
-sound.volume = 0.35;
-
-sound.play().catch(error => {
-console.log("Kollisions-Sound:", error);
-});
+    SOUND.COLLISION.currentTime = 0;
+    SOUND.COLLISION.play().catch(() => {});
 }
+
+function playBumperSound() {
+    SOUND.BUMPER.currentTime = 0;
+    SOUND.BUMPER.play().catch(() => {});
+}
+
+function playPocketSound() {
+    SOUND.POCKET.currentTime = 0;
+    SOUND.POCKET.play().catch(() => {});
+}
+
 
 
 
