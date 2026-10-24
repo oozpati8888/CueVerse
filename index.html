@@ -672,41 +672,66 @@ hitDistanceToShow = Math.min(
 if (Number.isFinite(hitDistanceToShow)) {
 const ghostX = cueBall.x + nx * hitDistanceToShow;
 const ghostY = cueBall.y + ny * hitDistanceToShow;
+// Ghost Ball mit zwei Zielstrichen
+ctx.save();
 
-// Durchgehende weiße Ziellinie
+// Weiße Ziellinie bis zum Mittelpunkt des Ghost Balls
 ctx.beginPath();
 ctx.setLineDash([]);
 ctx.moveTo(cueBall.x, cueBall.y);
 ctx.lineTo(ghostX, ghostY);
 ctx.strokeStyle = "#ffffff";
-ctx.lineWidth = 2;
+ctx.lineWidth = 3;
 ctx.stroke();
 
-// Kreis mit dem Radius einer Kugel
+// Kreis des Ghost Balls
 ctx.beginPath();
 ctx.arc(ghostX, ghostY, BALL_RADIUS, 0, Math.PI * 2);
 ctx.strokeStyle = "#bdefff";
 ctx.lineWidth = 2;
 ctx.stroke();
 
-// Goldene Richtung nur anzeigen, wenn eine Kugel getroffen wird
+// Zwei Zielstriche an der Objektkugel
 if (hitBall) {
-ctx.beginPath();
-ctx.moveTo(hitBall.x, hitBall.y);
-
 const outX = hitBall.x - ghostX;
 const outY = hitBall.y - ghostY;
-const outLength = Math.max(0.001, Math.hypot(outX, outY));
+const outLength = Math.hypot(outX, outY);
 
+if (outLength > 0.001) {
+const nx = outX / outLength;
+const ny = outY / outLength;
+
+// Strich 1: Richtung der Objektkugel
+ctx.beginPath();
+ctx.moveTo(hitBall.x, hitBall.y);
 ctx.lineTo(
-hitBall.x + (outX / outLength) * 220,
-hitBall.y + (outY / outLength) * 220
+hitBall.x + nx * 100,
+hitBall.y + ny * 100
 );
+ctx.strokeStyle = "#ffcc33";
+ctx.lineWidth = 3;
+ctx.stroke();
 
-ctx.strokeStyle = "#ffd700";
-ctx.lineWidth = 2;
+// Strich 2: seitlicher Zielstrich am Ghost Ball
+ctx.beginPath();
+ctx.moveTo(
+ghostX - ny * BALL_RADIUS,
+ghostY + nx * BALL_RADIUS
+);
+ctx.lineTo(
+ghostX + ny * BALL_RADIUS,
+ghostY - nx * BALL_RADIUS
+);
+ctx.strokeStyle = "#ffffff";
+ctx.lineWidth = 3;
 ctx.stroke();
 }
+}
+
+ctx.restore();
+
+
+
 }
 
 
