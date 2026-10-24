@@ -512,8 +512,8 @@ function drawAim() {
 if (!cueBall || !cueBall.active || !aiming) return;
 
 // Stoßrichtung bestimmen
-let dx = aiming ? cueBall.x - aimX : cueDirX;
-let dy = aiming ? cueBall.y - aimY : cueDirY;
+let dx = aiming ? aimX - cueBall.x : cueDirX;
+let dy = aiming ? aimY - cueBall.y : cueDirY;
 let distance = Math.hypot(dx, dy);
 
 if (distance < 0.001) {
