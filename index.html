@@ -691,55 +691,40 @@ ctx.strokeStyle = "#bdefff";
 ctx.lineWidth = 2;
 ctx.stroke();
 
-// Zwei Zielachsen am Ghost Ball
+// Zwei Zielstriche, die sich mit dem Ghost Ball drehen
 if (hitBall) {
 // Richtung vom Ghost Ball zur Objektkugel
-const contactX = hitBall.x - ghostX;
-const contactY = hitBall.y - ghostY;
-const contactLength = Math.hypot(contactX, contactY);
+const ax = hitBall.x - ghostX;
+const ay = hitBall.y - ghostY;
+const angle = Math.atan2(ay, ax);
 
-if (contactLength > 0.001) {
-const ax = contactX / contactLength;
-const ay = contactY / contactLength;
+// Strich 1: Achse durch den Ghost Ball
+// in Richtung der Objektkugel
+const lineLength = BALL_RADIUS;
 
-// Achse 1: Kontakt-Richtung durch den Ghost Ball
+ctx.save();
+ctx.translate(ghostX, ghostY);
+ctx.rotate(angle);
+
+// Waagerechter Strich
 ctx.beginPath();
-ctx.moveTo(
-ghostX - ax * BALL_RADIUS,
-ghostY - ay * BALL_RADIUS
-);
-ctx.lineTo(
-ghostX + ax * BALL_RADIUS,
-ghostY + ay * BALL_RADIUS
-);
-ctx.strokeStyle = "#ffcc33";
-ctx.lineWidth = 3;
-ctx.stroke();
-
-// Achse 2: Anspiel-Richtung der weißen Kugel
-const aimX = ghostX - cueBall.x;
-const aimY = ghostY - cueBall.y;
-const aimLength = Math.hypot(aimX, aimY);
-
-if (aimLength > 0.001) {
-const bx = aimX / aimLength;
-const by = aimY / aimLength;
-
-ctx.beginPath();
-ctx.moveTo(
-ghostX - bx * BALL_RADIUS,
-ghostY - by * BALL_RADIUS
-);
-ctx.lineTo(
-ghostX + bx * BALL_RADIUS,
-ghostY + by * BALL_RADIUS
-);
+ctx.moveTo(-lineLength, 0);
+ctx.lineTo(lineLength, 0);
 ctx.strokeStyle = "#ffffff";
 ctx.lineWidth = 3;
 ctx.stroke();
+
+// Senkrechter Strich
+ctx.beginPath();
+ctx.moveTo(0, -lineLength);
+ctx.lineTo(0, lineLength);
+ctx.strokeStyle = "#ff3333";
+ctx.lineWidth = 3;
+ctx.stroke();
+
+ctx.restore();
 }
-}
-}
+
 
 
 
