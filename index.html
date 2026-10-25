@@ -693,59 +693,42 @@ ctx.stroke();
 
 // Zwei weiße Zielstriche am Ghost Ball
 if (hitBall) {
-// 1. Berechnung für Strich 1 (Anspiellinie vom Queue)
-// Hier nutzen wir den Richtungsvektor des Queues (z.B. queueNx, queueNy oder aus dem Maus-Winkel)
-// Falls deine Variablen anders heißen, stelle sicher, dass hier der Winkel des Queues genutzt wird:
-const queueAngle = Math.atan2(ny, nx);
+// Richtung der Ziellinie zum Ghost Ball berechnen
+const angle = Math.atan2(ny, nx);
 
-// 2. Berechnung für Strich 2 (Abpralllinie durch die Zielkugel)
-// Dieser Winkel MUSS von der Ghost-Ball-Mitte (ghostX, ghostY)
-// exakt zur Zielkugel-Mitte (targetBall.x, targetBall.y) zeigen!
-const targetAngle = Math.atan2(targetBall.y - ghostY, targetBall.x - ghostX);
-
-// --- STRICH 1: Anspiellinie (Richtung des Queues) ---
 ctx.save();
 ctx.translate(ghostX, ghostY);
-ctx.rotate(queueAngle);
+ctx.rotate(angle);
+
 ctx.strokeStyle = "#ffffff";
 ctx.lineWidth = 3;
 ctx.lineCap = "round";
 
+// Strich 1: Die Anspiellinie (Von der weißen Kugel kommend)
+// Kommt von links und endet exakt im Zentrum des Ghost Balls (0, 0)
 ctx.beginPath();
-ctx.moveTo(-BALL_RADIUS * 12, 0); // Kommt von der weißen Kugel
-ctx.lineTo(0, 0); // Endet exakt in der Mitte des Ghost Balls
+ctx.moveTo(-BALL_RADIUS * 12, 0); // Weit nach hinten verlängert zur weißen Kugel
+ctx.lineTo(0, 0); // Endet genau im Zentrum
 ctx.stroke();
-ctx.restore();
 
-// --- STRICH 2: Abpralllinie (Durch die getroffene Kugel) ---
-ctx.save();
-ctx.translate(ghostX, ghostY);
-ctx.rotate(targetAngle); // Nutzt den dynamischen Winkel zur Zielkugel!
-ctx.strokeStyle = "#ffffff";
-ctx.lineWidth = 3;
-ctx.lineCap = "round";
-
+// Strich 2: Die Abpralllinie / Zielbahn nach vorne
+// Startet im Zentrum und schießt weit nach vorne durch die Zielkugel
 ctx.beginPath();
-ctx.moveTo(0, 0); // Startet in der Mitte des Ghost Balls
-ctx.lineTo(BALL_RADIUS * 12, 0); // Schießt nach vorne genau durch die Objektkugel
+ctx.moveTo(0, 0); // Start im Zentrum
+ctx.lineTo(BALL_RADIUS * 12, 0); // Weit nach vorne verlängert fürs Zielen
 ctx.stroke();
-ctx.restore();
 
-// --- STRICH 3: Der Visier-Querstrich (90 Grad nach oben) ---
-// Er steht im rechten Winkel zur Abpralllinie (Physik der Kugeln)
-ctx.save();
-ctx.translate(ghostX, ghostY);
-ctx.rotate(targetAngle);
-ctx.strokeStyle = "#ffffff";
-ctx.lineWidth = 3;
-ctx.lineCap = "round";
-
+// Strich 3: Genau 90 Grad nach oben (Der Visier-Querstrich)
+// Hier ist die Länge jetzt deutlich erhöht (Faktor 5 statt 2)!
 ctx.beginPath();
-ctx.moveTo(0, 0);
-ctx.lineTo(0, -BALL_RADIUS * 5); // Steht 90° nach oben ab
+ctx.moveTo(0, 0); // Start im Zentrum
+ctx.lineTo(0, -BALL_RADIUS * 5); // Zieht den Strich deutlich länger nach oben
 ctx.stroke();
+
 ctx.restore();
 }
+
+
 
 
 
