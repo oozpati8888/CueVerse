@@ -691,40 +691,62 @@ ctx.strokeStyle = "#bdefff";
 ctx.lineWidth = 2;
 ctx.stroke();
 
-// Zwei bewegliche Zielstriche am Ghost Ball
+// Zwei weiße Zielstriche am Ghost Ball
 if (hitBall) {
-// Winkel der aktuellen Ziellinie
-const angle = Math.atan2(
-ghostY - cueBall.y,
-ghostX - cueBall.x
-);
+// 1. Berechnung für Strich 1 (Anspiellinie vom Queue)
+// Hier nutzen wir den Richtungsvektor des Queues (z.B. queueNx, queueNy oder aus dem Maus-Winkel)
+// Falls deine Variablen anders heißen, stelle sicher, dass hier der Winkel des Queues genutzt wird:
+const queueAngle = Math.atan2(ny, nx);
 
+// 2. Berechnung für Strich 2 (Abpralllinie durch die Zielkugel)
+// Dieser Winkel MUSS von der Ghost-Ball-Mitte (ghostX, ghostY)
+// exakt zur Zielkugel-Mitte (targetBall.x, targetBall.y) zeigen!
+const targetAngle = Math.atan2(targetBall.y - ghostY, targetBall.x - ghostX);
+
+// --- STRICH 1: Anspiellinie (Richtung des Queues) ---
 ctx.save();
-
-// Mittelpunkt des Ghost Balls als Drehpunkt
 ctx.translate(ghostX, ghostY);
-ctx.rotate(angle);
-
+ctx.rotate(queueAngle);
 ctx.strokeStyle = "#ffffff";
 ctx.lineWidth = 3;
 ctx.lineCap = "round";
 
-// Strich 1: Gerade durch den Mittelpunkt,
-// etwa von Kugel 1 bis zum Bereich der Kugeln 9/10
 ctx.beginPath();
-ctx.moveTo(-BALL_RADIUS * 6, 0);
-ctx.lineTo(BALL_RADIUS * 8, 0);
+ctx.moveTo(-BALL_RADIUS * 12, 0); // Kommt von der weißen Kugel
+ctx.lineTo(0, 0); // Endet exakt in der Mitte des Ghost Balls
 ctx.stroke();
+ctx.restore();
 
-// Strich 2: 90 Grad zur Ziellinie,
-// ebenfalls durch den Mittelpunkt
+// --- STRICH 2: Abpralllinie (Durch die getroffene Kugel) ---
+ctx.save();
+ctx.translate(ghostX, ghostY);
+ctx.rotate(targetAngle); // Nutzt den dynamischen Winkel zur Zielkugel!
+ctx.strokeStyle = "#ffffff";
+ctx.lineWidth = 3;
+ctx.lineCap = "round";
+
 ctx.beginPath();
-ctx.moveTo(0, -BALL_RADIUS * 3);
-ctx.lineTo(0, BALL_RADIUS * 3);
+ctx.moveTo(0, 0); // Startet in der Mitte des Ghost Balls
+ctx.lineTo(BALL_RADIUS * 12, 0); // Schießt nach vorne genau durch die Objektkugel
 ctx.stroke();
+ctx.restore();
 
+// --- STRICH 3: Der Visier-Querstrich (90 Grad nach oben) ---
+// Er steht im rechten Winkel zur Abpralllinie (Physik der Kugeln)
+ctx.save();
+ctx.translate(ghostX, ghostY);
+ctx.rotate(targetAngle);
+ctx.strokeStyle = "#ffffff";
+ctx.lineWidth = 3;
+ctx.lineCap = "round";
+
+ctx.beginPath();
+ctx.moveTo(0, 0);
+ctx.lineTo(0, -BALL_RADIUS * 5); // Steht 90° nach oben ab
+ctx.stroke();
 ctx.restore();
 }
+
 
 
 
