@@ -691,35 +691,30 @@ ctx.strokeStyle = "#bdefff";
 ctx.lineWidth = 2;
 ctx.stroke();
 
-// Zwei Zielstriche, die sich mit dem Ghost Ball drehen
+// Zwei weiße Zielstriche am Ghost Ball
 if (hitBall) {
-// Richtung vom Ghost Ball zur Objektkugel
-const ax = hitBall.x - ghostX;
-const ay = hitBall.y - ghostY;
-const angle = Math.atan2(ay, ax);
-
-// Strich 1: Achse durch den Ghost Ball
-// in Richtung der Objektkugel
-const lineLength = BALL_RADIUS * 2.5;
+// Richtung der Ziellinie zum Ghost Ball
+const angle = Math.atan2(ny, nx);
 
 ctx.save();
 ctx.translate(ghostX, ghostY);
 ctx.rotate(angle);
 
-// Waagerechter Strich
-ctx.beginPath();
-ctx.moveTo(-lineLength, 0);
-ctx.lineTo(lineLength, 0);
 ctx.strokeStyle = "#ffffff";
 ctx.lineWidth = 3;
+ctx.lineCap = "round";
+
+// Strich 1: Geradeaus durch den Ghost Ball
+// Verlängert in Richtung der Objektkugeln
+ctx.beginPath();
+ctx.moveTo(-BALL_RADIUS, 0);
+ctx.lineTo(BALL_RADIUS * 7, 0);
 ctx.stroke();
 
-// Senkrechter Strich
+// Strich 2: Genau 90 Grad, durch den Mittelpunkt
 ctx.beginPath();
-ctx.moveTo(0, -lineLength);
-ctx.lineTo(0, lineLength);
-ctx.strokeStyle = "#ff3333";
-ctx.lineWidth = 3;
+ctx.moveTo(0, -BALL_RADIUS * 2);
+ctx.lineTo(0, BALL_RADIUS * 2);
 ctx.stroke();
 
 ctx.restore();
