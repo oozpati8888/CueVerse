@@ -705,20 +705,30 @@ ctx.lineWidth = 3;
 ctx.lineCap = "round";
 
 // Strich 1: Geradeaus durch den Ghost Ball
-// Verlängert in Richtung der Objektkugeln
+// Er kommt von der weißen Kugel und stoppt im Zentrum des Ghost Balls (0, 0)
 ctx.beginPath();
-ctx.moveTo(-BALL_RADIUS, 0);
-ctx.lineTo(BALL_RADIUS * 7, 0);
+ctx.moveTo(-BALL_RADIUS * 5, 0); // Kommt von weit hinten (weiße Kugel)
+ctx.lineTo(0, 0); // Endet exakt in der Mitte des Ghost Balls
 ctx.stroke();
 
-// Strich 2: Genau 90 Grad, durch den Mittelpunkt
+// Strich 2: Die Abpralllinie nach vorne durch die Zielkugel
+// Startet in der Mitte des Ghost Balls (0,0) und geht nach rechts (Richtung Zielkugel)
 ctx.beginPath();
-ctx.moveTo(0, -BALL_RADIUS * 2);
-ctx.lineTo(0, BALL_RADIUS * 2);
+ctx.moveTo(0, 0); // Start im Zentrum
+ctx.lineTo(BALL_RADIUS * 8, 0); // Schießt nach vorne durch die Objektkugel
+ctx.stroke();
+
+// Strich 3: Genau 90 Grad nach oben (Der Visier-Querstrich)
+// Startet im Zentrum und geht NUR nach oben (-Y im rotierten Canvas)
+ctx.beginPath();
+ctx.moveTo(0, 0); // Start im Zentrum
+ctx.lineTo(0, -BALL_RADIUS * 2); // Geht exakt im 90°-Winkel nach oben weg
 ctx.stroke();
 
 ctx.restore();
 }
+
+
 
 
 
