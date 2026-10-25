@@ -691,15 +691,17 @@ ctx.strokeStyle = "#bdefff";
 ctx.lineWidth = 2;
 ctx.stroke();
 
-// Zwei weiße Zielstriche am Ghost Ball
+// Zwei bewegliche Zielstriche am Ghost Ball
 if (hitBall) {
-// Richtung der Ziellinie zum Ghost Ball berechnen
+// Winkel der aktuellen Ziellinie
 const angle = Math.atan2(
-  ghostY - cueBall.y,
-  ghostX - cueBall.x
-  );
+ghostY - cueBall.y,
+ghostX - cueBall.x
+);
 
 ctx.save();
+
+// Mittelpunkt des Ghost Balls als Drehpunkt
 ctx.translate(ghostX, ghostY);
 ctx.rotate(angle);
 
@@ -707,29 +709,23 @@ ctx.strokeStyle = "#ffffff";
 ctx.lineWidth = 3;
 ctx.lineCap = "round";
 
-// Strich 1: Die Anspiellinie (Von der weißen Kugel kommend)
-// Kommt von links und endet exakt im Zentrum des Ghost Balls  (0, 0)
+// Strich 1: Gerade durch den Mittelpunkt,
+// etwa von Kugel 1 bis zum Bereich der Kugeln 9/10
 ctx.beginPath();
-ctx.moveTo(-BALL_RADIUS * 6, 0); // Weit nach hinten verlängert zur weißen Kugel
-ctx.lineTo(0, 0); // Endet genau mitte der gelben 1 bis ausschließlich der kugel 9 und 10 
+ctx.moveTo(-BALL_RADIUS * 6, 0);
+ctx.lineTo(BALL_RADIUS * 8, 0);
 ctx.stroke();
 
-// Strich 2: Die Abpralllinie / Zielbahn nach vorne
-// Startet im Zentrum und schießt weit nach vorne durch die Zielkugel
+// Strich 2: 90 Grad zur Ziellinie,
+// ebenfalls durch den Mittelpunkt
 ctx.beginPath();
-ctx.moveTo(0, 0); // Start im Zentrum
-ctx.lineTo(BALL_RADIUS * 8, 0); // Weit nach vorne verlängert fürs Zielen
-ctx.stroke();
-
-// Strich 3: Genau 90 Grad nach oben (Der Visier-Querstrich)
-// Hier ist die Länge jetzt deutlich erhöht (Faktor 5 statt 2)!
-ctx.beginPath();
-ctx.moveTo(0, 0); // Start im Zentrum
-ctx.lineTo(0, -BALL_RADIUS * 5); // Zieht den Strich deutlich länger nach oben
+ctx.moveTo(0, -BALL_RADIUS * 3);
+ctx.lineTo(0, BALL_RADIUS * 3);
 ctx.stroke();
 
 ctx.restore();
 }
+
 
 
 
