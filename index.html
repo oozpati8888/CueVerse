@@ -694,7 +694,10 @@ ctx.stroke();
 // Zwei weiße Zielstriche am Ghost Ball
 if (hitBall) {
 // Richtung der Ziellinie zum Ghost Ball berechnen
-const angle = Math.atan2(ny, nx);
+const angle = Math.atan2(
+  ghostY - cueBall.y,
+  ghostX - cueBall.x
+  );
 
 ctx.save();
 ctx.translate(ghostX, ghostY);
