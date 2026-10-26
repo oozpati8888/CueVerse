@@ -940,12 +940,9 @@ const ny = normalY / normalLen;
 const targetRadius = targetBall.radius || BALL_RADIUS;
 
 ctx.beginPath();
-ctx.moveTo(
-ghostX + nx * targetRadius,
-ghostY + ny * targetRadius
-);
+ctx.moveTo(ghostX, ghostY);
 ctx.lineTo(
-ghostX + nx * 120,
+ghostX + nx * 40,
 ghostY + ny * 120
 );
 ctx.strokeStyle = "#f5d32c";
