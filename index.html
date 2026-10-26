@@ -874,6 +874,102 @@ playBallCollision("wall-" + ball.number + "-bottom");
 PHYSIK
 ========================================= */
 
+/* =========================================
+GHOST BALL & ZIELHILFE BERECHNUNG (UHRZEIGER)
+========================================= */
+function drawAimAssist() {
+if (!aiming || !cueBall || shotInProgress) return;
+
+let closestDist = Infinity;
+let targetBall = null;
+
+balls.forEach(b => {
+if (!b.active || b.type === "cue") return;
+
+const toBallX = b.x - cueBall.x;
+const toBallY = b.y - cueBall.y;
+const dot = toBallX * cueDirX + toBallY * cueDirY;
+
+if (dot <= 0) return;
+
+const projX = cueBall.x + cueDirX * dot;
+const projY = cueBall.y + cueDirY * dot;
+
+const distSq = (b.x - projX) * (b.x - projX) + (b.y - projY) * (b.y - projY);
+const minDist = BALL_RADIUS * 2;
+
+if (distSq < minDist * minDist) {
+const diffX = projX - b.x;
+const diffY = projY - b.y;
+const offsetDist = Math.sqrt(minDist * minDist - distSq);
+const hitDist = dot - offsetDist;
+
+if (hitDist > 0 && hitDist < closestDist) {
+closestDist = hitDist;
+targetBall = b;
+}
+}
+});
+
+let ghostX = cueBall.x + cueDirX * 300;
+let ghostY = cueBall.y + cueDirY * 300;
+
+if (targetBall) {
+ghostX = cueBall.x + cueDirX * closestDist;
+ghostY = cueBall.y + cueDirY * closestDist;
+}
+
+// 1. Linie von Weiß zu Ghost Ball
+ctx.beginPath();
+ctx.moveTo(cueBall.x, cueBall.y);
+ctx.lineTo(ghostX, ghostY);
+ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
+ctx.lineWidth = 2;
+ctx.stroke();
+
+// 2. Ghost Ball Kreis zeichnen
+ctx.beginPath();
+ctx.arc(ghostX, ghostY, BALL_RADIUS, 0, Math.PI * 2);
+ctx.strokeStyle = "rgba(255, 255, 255, 0.7)";
+ctx.lineWidth = 2;
+ctx.fillStyle = "rgba(255, 255, 255, 0.15)";
+ctx.fill();
+ctx.stroke();
+
+// 3. Uhrzeiger-Striche rotieren lassen bei Ballkontakt
+if (targetBall) {
+const normalX = targetBall.x - ghostX;
+const normalY = targetBall.y - ghostY;
+const normalLen = Math.sqrt(normalX * normalX + normalY * normalY);
+
+if (normalLen > 0) {
+const nx = normalX / normalLen;
+const ny = normalY / normalLen;
+
+// Strich 1: Uhrzeiger für getroffenen Ball (Gelb)
+ctx.beginPath();
+ctx.moveTo(ghostX, ghostY);
+ctx.lineTo(ghostX + nx * 80, ghostY + ny * 80);
+ctx.strokeStyle = "#f5d32c";
+ctx.lineWidth = 3;
+ctx.stroke();
+
+// Strich 2: Uhrzeiger für weißen Abprallwinkel (Türkis - 90 Grad)
+const cross = cueDirX * ny - cueDirY * nx;
+const side = cross > 0 ? 1 : -1;
+const tx = -ny * side;
+const ty = nx * side;
+
+ctx.beginPath();
+ctx.moveTo(ghostX, ghostY);
+ctx.lineTo(ghostX + tx * 80, ghostY + ty * 80);
+ctx.strokeStyle = "#42d6ce";
+ctx.lineWidth = 3;
+ctx.stroke();
+}
+}
+}
+
 
 function updatePhysics() {
     // Taschenanimation beibehalten
