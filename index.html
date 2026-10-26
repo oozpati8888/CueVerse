@@ -692,7 +692,10 @@ ctx.lineWidth = 2;
 ctx.stroke();
 
 // Richtung der weißen Kugel zum Ghost Ball
-const angle = Math.atan2(ny, nx);
+const angle = Math.atan2(
+  ghostY - cueBall.y,
+  ghostX - cueBall.x
+  );
 
 ctx.save();
 ctx.translate(ghostX, ghostY);
@@ -708,14 +711,11 @@ ctx.moveTo(-BALL_RADIUS, 0);
 ctx.lineTo(BALL_RADIUS * 7, 0);
 ctx.stroke();
 
-// Strich 2: senkrechte Markierung durch den Mittelpunkt
+// Strich 2: kurze Querachse durch den Ghost-Ball-Mittelpunkt
 ctx.beginPath();
-ctx.moveTo(0, -BALL_RADIUS * 2.5);
-ctx.lineTo(0, BALL_RADIUS * 2.5);
+ctx.moveTo(0, -BALL_RADIUS * 1.5);
+ctx.lineTo(0, BALL_RADIUS * 1.5);
 ctx.stroke();
-
-ctx.restore();
-
 
 
 
