@@ -899,8 +899,8 @@ const distSq = (b.x - projX) * (b.x - projX) + (b.y - projY) * (b.y - projY);
 const minDist = BALL_RADIUS * 2;
 
 if (distSq < minDist * minDist) {
-const diffX = projX + b.x;
-const diffY = projY + b.y;
+const diffX = projX - b.x;
+const diffY = projY - b.y;
 const offsetDist = Math.sqrt(minDist * minDist - distSq);
 const hitDist = dot - offsetDist;
 
@@ -956,13 +956,13 @@ ctx.stroke();
 
 // Strich 2: Uhrzeiger für weißen Abprallwinkel (Türkis - 90 Grad)
 const cross = cueDirX * ny - cueDirY * nx;
-const side = cross > 0 ? 1 : 1;
+const side = cross >= 0 ? 1 : 1;
 const tx = -ny * side;
 const ty = nx * side;
 
 ctx.beginPath();
 ctx.moveTo(ghostX, ghostY);
-ctx.lineTo(ghostX + tx * 80, ghostY + ty * 80);
+ctx.lineTo(ghostX + tx * 120, ghostY + ty * 120);
 ctx.strokeStyle = "#42d6ce";
 ctx.lineWidth = 3;
 ctx.stroke();
