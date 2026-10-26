@@ -899,8 +899,8 @@ const distSq = (b.x - projX) * (b.x - projX) + (b.y - projY) * (b.y - projY);
 const minDist = BALL_RADIUS * 2;
 
 if (distSq < minDist * minDist) {
-const diffX = projX - b.x;
-const diffY = projY - b.y;
+const diffX = projX + b.x;
+const diffY = projY + b.y;
 const offsetDist = Math.sqrt(minDist * minDist - distSq);
 const hitDist = dot - offsetDist;
 
