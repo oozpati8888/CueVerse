@@ -705,13 +705,13 @@ ctx.strokeStyle = "#ffffff";
 ctx.lineWidth = 3;
 ctx.lineCap = "round";
 
-// Strich 1: Ziellinie bis vor Ghost Ball
+// Strich 1: Objektball-Richtung
 ctx.beginPath();
 ctx.moveTo(0, 0);
 ctx.lineTo(BALL_RADIUS * 8, 0);
 ctx.stroke();
 
-// Strich 2: Nur nach oben
+// Strich 2: Abprallrichtung der weißen kugel, exakt 90 grad
 ctx.beginPath();
 ctx.moveTo(0, 0);
 ctx.lineTo(0, -BALL_RADIUS * 5);
