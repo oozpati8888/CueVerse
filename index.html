@@ -936,10 +936,18 @@ if (normalLen > 0) {
 const nx = normalX / normalLen;
 const ny = normalY / normalLen;
 
-// Strich 1: Uhrzeiger für getroffenen Ball (Gelb)
+// Gelbe Ziellinie: an der Oberfläche der Zielkugel enden
+const targetRadius = targetBall.radius || BALL_RADIUS;
+
 ctx.beginPath();
-ctx.moveTo(ghostX, ghostY);
-ctx.lineTo(ghostX + nx * 120 , ghostY + ny * 120);
+ctx.moveTo(
+ghostX + nx * targetRadius,
+ghostY + ny * targetRadius
+);
+ctx.lineTo(
+ghostX + nx * 120,
+ghostY + ny * 120
+);
 ctx.strokeStyle = "#f5d32c";
 ctx.lineWidth = 3;
 ctx.stroke();
