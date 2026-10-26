@@ -702,13 +702,13 @@ ctx.translate(ghostX, ghostY);
 ctx.rotate(angle);
 
 ctx.strokeStyle = "#ffffff";
-ctx.lineWidth = 3;
+ctx.lineWidth = 1;
 ctx.lineCap = "round";
 
 // Strich 1: Ziellinie bis vor Ghost Ball
 ctx.beginPath();
 ctx.moveTo(0, 0);
-ctx.lineTo(BALL_RADIUS * 4, 0);
+ctx.lineTo(BALL_RADIUS * 8, 0);
 ctx.stroke();
 
 // Strich 2: Nur nach oben
