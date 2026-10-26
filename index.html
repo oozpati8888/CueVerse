@@ -705,16 +705,16 @@ ctx.strokeStyle = "#ffffff";
 ctx.lineWidth = 3;
 ctx.lineCap = "round";
 
-// Strich 1: lange Ziellinie durch den Ghost Ball
+// Strich 1: Ziellinie durch den Ghost Ball
 ctx.beginPath();
-ctx.moveTo(-BALL_RADIUS, 0);
-ctx.lineTo(BALL_RADIUS * 7, 0);
+ctx.moveTo(0, 0);
+ctx.lineTo(BALL_RADIUS * 2, 0);
 ctx.stroke();
 
-// Strich 2: kurze Querachse durch den Ghost-Ball-Mittelpunkt
+// Strich 2: Senkrechter Strich durch den Ghost Ball
 ctx.beginPath();
-ctx.moveTo(0, -BALL_RADIUS * 1.5);
-ctx.lineTo(0, BALL_RADIUS * 1.5);
+ctx.moveTo(0, -BALL_RADIUS * 3);
+ctx.lineTo(0, BALL_RADIUS * 3);
 ctx.stroke();
 
 
