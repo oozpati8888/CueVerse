@@ -941,10 +941,7 @@ const targetRadius = targetBall.radius || BALL_RADIUS;
 
 ctx.beginPath();
 ctx.moveTo(ghostX, ghostY);
-ctx.lineTo(
-ghostX + nx * 40,
-ghostY + ny * 120
-);
+ctx.lineTo(ghostX + nx * 120 , ghostY + ny * 120);
 ctx.strokeStyle = "#f5d32c";
 ctx.lineWidth = 3;
 ctx.stroke();
