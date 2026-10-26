@@ -949,14 +949,14 @@ const ny = normalY / normalLen;
 // Strich 1: Uhrzeiger für getroffenen Ball (Gelb)
 ctx.beginPath();
 ctx.moveTo(ghostX, ghostY);
-ctx.lineTo(ghostX + nx * 80, ghostY + ny * 80);
+ctx.lineTo(ghostX + nx * 120 , ghostY + ny * 120);
 ctx.strokeStyle = "#f5d32c";
 ctx.lineWidth = 3;
 ctx.stroke();
 
 // Strich 2: Uhrzeiger für weißen Abprallwinkel (Türkis - 90 Grad)
 const cross = cueDirX * ny - cueDirY * nx;
-const side = cross >= 0 ? 1 : 1;
+const side = cross > 0 ? 1 : 1;
 const tx = -ny * side;
 const ty = nx * side;
 
