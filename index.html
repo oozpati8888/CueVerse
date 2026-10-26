@@ -1352,8 +1352,14 @@ SPIELSCHLEIFE
 ========================================= */
 
 function gameLoop() {
-updatePhysics();
-draw();
+ctx.clearRect(0, 0, W, H);
+  
+  updatePhysics();
+
+ // Bälle zeichnen
+  balls.forEach(drawBall);
+
+drawAimAssist();
 requestAnimationFrame(gameLoop);
 }
 
