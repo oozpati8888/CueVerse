@@ -386,23 +386,11 @@ function drawBall(ball) {
 if (!ball.active && !ball.pocketing) return;
 
 const r = ball.radius;
-
-// Kugel bleibt während des Fallens in voller Größe sichtbar.
-const scale = ball.pocketing ? 1 : 1;
+const scale = ball.pocketing ? ball.pocketScale : 1;
 
 ctx.save();
+
 ctx.translate(ball.x, ball.y);
-if (ball.pocketing) {
-const fall = ball.pocketFall || 0;
-
-// Die Kugel sinkt optisch in die Tasche.
-ctx.translate(0, fall * ball.radius * 0.8);
-
-// Die Tasche verdeckt den unteren Teil der Kugel.
-ctx.beginPath();
-ctx.arc(0, 0, ball.radius * 0.72, 0, Math.PI * 2);
-ctx.clip();
-}
 ctx.scale(scale, scale);
 
 /* Schatten */
@@ -710,6 +698,17 @@ ctx.strokeStyle = "#ffffff";
 ctx.lineWidth = 3;
 ctx.lineCap = "round";
 
+// Strich 1: Objektball-Richtung
+ctx.beginPath();
+ctx.moveTo(0, 0);
+ctx.lineTo(BALL_RADIUS * 8, 0);
+ctx.stroke();
+
+// Strich 2: Abprallrichtung der weißen Kugel
+// 90 Grad zur Objektball-Richtung, entgegengesetzt zur Anstoßseite
+ctx.beginPath();
+ctx.moveTo(0, 0);
+ctx.lineTo(0, -BALL_RADIUS *4 );
 ctx.stroke();
 
 ctx.restore();
@@ -734,7 +733,7 @@ const distance = Math.hypot(dx, dy);
 
 // Die Kugel muss weiter in die Tasche rollen,
 // bevor die Einloch-Animation beginnt.
-const captureDistance = POCKET_CAPTURE * 1.0;
+const captureDistance = POCKET_CAPTURE * 0.7;
 
 if (distance < captureDistance) {
 ball.pocketing = true;
@@ -754,7 +753,6 @@ return false;
 function updatePocketAnimation(ball) {
 const dx = ball.pocketX - ball.x;
 const dy = ball.pocketY - ball.y;
- 
 const distance = Math.hypot(dx, dy);
 
 // Die Kugel sichtbar bis zur Taschenmitte rollen lassen.
@@ -766,21 +764,15 @@ ball.y += dy * rollSpeed;
 return;
 }
 
-// Kugel bleibt gleich gross und fällt sichtbar in die Tasche.
+// Erst in der Taschenmitte kleiner werden und verschwinden.
 ball.x = ball.pocketX;
 ball.y = ball.pocketY;
+ball.pocketScale -= POCKET_ANIMATION_SPEED;
 
-if (ball.pocketFall === undefined) {
-ball.pocketFall = 0;
-}
-
-ball.pocketFall += 0.06;
-
-if (ball.pocketFall >= 1) {
-ball.pocketFall = 1;
+if (ball.pocketScale <= 0) {
+ball.pocketScale = 0;
 ball.pocketing = false;
-ball.pocketScale = 1;
-}
+
 if (ball.type === "cue") {
 ball.x = 430;
 ball.y = 384;
@@ -922,9 +914,7 @@ if (normalLen > 0) {
 const nx = normalX / normalLen;
 const ny = normalY / normalLen;
 
-// Gelbe Ziellinie: an der Oberfläche der Zielkugel enden
-const targetRadius = targetBall.radius || BALL_RADIUS;
-
+// Strich 1: Uhrzeiger für getroffenen Ball (Gelb)
 ctx.beginPath();
 ctx.moveTo(ghostX, ghostY);
 ctx.lineTo(ghostX + nx * 120 , ghostY + ny * 120);
@@ -934,9 +924,9 @@ ctx.stroke();
 
 // Strich 2: Uhrzeiger für weißen Abprallwinkel (Türkis - 90 Grad)
 const cross = cueDirX * ny - cueDirY * nx;
-const side = cross > 0 ? 1 : -1;
-const tx = ny * side;
-const ty = -nx * side;
+const side = cross > 0 ? 1 : 1;
+const tx = -ny * side;
+const ty = nx * side;
 
 ctx.beginPath();
 ctx.moveTo(ghostX, ghostY);
@@ -946,42 +936,6 @@ ctx.lineWidth = 3;
 ctx.stroke();
 }
 }
-}
-
-function solveRealQuadratic(u, v, w) {
-const discriminant = v * v - 4 * u * w;
-
-if (discriminant < 0 || u === 0) return [];
-
-const root = Math.sqrt(discriminant);
-
-return [
-(-v + root) / (2 * u),
-(-v - root) / (2 * u)
-];
-}
-
-function segmentIntersectsCircle(segment, circle) {
-const [a, b] = segment;
-const [c, r] = circle;
-
-const u =
-(b.x - a.x) ** 2 +
-(b.y - a.y) ** 2;
-
-const v = 2 * (
-(a.x - c.x) * (b.x - a.x) +
-(a.y - c.y) * (b.y - a.y)
-);
-
-const w =
-(a.x - c.x) ** 2 +
-(a.y - c.y) ** 2 -
-r ** 2;
-
-const solutions = solveRealQuadratic(u, v, w);
-
-return solutions.some(t => t >= 0 && t <= 1);
 }
 
 function updatePhysics() {
@@ -1081,29 +1035,14 @@ function updatePhysics() {
 
             // Nur reagieren, wenn sich die Kugeln annähern
             if (relativeVelocity < -0.0001) {
-               // Elastischer Kugelstoß nach dem YouTube-Prinzip
-const v_d = {
-x: a.vx - b.vx,
-y: a.vy - b.vy
-};
+                const impulse =
+                    -(1 + BALL_BOUNCE) * relativeVelocity / 2;
 
-const x_d = {
-x: dx,
-y: dy
-};
+                a.vx -= impulse * nx;
+                a.vy -= impulse * ny;
 
-const dot = x_d.x * v_d.x + x_d.y * v_d.y;
-
-const w = {
-x: (dot / (distance * distance)) * x_d.x,
-y: (dot / (distance * distance)) * x_d.y
-};
-
-a.vx -= w.x;
-a.vy -= w.y;
-
-b.vx += w.x;
-b.vy += w.y;
+                b.vx += impulse * nx;
+                b.vy += impulse * ny;
 
                 // Vorhandene Kollisionssound-Funktion verwenden
                 playBallCollision(
@@ -1309,10 +1248,10 @@ firstContactBall = null;
 foulThisTurn = false;
 
 const power = Math.min(distance, MAX_DRAG) / MAX_DRAG;
-const strength = power *  30;
+const strength = Math.max(1, power * MAX_POWER);
 
-cueBall.vx = -(dx / distance) * strength;
-cueBall.vy = -(dy / distance) * strength;
+cueBall.vx = (dx / distance) * strength;
+cueBall.vy = (dy / distance) * strength;
 
 shotInProgress = true;
 playBilliardHit();
@@ -1370,12 +1309,9 @@ ctx.clearRect(0, 0, W, H);
   updatePhysics();
 
  // Bälle zeichnen
-balls.forEach(drawBall);
+  balls.forEach(drawBall);
 
-// Kö und Zielhilfe zeichnen
-drawAim();
 drawAimAssist();
-
 requestAnimationFrame(gameLoop);
 }
 
