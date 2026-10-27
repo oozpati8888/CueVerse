@@ -335,18 +335,16 @@ return ball;
 
 function setupBalls() {
 balls = [];
-console.log("Kugeln nach dem Zurücksetzen:", balls.length);
 console.log("setupBalls gestartet");
 gameOver = false;
-currentPlayer = 1;  
+currentPlayer = 1;
 
-/* 15 Objektkugeln: 7 Volle, 7 Halbe und die schwarze 8 */
-const rack = [
-[1],
-[2, 3],
-[4, 8, 5],
-[6, 9, 10, 7],
-[11, 12, 13, 14, 15]
+/* 15 Objektkugeln: 7 Volle (1-7), die schwarze 8 und 7 Halbe (9-15) */
+const rack = [,
+,
+,
+,
+[6, 13, 14, 15, 7]
 ];
 
 const startX = 1120;
@@ -373,8 +371,6 @@ createBall(x, y, number, type);
 });
 
 cueBall = createBall(430, 384, 0, "cue");
-console.log("Kugeln nach dem Erzeugen:", balls.length, balls);
-  
 ballInHand = true;
 
 aiming = false;
@@ -383,6 +379,8 @@ powerFill.style.width = "0%";
 
 updateStatus();
 }
+
+
 
 /* =========================================
 KUGEL ZEICHNEN
