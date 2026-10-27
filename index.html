@@ -701,14 +701,14 @@ ctx.lineCap = "round";
 // Strich 1: Objektball-Richtung
 ctx.beginPath();
 ctx.moveTo(0, 0);
-ctx.lineTo(BALL_RADIUS * 2.5, 0);
+ctx.lineTo(BALL_RADIUS * 8, 0);
 ctx.stroke();
 
 // Strich 2: Abprallrichtung der weißen Kugel
 // 90 Grad zur Objektball-Richtung, entgegengesetzt zur Anstoßseite
 ctx.beginPath();
 ctx.moveTo(0, 0);
-ctx.lineTo(0, -BALL_RADIUS *3 );
+ctx.lineTo(0, -BALL_RADIUS *4 );
 ctx.stroke();
 
 ctx.restore();
@@ -908,9 +908,7 @@ ctx.stroke();
 if (targetBall) {
 const normalX = targetBall.x - ghostX;
 const normalY = targetBall.y - ghostY;
-const normalLen = Math.sqrt(
-normalX * normalX + normalY * normalY
-);
+const normalLen = Math.sqrt(normalX * normalX + normalY * normalY);
 
 if (normalLen > 0) {
 const nx = normalX / normalLen;
@@ -919,33 +917,26 @@ const ny = normalY / normalLen;
 // Strich 1: Uhrzeiger für getroffenen Ball (Gelb)
 ctx.beginPath();
 ctx.moveTo(ghostX, ghostY);
-ctx.lineTo(
-ghostX + nx * 120,
-ghostY + ny * 120
-);
+ctx.lineTo(ghostX + nx * 120 , ghostY + ny * 120);
 ctx.strokeStyle = "#f5d32c";
 ctx.lineWidth = 3;
 ctx.stroke();
 
-// Strich 2: Uhrzeiger für weißen Abprallwinkel
+// Strich 2: Uhrzeiger für weißen Abprallwinkel (Türkis - 90 Grad)
 const cross = cueDirX * ny - cueDirY * nx;
-const side = cross > 0 ? 1 : -1;
-const tx = ny * side;
-const ty = -nx * side;
+const side = cross > 0 ? 1 : 1;
+const tx = -ny * side;
+const ty = nx * side;
 
 ctx.beginPath();
 ctx.moveTo(ghostX, ghostY);
-ctx.lineTo(
-ghostX + tx * 120,
-ghostY + ty * 120
-);
+ctx.lineTo(ghostX + tx * 120, ghostY + ty * 120);
 ctx.strokeStyle = "#42d6ce";
 ctx.lineWidth = 3;
 ctx.stroke();
 }
 }
-
-
+}
 
 function updatePhysics() {
     // Taschenanimation beibehalten
