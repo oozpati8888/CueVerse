@@ -1392,10 +1392,14 @@ SPIELSCHLEIFE
 
 function gameLoop() {
 ctx.clearRect(0, 0, W, H);
-  
-// updatePhysics();
 
-// Bälle zeichnen
+// TEST: Sichtbarkeit des Canvas prüfen
+ctx.beginPath();
+ctx.arc(430, 384, 18, 0, Math.PI * 2);
+ctx.fillStyle = "red";
+ctx.fill();
+
+// Alle vorhandenen Kugeln zeichnen
 balls.forEach(drawBall);
 
 // Kö und Zielhilfe zeichnen
