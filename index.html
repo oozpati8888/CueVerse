@@ -924,7 +924,7 @@ ctx.stroke();
 
 // Strich 2: Uhrzeiger für weißen Abprallwinkel (Türkis - 90 Grad)
 const cross = cueDirX * ny - cueDirY * nx;
-const side = cross > 0 ? 1 : 1;
+const side = cross >= 0 ? 1 : 1;
 const tx = -ny * side;
 const ty = nx * side;
 
