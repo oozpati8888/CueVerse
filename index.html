@@ -1109,8 +1109,7 @@ function updatePhysics() {
                 }
             }
 
-            // Relative Geschwindigkeit entlang der Kollisionsnormalen
-            // Relative Geschwindigkeit entlang der Kollisionsnormalen
+           // Relative Geschwindigkeit entlang der Kollisionsnormalen
 const relativeX = b.vx - a.vx;
 const relativeY = b.vy - a.vy;
 
@@ -1119,7 +1118,6 @@ relativeX * nx + relativeY * ny;
 
 // Nur reagieren, wenn sich die Kugeln annähern
 if (relativeVelocity < -0.0001) {
-// Elastischer Kugelstoß
 const impulse =
 -(1 + BALL_BOUNCE) * relativeVelocity / 2;
 
@@ -1129,15 +1127,16 @@ a.vy -= impulse * ny;
 b.vx += impulse * nx;
 b.vy += impulse * ny;
 
-// Kollisionssound
 playBallCollision(
 "balls-" +
 Math.min(a.number, b.number) + "-" +
 Math.max(a.number, b.number)
 );
 }
+}
+}
 
-    updateStatus();
+updateStatus();
 }
 
 
