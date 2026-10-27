@@ -1107,55 +1107,32 @@ function updatePhysics() {
             }
 
             // Relative Geschwindigkeit entlang der Kollisionsnormalen
-            const relativeX = b.vx - a.vx;
-            const relativeY = b.vy - a.vy;
+            // Relative Geschwindigkeit entlang der Kollisionsnormalen
+const relativeX = b.vx - a.vx;
+const relativeY = b.vy - a.vy;
 
-            const relativeVelocity =
-                relativeX * nx + relativeY * ny;
+const relativeVelocity =
+relativeX * nx + relativeY * ny;
 
-            // Nur reagieren, wenn sich die Kugeln annähern
-            if (relativeVelocity < -0.0001) {
-               // Elastischer Kugelstoß nach dem YouTube-Prinzip
-const v_d = {
-x: a.vx - b.vx,
-y: a.vy - b.vy
-};
+// Nur reagieren, wenn sich die Kugeln annähern
+if (relativeVelocity < -0.0001) {
+// Elastischer Kugelstoß
+const impulse =
+-(1 + BALL_BOUNCE) * relativeVelocity / 2;
 
-const x_d = {
-x: dx,
-y: dy
-};
+a.vx -= impulse * nx;
+a.vy -= impulse * ny;
 
-const dot = x_d.x * v_d.x + x_d.y * v_d.y;
+b.vx += impulse * nx;
+b.vy += impulse * ny;
 
-const w = {
-x: (dot / (distance * distance)) * x_d.x,
-y: (dot / (distance * distance)) * x_d.y
-};
-
-a.vx -= w.x;
-a.vy -= w.y;
-
-b.vx += w.x;
-b.vy += w.y;
-
-                // Vorhandene Kollisionssound-Funktion verwenden
-                playBallCollision(
-                    "balls-" +
-                    Math.min(a.number, b.number) + "-" +
-                    Math.max(a.number, b.number)
-                );
-            }
-        }
-    }
-
-    // Prüfen, ob noch eine Kugel rollt
-    shotInProgress = balls.some(ball =>
-        ball.active &&
-        !ball.pocketing &&
-        (Math.abs(ball.vx) > 0.035 ||
-         Math.abs(ball.vy) > 0.035)
-    );
+// Kollisionssound
+playBallCollision(
+"balls-" +
+Math.min(a.number, b.number) + "-" +
+Math.max(a.number, b.number)
+);
+}
 
     updateStatus();
 }
