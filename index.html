@@ -701,14 +701,14 @@ ctx.lineCap = "round";
 // Strich 1: Objektball-Richtung
 ctx.beginPath();
 ctx.moveTo(0, 0);
-ctx.lineTo(BALL_RADIUS * 8, 0);
+ctx.lineTo(BALL_RADIUS * 2.5, 0);
 ctx.stroke();
 
 // Strich 2: Abprallrichtung der weißen Kugel
 // 90 Grad zur Objektball-Richtung, entgegengesetzt zur Anstoßseite
 ctx.beginPath();
 ctx.moveTo(0, 0);
-ctx.lineTo(0, -BALL_RADIUS *4 );
+ctx.lineTo(0, -BALL_RADIUS *3 );
 ctx.stroke();
 
 ctx.restore();
