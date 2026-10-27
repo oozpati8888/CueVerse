@@ -1311,6 +1311,9 @@ ctx.clearRect(0, 0, W, H);
  // Bälle zeichnen
   balls.forEach(drawBall);
 
+  // Goldenen kö und Zielrichtung zeichnen
+  drawAim();
+
 drawAimAssist();
 requestAnimationFrame(gameLoop);
 }
