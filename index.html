@@ -146,6 +146,50 @@ box-shadow: 0 0 5px #d9b45e;
 pointer-events: none;
 z-index: 2;
 }
+/* OOZ BALL – Effet-Regler */
+#spinPanel {
+display: flex;
+align-items: center;
+justify-content: center;
+gap: 12px;
+margin: 12px auto;
+color: #ead08a;
+}
+
+#spinBall {
+width: 100px;
+height: 100px;
+border: 2px solid #bda56b;
+border-radius: 50%;
+background: radial-gradient(circle at 32% 28%, #fff, #e6eaf0 55%, #8993a3);
+display: grid;
+grid-template-columns: repeat(3, 1fr);
+grid-template-rows: repeat(3, 1fr);
+padding: 12px;
+box-shadow: inset -5px -6px 12px #707987;
+}
+
+.spinPoint {
+border: 0;
+padding: 0;
+margin: 0;
+border-radius: 50%;
+background: transparent;
+cursor: pointer;
+min-width: 0;
+}
+
+.spinPoint.selected {
+background: #e4b949;
+box-shadow: 0 0 8px #e4b949;
+}
+
+#spinLabel {
+font-size: 13px;
+line-height: 1.6;
+color: #fff;
+}
+
 
 #status {
 color: #ead08a;
@@ -207,6 +251,29 @@ cursor: pointer;
   
 
 <div id="controls">
+<div id="spinPanel">
+<div id="spinBall">
+<button class="spinPoint" data-x="-1" data-y="-1" aria-label="Oben links"></button>
+<button class="spinPoint" data-x="0" data-y="-1" aria-label="Oben"></button>
+<button class="spinPoint" data-x="1" data-y="-1" aria-label="Oben rechts"></button>
+
+<button class="spinPoint" data-x="-1" data-y="0" aria-label="Links"></button>
+<button class="spinPoint selected" data-x="0" data-y="0" aria-label="Mitte"></button>
+<button class="spinPoint" data-x="1" data-y="0" aria-label="Rechts"></button>
+
+<button class="spinPoint" data-x="-1" data-y="1" aria-label="Unten links"></button>
+<button class="spinPoint" data-x="0" data-y="1" aria-label="Unten"></button>
+<button class="spinPoint" data-x="1" data-y="1" aria-label="Unten rechts"></button>
+</div>
+<div id="spinLabel">
+**EFFET**<br>
+Mitte = normaler Stoß<br>
+Oben = Vorwärtsdrall<br>
+Unten = Rückwärtsdrall<br>
+Links / Rechts = Seitendrall
+</div>
+</div>
+ 
 <div id="status">OOZ BALL · BEREIT</div>
 <div id="powerTrack"><div id="powerFill"></div></div>
 <button id="resetButton">NEU STARTEN</button>
@@ -282,6 +349,19 @@ const POCKETS = [
 ];
 
 let balls = [];
+let spinX = 0;
+let spinY = 0;
+
+document.querySelectorAll(".spinPoint").forEach(point => {
+point.addEventListener("click", () => {
+spinX = Number(point.dataset.x);
+spinY = Number(point.dataset.y);
+
+document.querySelectorAll(".spinPoint").forEach(p => {
+p.classList.toggle("selected", p === point);
+});
+});
+});
 let cueBall = null;
 let aiming = false;
 let aimX = 0;
