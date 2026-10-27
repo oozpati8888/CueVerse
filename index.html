@@ -1250,8 +1250,8 @@ foulThisTurn = false;
 const power = Math.min(distance, MAX_DRAG) / MAX_DRAG;
 const strength = Math.max(1, power * MAX_POWER);
 
-cueBall.vx = (dx / distance) * strength;
-cueBall.vy = (dy / distance) * strength;
+cueBall.vx = -(dx / distance) * strength;
+cueBall.vy = -(dy / distance) * strength;
 
 shotInProgress = true;
 playBilliardHit();
