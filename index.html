@@ -390,11 +390,23 @@ function drawBall(ball) {
 if (!ball.active && !ball.pocketing) return;
 
 const r = ball.radius;
-const scale = 1;
+
+// Kugel bleibt während des Fallens in voller Größe sichtbar.
+const scale = ball.pocketing ? 1 : 1;
 
 ctx.save();
-
 ctx.translate(ball.x, ball.y);
+if (ball.pocketing) {
+const fall = ball.pocketFall || 0;
+
+// Die Kugel sinkt optisch in die Tasche.
+ctx.translate(0, fall * ball.radius * 0.8);
+
+// Die Tasche verdeckt den unteren Teil der Kugel.
+ctx.beginPath();
+ctx.arc(0, 0, ball.radius * 0.72, 0, Math.PI * 2);
+ctx.clip();
+}
 ctx.scale(scale, scale);
 
 /* Schatten */
@@ -750,7 +762,7 @@ const distance = Math.hypot(dx, dy);
 
 // Die Kugel muss weiter in die Tasche rollen,
 // bevor die Einloch-Animation beginnt.
-const captureDistance = POCKET_CAPTURE * 0.7;
+const captureDistance = POCKET_CAPTURE * 1.0;
 
 if (distance < captureDistance) {
 ball.pocketing = true;
@@ -782,15 +794,21 @@ ball.y += dy * rollSpeed;
 return;
 }
 
-// Erst in der Taschenmitte kleiner werden und verschwinden.
+// Kugel bleibt gleich gross und fällt sichtbar in die Tasche.
 ball.x = ball.pocketX;
 ball.y = ball.pocketY;
-ball.pocketScale -= POCKET_ANIMATION_SPEED;
 
-if (ball.pocketScale <= 0) {
-ball.pocketScale = 0;
+if (ball.pocketFall === undefined) {
+ball.pocketFall = 0;
+}
+
+ball.pocketFall += 0.06;
+
+if (ball.pocketFall >= 1) {
+ball.pocketFall = 1;
 ball.pocketing = false;
-
+ball.pocketScale = 1;
+}
 if (ball.type === "cue") {
 ball.x = 430;
 ball.y = 384;
