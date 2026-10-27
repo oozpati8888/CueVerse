@@ -1097,14 +1097,29 @@ function updatePhysics() {
 
             // Nur reagieren, wenn sich die Kugeln annähern
             if (relativeVelocity < -0.0001) {
-                const impulse =
-                    -(1 + BALL_BOUNCE) * relativeVelocity / 2;
+               // Elastischer Kugelstoß nach dem YouTube-Prinzip
+const v_d = {
+x: a.vx - b.vx,
+y: a.vy - b.vy
+};
 
-                a.vx -= impulse * nx;
-                a.vy -= impulse * ny;
+const x_d = {
+x: dx,
+y: dy
+};
 
-                b.vx += impulse * nx;
-                b.vy += impulse * ny;
+const dot = x_d.x * v_d.x + x_d.y * v_d.y;
+
+const w = {
+x: (dot / (distance * distance)) * x_d.x,
+y: (dot / (distance * distance)) * x_d.y
+};
+
+a.vx -= w.x;
+a.vy -= w.y;
+
+b.vx += w.x;
+b.vy += w.y;
 
                 // Vorhandene Kollisionssound-Funktion verwenden
                 playBallCollision(
