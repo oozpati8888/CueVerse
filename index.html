@@ -904,27 +904,27 @@ ctx.fillStyle = "rgba(255, 255, 255, 0.15)";
 ctx.fill();
 ctx.stroke();
 
-// 3. Uhrzeiger-Striche rotieren lassen bei Ballkontakt
+// 3. Zielstriche anhand der tatsächlichen Kollisionsrichtung
 if (targetBall) {
 const normalX = targetBall.x - ghostX;
 const normalY = targetBall.y - ghostY;
-const normalLen = Math.sqrt(normalX * normalX + normalY * normalY);
+const normalLen = Math.hypot(normalX, normalY);
 
-if (normalLen > 0) {
+if (normalLen > 0.001) {
 const nx = normalX / normalLen;
 const ny = normalY / normalLen;
 
-// Strich 1: Uhrzeiger für getroffenen Ball (Gelb)
+// Gelb: Richtung der Objektkugel
 ctx.beginPath();
 ctx.moveTo(ghostX, ghostY);
-ctx.lineTo(ghostX + nx * 120 , ghostY + ny * 120);
+ctx.lineTo(ghostX + nx * 120, ghostY + ny * 120);
 ctx.strokeStyle = "#f5d32c";
 ctx.lineWidth = 3;
 ctx.stroke();
 
-// Strich 2: Uhrzeiger für weißen Abprallwinkel (Türkis - 90 Grad)
+// Türkis: 90 Grad zur gelben Linie
 const cross = cueDirX * ny - cueDirY * nx;
-const side = cross >= 0 ? 1 : 1;
+const side = cross >= 0 ? 1 : -1;
 const tx = -ny * side;
 const ty = nx * side;
 
@@ -936,7 +936,7 @@ ctx.lineWidth = 3;
 ctx.stroke();
 }
 }
-}
+
 
 function updatePhysics() {
     // Taschenanimation beibehalten
