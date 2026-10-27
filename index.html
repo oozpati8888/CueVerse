@@ -335,6 +335,7 @@ return ball;
 
 function setupBalls() {
 balls = [];
+console.log("Kugeln nach dem Zurücksetzen:", balls.length);
 console.log("setupBalls gestartet");
 gameOver = false;
 currentPlayer = 1;  
@@ -372,6 +373,8 @@ createBall(x, y, number, type);
 });
 
 cueBall = createBall(430, 384, 0, "cue");
+console.log("Kugeln nach dem Erzeugen:", balls.length, balls);
+  
 ballInHand = true;
 
 aiming = false;
@@ -1392,12 +1395,8 @@ SPIELSCHLEIFE
 
 function gameLoop() {
 ctx.clearRect(0, 0, W, H);
+  updatePhysics();
 
-// TEST: Sichtbarkeit des Canvas prüfen
-ctx.beginPath();
-ctx.arc(430, 384, 18, 0, Math.PI * 2);
-ctx.fillStyle = "red";
-ctx.fill();
 
 // Alle vorhandenen Kugeln zeichnen
 balls.forEach(drawBall);
