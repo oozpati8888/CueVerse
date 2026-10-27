@@ -770,6 +770,7 @@ return false;
 function updatePocketAnimation(ball) {
 const dx = ball.pocketX - ball.x;
 const dy = ball.pocketY - ball.y;
+  
 const distance = Math.hypot(dx, dy);
 
 // Die Kugel sichtbar bis zur Taschenmitte rollen lassen.
@@ -960,6 +961,42 @@ ctx.lineWidth = 3;
 ctx.stroke();
 }
 }
+}
+
+function solveRealQuadratic(u, v, w) {
+const discriminant = v * v - 4 * u * w;
+
+if (discriminant < 0 || u === 0) return [];
+
+const root = Math.sqrt(discriminant);
+
+return [
+(-v + root) / (2 * u),
+(-v - root) / (2 * u)
+];
+}
+
+function segmentIntersectsCircle(segment, circle) {
+const [a, b] = segment;
+const [c, r] = circle;
+
+const u =
+(b.x - a.x) ** 2 +
+(b.y - a.y) ** 2;
+
+const v = 2 * (
+(a.x - c.x) * (b.x - a.x) +
+(a.y - c.y) * (b.y - a.y)
+);
+
+const w =
+(a.x - c.x) ** 2 +
+(a.y - c.y) ** 2 -
+r ** 2;
+
+const solutions = solveRealQuadratic(u, v, w);
+
+return solutions.some(t => t >= 0 && t <= 1);
 }
 
 
