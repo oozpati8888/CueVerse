@@ -55,9 +55,9 @@ width: auto;
 #table {
 position: relative;
 width: min(100vw, 1536px);
-aspect-ratio: 2 / 1;
+aspect-ratio: 1320 / 720; /* KORREKTUR: Passt jetzt haargenau zur Bildgröße! */
 background-image: url("OOZ_BALL_table_1320x720_6pockets.png");
-background-size: 100% 100%; /* Das zwingt dein KI-Bild in das exakte 1320x720-Verhältnis des YouTubers */
+background-size: 100% 100%;
 background-repeat: no-repeat;
 overflow: hidden;
 touch-action: none;
@@ -301,10 +301,10 @@ const W = 1320;
 const H = 720;
 
 const TABLE = {
-left: 60, // Original margin von canvas.js des YouTubers
-right: 1260, // 1320 - 60
-top: 60, // Original margin von canvas.js des YouTubers
-bottom: 660 // 720 - 60
+left: 104, // 
+right: 1216, 
+top: 98,
+bottom: 622
 };
 
 const BALL_RADIUS = 18;
@@ -343,31 +343,8 @@ const POCKETS = [
 ];
 
 /* OOZ BALL – ORIGINAL POLYGON-KANTEN VOM YOUTUBE-KANAL */
-const POCKET_JAWS = [
-// Obere linke Tasche
-[{ x: 60, y: 115 }, { x: 115, y: 60 }],
-[{ x: 60, y: 115 }, { x: 60, y: 60 }],
+const POCKET_JAWS = [];
 
-// Obere mittlere Tasche
-[{ x: 638, y: 60 }, { x: 650, y: 72 }],
-[{ x: 682, y: 60 }, { x: 670, y: 72 }],
-
-// Obere rechte Tasche
-[{ x: 1260, y: 115 }, { x: 1205, y: 60 }],
-[{ x: 1260, y: 115 }, { x: 1260, y: 60 }],
-
-// Untere linke Tasche
-[{ x: 60, y: 605 }, { x: 115, y: 660 }],
-[{ x: 60, y: 605 }, { x: 60, y: 660 }],
-
-// Untere mittlere Tasche
-[{ x: 638, y: 660 }, { x: 650, y: 648 }],
-[{ x: 682, y: 660 }, { x: 670, y: 648 }],
-
-// Untere rechte Tasche
-[{ x: 1260, y: 605 }, { x: 1205, y: 660 }],
-[{ x: 1260, y: 605 }, { x: 1260, y: 660 }]
-];
 
 
 
