@@ -1467,9 +1467,10 @@ function gameLoop() {
 // 1. Spielfeld leeren
 ctx.clearRect(0, 0, W, H);
 
-// 2. Das innere Spielfeld (Tuch) zeichnen, wo die Kugeln rollen
-ctx.fillStyle = "#101b2b"; // Farbe deines inneren Spielfelds (z.B. Dunkelblau/Schwarz)
-ctx.fillRect(TABLE.left, TABLE.top, TABLE.right - TABLE.left, TABLE.bottom - TABLE.top);
+// 2. DEIN REPARIERTER TISCH: Zeichnet das originale Bild auf das Canvas
+if (tableImage.complete) {
+ctx.drawImage(tableImage, 0, 0, W, H);
+}
 
 // 3. Physik berechnen
 updatePhysics();
