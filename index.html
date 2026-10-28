@@ -349,6 +349,32 @@ const POCKETS = [
 { x: (TABLE.left + TABLE.right) / 2, y: TABLE.bottom },
 { x: TABLE.right, y: TABLE.bottom }
 ];
+/* OOZ BALL – POLYGON-KANTEN DER SECHS TASCHEN */
+const POCKET_JAWS = [
+// Obere linke Tasche
+[{ x: 60, y: 60 }, { x: 95, y: 82 }],
+[{ x: 60, y: 60 }, { x: 82, y: 95 }],
+
+// Obere mittlere Tasche
+[{ x: 620, y: 60 }, { x: 645, y: 82 }],
+[{ x: 700, y: 60 }, { x: 675, y: 82 }],
+
+// Obere rechte Tasche
+[{ x: 1260, y: 60 }, { x: 1225, y: 82 }],
+[{ x: 1260, y: 60 }, { x: 1238, y: 95 }],
+
+// Untere linke Tasche
+[{ x: 60, y: 660 }, { x: 95, y: 638 }],
+[{ x: 60, y: 660 }, { x: 82, y: 625 }],
+
+// Untere mittlere Tasche
+[{ x: 620, y: 660 }, { x: 645, y: 638 }],
+[{ x: 700, y: 660 }, { x: 675, y: 638 }],
+
+// Untere rechte Tasche
+[{ x: 1260, y: 660 }, { x: 1225, y: 638 }],
+[{ x: 1260, y: 660 }, { x: 1238, y: 625 }]
+];
 
 let balls = [];
 let spinX = 0;
@@ -881,6 +907,54 @@ Math.abs(ball.x - pocket.x) < BALL_RADIUS + 8
 );
 });
 }
+function collideWithPocketJaws(ball) {
+const r = ball.radius;
+
+for (const segment of POCKET_JAWS) {
+const a = segment[0];
+const b = segment[1];
+
+const dx = b.x - a.x;
+const dy = b.y - a.y;
+const lengthSquared = dx * dx + dy * dy;
+
+if (lengthSquared === 0) continue;
+
+// Nächsten Punkt auf der Kante bestimmen
+const t = Math.max(0, Math.min(1,
+((ball.x - a.x) * dx + (ball.y - a.y) * dy) /
+lengthSquared
+));
+
+const closestX = a.x + t * dx;
+const closestY = a.y + t * dy;
+
+const diffX = ball.x - closestX;
+const diffY = ball.y - closestY;
+const distance = Math.hypot(diffX, diffY);
+
+if (distance >= r || distance < 0.0001) continue;
+
+// Kugel aus der Kante herausdrücken
+const nx = diffX / distance;
+const ny = diffY / distance;
+
+ball.x = closestX + nx * r;
+ball.y = closestY + ny * r;
+
+// Nur abprallen, wenn sich die Kugel auf die Kante zubewegt
+const velocityTowardEdge = ball.vx * nx + ball.vy * ny;
+
+if (velocityTowardEdge < 0) {
+ball.vx -= 2 * velocityTowardEdge * nx;
+ball.vy -= 2 * velocityTowardEdge * ny;
+ball.vx *= WALL_BOUNCE;
+ball.vy *= WALL_BOUNCE;
+playBumperSound();
+}
+}
+}
+
 
 function updateWalls(ball) {
 const r = ball.radius;
@@ -1064,6 +1138,7 @@ function updatePhysics() {
 
         // Bestehende Banden- und Taschenlogik verwenden
         updateWalls(ball);
+      collideWithPocketJaws(ball);
     }
 
     // Jede Kugelpaarung nur einmal prüfen
