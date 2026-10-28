@@ -830,7 +830,7 @@ const distance = Math.hypot(dx, dy);
 
 // Die Kugel muss weiter in die Tasche rollen,
 // bevor die Einloch-Animation beginnt.
-const captureDistance = POCKET_CAPTURE * 0.7;
+const captureDistance = POCKET_OPENING / 2;
 
 if (distance < captureDistance) {
 ball.pocketing = true;
