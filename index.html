@@ -301,10 +301,10 @@ const W = 1320;
 const H = 720;
 
 const TABLE = {
-left: 60,
-right: 1260,
-top: 60,
-bottom: 660
+left: 104,
+right: 1216,
+top: 98,
+bottom: 622
 };
 
 const BALL_RADIUS = 18;
@@ -342,38 +342,41 @@ const COLORS = {
 };
 
 const POCKETS = [
-{ x: TABLE.left, y: TABLE.top },
-{ x: (TABLE.left + TABLE.right) / 2, y: TABLE.top },
-{ x: TABLE.right, y: TABLE.top },
-{ x: TABLE.left, y: TABLE.bottom },
-{ x: (TABLE.left + TABLE.right) / 2, y: TABLE.bottom },
-{ x: TABLE.right, y: TABLE.bottom }
+// Obere Reihe (Links, Mitte, Rechts)
+{ x: TABLE.left - 10, y: TABLE.top - 10 },
+{ x: (TABLE.left + TABLE.right) / 2, y: TABLE.top - 15 },
+{ x: TABLE.right + 10, y: TABLE.top - 10 },
+
+// Untere Reihe (Links, Mitte, Rechts)
+{ x: TABLE.left - 10, y: TABLE.bottom + 10 },
+{ x: (TABLE.left + TABLE.right) / 2, y: TABLE.bottom + 15 },
+{ x: TABLE.right + 10, y: TABLE.bottom + 10 }
 ];
 /* OOZ BALL – POLYGON-KANTEN DER SECHS TASCHEN */
 const POCKET_JAWS = [
 // Obere linke Tasche
-[{ x: 60, y: 60 }, { x: 95, y: 82 }],
-[{ x: 60, y: 60 }, { x: 82, y: 95 }],
+[{ x: 104, y: 153 }, { x: 159, y: 98 }],
+[{ x: 104, y: 153 }, { x: 104, y: 98 }],
 
 // Obere mittlere Tasche
-[{ x: 620, y: 60 }, { x: 645, y: 82 }],
-[{ x: 700, y: 60 }, { x: 675, y: 82 }],
+[{ x: 626, y: 98 }, { x: 641, y: 113 }],
+[{ x: 694, y: 98 }, { x: 679, y: 113 }],
 
 // Obere rechte Tasche
-[{ x: 1260, y: 60 }, { x: 1225, y: 82 }],
-[{ x: 1260, y: 60 }, { x: 1238, y: 95 }],
+[{ x: 1216, y: 153 }, { x: 1161, y: 98 }],
+[{ x: 1216, y: 153 }, { x: 1216, y: 98 }],
 
 // Untere linke Tasche
-[{ x: 60, y: 660 }, { x: 95, y: 638 }],
-[{ x: 60, y: 660 }, { x: 82, y: 625 }],
+[{ x: 104, y: 567 }, { x: 159, y: 622 }],
+[{ x: 104, y: 567 }, { x: 104, y: 622 }],
 
 // Untere mittlere Tasche
-[{ x: 620, y: 660 }, { x: 645, y: 638 }],
-[{ x: 700, y: 660 }, { x: 675, y: 638 }],
+[{ x: 626, y: 622 }, { x: 641, y: 607 }],
+[{ x: 694, y: 622 }, { x: 679, y: 607 }],
 
 // Untere rechte Tasche
-[{ x: 1260, y: 660 }, { x: 1225, y: 638 }],
-[{ x: 1260, y: 660 }, { x: 1238, y: 625 }]
+[{ x: 1216, y: 567 }, { x: 1161, y: 622 }],
+[{ x: 1216, y: 567 }, { x: 1216, y: 622 }]
 ];
 
 let balls = [];
