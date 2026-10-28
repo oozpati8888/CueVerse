@@ -61,6 +61,7 @@ background-size: 100% 100%;
 background-repeat: no-repeat;
 overflow: hidden;
 touch-action: none;
+z-index: 10;
 }
 
 #gameCanvas {
@@ -466,31 +467,26 @@ function drawBall(ball) {
 if (!ball.active && !ball.pocketing) return;
 
 const r = ball.radius;
-
-// 1. Berechne die 3D-Verkleinerung (Schrumpfen beim Fallen)
 let scale = ball.pocketing ? (1 - (ball.pocketFall || 0) * 0.55) : 1;
 
 ctx.save();
 
-// 2. TRICK: Wenn die Kugel locht, verschieben wir sie optisch nach unten (Falltiefe)
-// und beschneiden sie an einem unsichtbaren Kreis, damit sie unter der Bande verschwindet!
+// 🎯 HIER PASSIERT DER TRICK:
 if (ball.pocketing) {
 const fallProgress = ball.pocketFall || 0;
 
-// Bewege den Zeichenkontext leicht nach unten/hinten ins Loch hinein
-ctx.translate(ball.x, ball.y);
-
-// Maske erstellen: Nur zeichnen, was innerhalb des Loch-Radius liegt
+// Wir erstellen eine Maske exakt an den Bandengrenzen deines Tisches
 ctx.beginPath();
-ctx.arc(0, 0, r * 1.6, 0, Math.PI * 2);
-ctx.clip();
+ctx.rect(TABLE.left, TABLE.top, TABLE.right - TABLE.left, TABLE.bottom - TABLE.top);
+ctx.clip(); // Alles, was jetzt aus dem schwarzen Spielfeld herausrollt, wird abgeschnitten!
 
-// Drücke die Kugel visuell nach unten (Kipp-Effekt über die Bandenkante)
-ctx.translate(0, fallProgress * r * 0.9);
+ctx.translate(ball.x, ball.y);
+// Drückt die Kugel visuell nach hinten/unten ins Loch hinein
+ctx.translate(0, fallProgress * r * 0.8);
 ctx.scale(scale, scale);
 
-// Lässt die Kugel im Dunkeln der Tasche leicht abdunkeln
-ctx.globalAlpha = Math.max(0, 1 - fallProgress * 0.8);
+// Lässt die Kugel im Dunkeln des Lochs weich ausfaden
+ctx.globalAlpha = Math.max(0, 1 - fallProgress * 0.9);
 } else {
 ctx.translate(ball.x, ball.y);
 ctx.scale(scale, scale);
@@ -1468,20 +1464,31 @@ SPIELSCHLEIFE
 ========================================= */
 
 function gameLoop() {
+// 1. Spielfeld leeren
 ctx.clearRect(0, 0, W, H);
- 
-  updatePhysics();
-  if (tableImage.complete && tableImage.naturalWidth > 0) {
-ctx.drawImage(tableImage, 0, 0, W, H);
+
+// 2. Das innere Spielfeld (Tuch) zeichnen, wo die Kugeln rollen
+ctx.fillStyle = "#101b2b"; // Farbe deines inneren Spielfelds (z.B. Dunkelblau/Schwarz)
+ctx.fillRect(TABLE.left, TABLE.top, TABLE.right - TABLE.left, TABLE.bottom - TABLE.top);
+
+// 3. Physik berechnen
+updatePhysics();
+
+// 4. Ziellinie zeichnen
+drawAimLine();
+
+// 5. Kugeln zeichnen
+balls.forEach(ball => drawBall(ball));
+
+// 6. Ball-In-Hand Kreis zeichnen
+if (ballInHand && !shotInProgress && !gameOver) {
+ctx.beginPath();
+ctx.arc(cueBall.x, cueBall.y, cueBall.radius * 1.4, 0, Math.PI * 2);
+ctx.strokeStyle = "rgba(66, 214, 206, 0.6)";
+ctx.lineWidth = 2;
+ctx.stroke();
 }
 
- // Bälle zeichnen
-  balls.forEach(drawBall);
-
-  // Goldenen kö und Zielrichtung zeichnen
-  drawAim();
-
-drawAimAssist();
 requestAnimationFrame(gameLoop);
 }
 
