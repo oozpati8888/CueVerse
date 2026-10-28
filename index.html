@@ -865,50 +865,67 @@ BANDEN
 ========================================= */
 
 function nearPocketOpening(ball, edge) {
+const halfOpening = POCKET_OPENING / 2;
+
 return POCKETS.some(pocket => {
-if (edge === "left" || edge === "right") {
-return Math.abs(ball.y - pocket.y) < POCKET_OPENING &&
-Math.abs(ball.x - pocket.x) < POCKET_OPENING + 20;
+if (edge === "top" || edge === "bottom") {
+return (
+Math.abs(ball.x - pocket.x) < halfOpening &&
+Math.abs(ball.y - pocket.y) < BALL_RADIUS + 8
+);
 }
 
-return Math.abs(ball.x - pocket.x) < POCKET_OPENING &&
-Math.abs(ball.y - pocket.y) < POCKET_OPENING + 20;
+return (
+Math.abs(ball.y - pocket.y) < halfOpening &&
+Math.abs(ball.x - pocket.x) < BALL_RADIUS + 8
+);
 });
 }
 
 function updateWalls(ball) {
 const r = ball.radius;
 
-/* Taschen immer vor Banden prüfen */
+// Zuerst prüfen, ob die Kugel in eine Tasche fällt.
 if (checkPockets(ball)) return;
 
-if (ball.y - r < TABLE.top &&
-!nearPocketOpening(ball, "top")) {
+// Obere Bande
+if (ball.y - r < TABLE.top) {
+if (!nearPocketOpening(ball, "top")) {
 ball.y = TABLE.top + r;
 ball.vy = Math.abs(ball.vy) * WALL_BOUNCE;
 playBumperSound();
 }
-
-if (ball.x - r < TABLE.left &&
-!nearPocketOpening(ball, "left")) {
-ball.x = TABLE.left + r;
-ball.vx = Math.abs(ball.vx) * WALL_BOUNCE;
-playBumperSound();
-}
-if (ball.x + r > TABLE.right &&
-!nearPocketOpening(ball, "right")) {
-ball.x = TABLE.right - r;
-ball.vx = -Math.abs(ball.vx) * WALL_BOUNCE;
-playBumperSound();
 }
 
-if (ball.y + r > TABLE.bottom &&
-!nearPocketOpening(ball, "bottom")) {
+// Untere Bande
+if (ball.y + r > TABLE.bottom) {
+if (!nearPocketOpening(ball, "bottom")) {
 ball.y = TABLE.bottom - r;
 ball.vy = -Math.abs(ball.vy) * WALL_BOUNCE;
 playBumperSound();
 }
 }
+
+// Linke Bande
+if (ball.x - r < TABLE.left) {
+if (!nearPocketOpening(ball, "left")) {
+ball.x = TABLE.left + r;
+ball.vx = Math.abs(ball.vx) * WALL_BOUNCE;
+playBumperSound();
+}
+}
+
+// Rechte Bande
+if (ball.x + r > TABLE.right) {
+if (!nearPocketOpening(ball, "right")) {
+ball.x = TABLE.right - r;
+ball.vx = -Math.abs(ball.vx) * WALL_BOUNCE;
+playBumperSound();
+}
+}
+}
+
+
 
 /* =========================================
 PHYSIK
