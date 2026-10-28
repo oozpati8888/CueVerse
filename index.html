@@ -56,8 +56,8 @@ width: auto;
 position: relative;
 width: min(100vw, 1536px);
 aspect-ratio: 2 / 1;
-background-image: none;
-background-size: 100% 100%;
+background-image: url("OOZ_BALL_table_1320x720_6pockets.png");
+background-size: 100% 100%; /* Das zwingt dein KI-Bild in das exakte 1320x720-Verhältnis des YouTubers */
 background-repeat: no-repeat;
 overflow: hidden;
 touch-action: none;
@@ -301,17 +301,17 @@ const W = 1320;
 const H = 720;
 
 const TABLE = {
-left: 104,
-right: 1216,
-top: 98,
-bottom: 622
+left: 60, // Original margin von canvas.js des YouTubers
+right: 1260, // 1320 - 60
+top: 60, // Original margin von canvas.js des YouTubers
+bottom: 660 // 720 - 60
 };
 
 const BALL_RADIUS = 18;
 
 /* Stärkerer Stoß, kontrolliertes Ausrollen */
 const MAX_POWER = 45;
- const powerSlider = document.getElementById("powerSlider");
+const powerSlider = document.getElementById("powerSlider");
 const powerCue = document.getElementById("powerCue");
 const MAX_DRAG = 190;
 const FRICTION = 0.99;
@@ -319,65 +319,57 @@ const WALL_BOUNCE = 1.0;
 const BALL_BOUNCE = 1.0;
 
 /* Taschenradius und sichtbare Versenk-Animation */
-const POCKET_CAPTURE = 35;
-const POCKET_OPENING = 55;
+const POCKET_CAPTURE = 30;
+const POCKET_OPENING = 52;
 const POCKET_ANIMATION_SPEED = 0.025;
 
 const COLORS = {
-1: "#f5d32c",
-2: "#2455d8",
-3: "#d83232",
-4: "#753cc5",
-5: "#f18a28",
-6: "#23944f",
-7: "#8b2525",
-8: "#101010",
-9: "#f5d32c",
-10: "#2455d8",
-11: "#d83232",
-12: "#753cc5",
-13: "#f18a28",
-14: "#23944f",
-15: "#8b2525"
+1: "#f5d32c", 2: "#2455d8", 3: "#d83232", 4: "#753cc5",
+5: "#f18a28", 6: "#23944f", 7: "#8b2525", 8: "#101010",
+9: "#f5d32c", 10: "#2455d8", 11: "#d83232", 12: "#753cc5",
+13: "#f18a28", 14: "#23944f", 15: "#8b2525"
 };
 
 const POCKETS = [
 // Obere Reihe (Links, Mitte, Rechts)
-{ x: TABLE.left - 10, y: TABLE.top - 10 },
-{ x: (TABLE.left + TABLE.right) / 2, y: TABLE.top - 15 },
-{ x: TABLE.right + 10, y: TABLE.top - 10 },
+{ x: TABLE.left, y: TABLE.top },
+{ x: (TABLE.left + TABLE.right) / 2, y: TABLE.top },
+{ x: TABLE.right, y: TABLE.top },
 
 // Untere Reihe (Links, Mitte, Rechts)
-{ x: TABLE.left - 10, y: TABLE.bottom + 10 },
-{ x: (TABLE.left + TABLE.right) / 2, y: TABLE.bottom + 15 },
-{ x: TABLE.right + 10, y: TABLE.bottom + 10 }
+{ x: TABLE.left, y: TABLE.bottom },
+{ x: (TABLE.left + TABLE.right) / 2, y: TABLE.bottom },
+{ x: TABLE.right, y: TABLE.bottom }
 ];
-/* OOZ BALL – POLYGON-KANTEN DER SECHS TASCHEN */
-const POCKET_JAWS = [
-// Obere linke Tasche (Öffnung zur Ecke hin)
-[{ x: 104, y: 148 }, { x: 104, y: 153 }],
-[{ x: 154, y: 98 }, { x: 159, y: 98 }],
 
-// Obere mittlere Tasche (Lässt die Mitte komplett frei)
-[{ x: 620, y: 98 }, { x: 625, y: 98 }],
-[{ x: 695, y: 98 }, { x: 700, y: 98 }],
+/* OOZ BALL – ORIGINAL POLYGON-KANTEN VOM YOUTUBE-KANAL */
+const POCKET_JAWS = [
+// Obere linke Tasche
+[{ x: 60, y: 115 }, { x: 115, y: 60 }],
+[{ x: 60, y: 115 }, { x: 60, y: 60 }],
+
+// Obere mittlere Tasche
+[{ x: 638, y: 60 }, { x: 650, y: 72 }],
+[{ x: 682, y: 60 }, { x: 670, y: 72 }],
 
 // Obere rechte Tasche
-[{ x: 1216, y: 148 }, { x: 1216, y: 153 }],
-[{ x: 1166, y: 98 }, { x: 1161, y: 98 }],
+[{ x: 1260, y: 115 }, { x: 1205, y: 60 }],
+[{ x: 1260, y: 115 }, { x: 1260, y: 60 }],
 
 // Untere linke Tasche
-[{ x: 104, y: 572 }, { x: 104, y: 567 }],
-[{ x: 154, y: 622 }, { x: 159, y: 622 }],
+[{ x: 60, y: 605 }, { x: 115, y: 660 }],
+[{ x: 60, y: 605 }, { x: 60, y: 660 }],
 
 // Untere mittlere Tasche
-[{ x: 620, y: 622 }, { x: 625, y: 622 }],
-[{ x: 695, y: 622 }, { x: 700, y: 622 }],
+[{ x: 638, y: 660 }, { x: 650, y: 648 }],
+[{ x: 682, y: 660 }, { x: 670, y: 648 }],
 
 // Untere rechte Tasche
-[{ x: 1216, y: 572 }, { x: 1216, y: 567 }],
-[{ x: 1166, y: 622 }, { x: 1161, y: 622 }]
+[{ x: 1260, y: 605 }, { x: 1205, y: 660 }],
+[{ x: 1260, y: 605 }, { x: 1260, y: 660 }]
 ];
+
+
 
 let balls = [];
 let spinX = 0;
