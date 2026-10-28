@@ -808,6 +808,7 @@ const captureDistance = POCKET_CAPTURE * 0.7;
 
 if (distance < captureDistance) {
 ball.pocketing = true;
+playPocketSound();
 ball.pocketScale = 1;
 ball.pocketX = pocket.x;
 ball.pocketY = pocket.y;
@@ -885,27 +886,27 @@ if (ball.y - r < TABLE.top &&
 !nearPocketOpening(ball, "top")) {
 ball.y = TABLE.top + r;
 ball.vy = Math.abs(ball.vy) * WALL_BOUNCE;
-playBallCollision("wall-" + ball.number + "-top");
+playBumperSound();
 }
 
 if (ball.x - r < TABLE.left &&
 !nearPocketOpening(ball, "left")) {
 ball.x = TABLE.left + r;
 ball.vx = Math.abs(ball.vx) * WALL_BOUNCE;
-playBallCollision("wall-" + ball.number + "-left");
+playBumperSound();
 }
 if (ball.x + r > TABLE.right &&
 !nearPocketOpening(ball, "right")) {
 ball.x = TABLE.right - r;
 ball.vx = -Math.abs(ball.vx) * WALL_BOUNCE;
-playBallCollision("wall-" + ball.number + "-right");
+playBumperSound();
 }
 
 if (ball.y + r > TABLE.bottom &&
 !nearPocketOpening(ball, "bottom")) {
 ball.y = TABLE.bottom - r;
 ball.vy = -Math.abs(ball.vy) * WALL_BOUNCE;
-playBallCollision("wall-" + ball.number + "-bottom");
+playBumperSound();
 }
 }
 
