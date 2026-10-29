@@ -1499,11 +1499,11 @@ ctx.drawImage(tableImage, 0, 0, W, H);
 // 3. Physik berechnen
 updatePhysics();
 
-// 4. Ziellinie zeichnen
-drawAim();
 
-// 5. Kugeln zeichnen
+// 4. Kugeln zeichnen
 balls.forEach(ball => drawBall(ball));
+// Ziellinie und Ghost-Ball-Striche zeichnen
+drawAim();
 
 // 6. Ball-in-Hand-Kreis zeichnen
 if (ballInHand && !shotInProgress && !gameOver) {
