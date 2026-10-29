@@ -1511,34 +1511,63 @@ SPIELSCHLEIFE
 ========================================= */
 
 function gameLoop() {
-// 1. Spielfeld leeren
 ctx.clearRect(0, 0, W, H);
 
-// 2. Tischbild zeichnen
+// Tischbild zeichnen, sofern es wirklich geladen wurde
 if (tableImage.complete && tableImage.naturalWidth > 0) {
-    ctx.drawImage(tableImage, 0, 0, W, H);
+ctx.drawImage(tableImage, 0, 0, W, H);
+} else {
+// Sichtbarer grüner Ersatztisch, falls das Bild fehlt
+ctx.fillStyle = "#176b43";
+ctx.fillRect(0, 0, W, H);
+
+ctx.strokeStyle = "#bda56b";
+ctx.lineWidth = 18;
+ctx.strokeRect(
+TABLE.left,
+TABLE.top,
+TABLE.right - TABLE.left,
+TABLE.bottom - TABLE.top
+);
+
+// Fehlendes Bild in der Konsole melden
+if (tableImage.complete && tableImage.naturalWidth === 0) {
+console.error(
+"OOZ BALL: Tischbild konnte nicht geladen werden:",
+tableImage.src
+);
+}
 }
 
-// 3. Physik berechnen
-updatePhysics();
-
-
-// 4. Kugeln zeichnen
+// Kugeln zuerst zeichnen, damit sie sichtbar bleiben
 balls.forEach(ball => drawBall(ball));
-// Ziellinie und Ghost-Ball-Striche zeichnen
 drawAim();
 
-// 6. Ball-in-Hand-Kreis zeichnen
-if (ballInHand && !shotInProgress && !gameOver) {
+if (ballInHand && cueBall && cueBall.active &&
+!shotInProgress && !gameOver) {
 ctx.beginPath();
-ctx.arc(cueBall.x, cueBall.y, cueBall.radius * 1.4, 0, Math.PI * 2);
+ctx.arc(
+cueBall.x,
+cueBall.y,
+cueBall.radius * 1.4,
+0,
+Math.PI * 2
+);
 ctx.strokeStyle = "rgba(66, 214, 205, 0.6)";
 ctx.lineWidth = 2;
 ctx.stroke();
 }
 
+// Physikfehler anzeigen, ohne die Darstellung abzubrechen
+try {
+updatePhysics();
+} catch (error) {
+console.error("OOZ BALL – Fehler in updatePhysics():", error);
+}
+
 requestAnimationFrame(gameLoop);
 }
+
 
 
 
