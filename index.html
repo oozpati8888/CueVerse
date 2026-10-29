@@ -1515,8 +1515,8 @@ function gameLoop() {
 ctx.clearRect(0, 0, W, H);
 
 // 2. Tischbild zeichnen
-if (tableImage.complete) {
-ctx.drawImage(tableImage, 0, 0, W, H);
+if (tableImage.complete && tableImage.naturalWidth > 0) {
+    ctx.drawImage(tableImage, 0, 0, W, H);
 }
 
 // 3. Physik berechnen
