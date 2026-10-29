@@ -293,7 +293,7 @@ OOZ BALL – EINSTELLUNGEN
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 const tableImage = new Image();
-tableImage.src = "OOZ_BALL_table_1320x720_6pockets(1).png"
+tableImage.src = "./OOZ_BALL_table_1320x720_6pockets(1).png";
 const statusText = document.getElementById("status");
 const powerFill = document.getElementById("powerFill");
 
@@ -1571,7 +1571,33 @@ requestAnimationFrame(gameLoop);
 
 
 
-/* START */
+
+  function draw() {
+ctx.clearRect(0, 0, W, H);
+
+if (tableImage.complete && tableImage.naturalWidth > 0) {
+ctx.drawImage(tableImage, 0, 0, W, H);
+}
+
+balls.forEach(ball => drawBall(ball));
+drawAim();
+
+if (ballInHand && cueBall && cueBall.active &&
+!shotInProgress && !gameOver) {
+ctx.beginPath();
+ctx.arc(
+cueBall.x,
+cueBall.y,
+cueBall.radius * 1.4,
+0,
+Math.PI * 2
+);
+ctx.strokeStyle = "rgba(66, 214, 205, 0.6)";
+ctx.lineWidth = 2;
+ctx.stroke();
+}
+}
+  /* START */
 setupBalls();
 draw();
 gameLoop();
