@@ -765,6 +765,48 @@ ctx.arc(ghostX, ghostY, BALL_RADIUS, 0, Math.PI * 2);
 ctx.strokeStyle = "#bdefff";
 ctx.lineWidth = 2;
 ctx.stroke();
+/* OOZ BALL – DIE ZWEI GHOST-BALL-ZIELSTRICHE */
+if (hitBall) {
+const normalX = hitBall.x - ghostX;
+const normalY = hitBall.y - ghostY;
+const normalLen = Math.hypot(normalX, normalY);
+
+if (normalLen > 0) {
+const nx = normalX / normalLen;
+const ny = normalY / normalLen;
+
+// 1. GELBER STRICH:
+// Richtung der getroffenen Objektkugel
+ctx.beginPath();
+ctx.moveTo(ghostX, ghostY);
+ctx.lineTo(
+ghostX + nx * 120,
+ghostY + ny * 120
+);
+ctx.strokeStyle = "#f5d32c";
+ctx.lineWidth = 3;
+ctx.stroke();
+
+// 2. TÜRKISER STRICH:
+// Seitlicher Abprallwinkel der weißen Kugel
+const cross = cueDirX * ny - cueDirY * nx;
+const side = cross >= 0 ? 1 : -1;
+const tx = ny * side;
+const ty = -nx * side;
+
+ctx.beginPath();
+ctx.moveTo(ghostX, ghostY);
+ctx.lineTo(
+ghostX + tx * 120,
+ghostY + ty * 120
+);
+ctx.strokeStyle = "#42d6ce";
+ctx.lineWidth = 3;
+ctx.stroke();
+}
+}
+
+
 
 // Richtung der weißen Kugel zum Ghost Ball
 const angle = Math.atan2(
