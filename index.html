@@ -413,7 +413,13 @@ function setupBalls() {
 balls = [];
 console.log("setupBalls gestartet");
 gameOver = false;
-currentPlayer = 1;  
+currentPlayer = 1;
+playerGroups = { 1: null, 2: null };
+turnPocketedBalls = [];
+firstContactBall = null;
+foulThisTurn = false;
+turnMessage = "";
+ballInHand = true;
 
 /* 15 Objektkugeln: 7 Volle, 7 Halbe und die schwarze 8 */
 const rack = [
@@ -1122,14 +1128,17 @@ ctx.stroke();
 }
 
 function updatePhysics() {
-    // Taschenanimation beibehalten
+    // Merken, ob der vorherige Frame noch zum laufenden Stoß gehörte
+    const shotWasInProgress = shotInProgress;
+
+    // Taschenanimationen aktualisieren
     for (const ball of balls) {
         if (ball.active && ball.pocketing) {
             updatePocketAnimation(ball);
         }
     }
 
-    // Bewegung und Reibung wie in Ball.js
+    // Kugeln bewegen und Reibung anwenden
     for (const ball of balls) {
         if (!ball.active || ball.pocketing) continue;
 
@@ -1139,11 +1148,9 @@ function updatePhysics() {
         ball.vx *= FRICTION;
         ball.vy *= FRICTION;
 
-        // Sehr langsame Kugeln anhalten
         if (Math.abs(ball.vx) < 0.04) ball.vx = 0;
         if (Math.abs(ball.vy) < 0.04) ball.vy = 0;
 
-        // Kugelrotation beibehalten
         const rollDistance = Math.hypot(ball.vx, ball.vy);
 
         if (rollDistance > 0.001) {
@@ -1156,12 +1163,11 @@ function updatePhysics() {
             ball.movementAngle = Math.atan2(ball.vy, ball.vx);
         }
 
-        // Bestehende Banden- und Taschenlogik verwenden
         updateWalls(ball);
-      collideWithPocketJaws(ball);
+        collideWithPocketJaws(ball);
     }
 
-    // Jede Kugelpaarung nur einmal prüfen
+    // Kugelkollisionen prüfen
     const activeBalls = balls.filter(
         ball => ball.active && !ball.pocketing
     );
@@ -1178,18 +1184,14 @@ function updatePhysics() {
 
             if (distance >= minimumDistance) continue;
 
-            // Sonderfall: Kugeln liegen exakt übereinander
             if (distance < 0.0001) {
                 a.x -= 0.01;
                 b.x += 0.01;
                 continue;
             }
 
-            // Normalenvektor zwischen den Kugelmittelpunkten
             const nx = dx / distance;
             const ny = dy / distance;
-
-            // Überlappung korrigieren
             const overlap = minimumDistance - distance;
 
             a.x -= nx * overlap / 2;
@@ -1197,7 +1199,7 @@ function updatePhysics() {
             b.x += nx * overlap / 2;
             b.y += ny * overlap / 2;
 
-            // Ersten Kontakt der weißen Kugel erkennen
+            // Ersten Kontakt der weißen Kugel merken
             if (
                 cueBall &&
                 shotInProgress &&
@@ -1205,30 +1207,28 @@ function updatePhysics() {
             ) {
                 const otherBall = a === cueBall ? b : a;
 
-                if (otherBall.type !== "cue" && !firstContactBall) {
+                if (
+                    otherBall.type !== "cue" &&
+                    !firstContactBall
+                ) {
                     firstContactBall = otherBall;
                 }
             }
 
-            // Relative Geschwindigkeit entlang der Kollisionsnormalen
             const relativeX = b.vx - a.vx;
             const relativeY = b.vy - a.vy;
-
             const relativeVelocity =
                 relativeX * nx + relativeY * ny;
 
-            // Nur reagieren, wenn sich die Kugeln annähern
             if (relativeVelocity < -0.0001) {
                 const impulse =
                     -(1 + BALL_BOUNCE) * relativeVelocity / 2;
 
                 a.vx -= impulse * nx;
                 a.vy -= impulse * ny;
-
                 b.vx += impulse * nx;
                 b.vy += impulse * ny;
 
-                // Vorhandene Kollisionssound-Funktion verwenden
                 playBallCollision(
                     "balls-" +
                     Math.min(a.number, b.number) + "-" +
@@ -1238,15 +1238,55 @@ function updatePhysics() {
         }
     }
 
-    // Prüfen, ob noch eine Kugel rollt
+    // Ein Stoß läuft weiter, solange Kugeln rollen ODER
+    // noch eine Kugel in einer Tasche animiert wird.
     shotInProgress = balls.some(ball =>
         ball.active &&
-        !ball.pocketing &&
-        (Math.abs(ball.vx) > 0.035 ||
-         Math.abs(ball.vy) > 0.035)
+        (
+            ball.pocketing ||
+            Math.abs(ball.vx) > 0.035 ||
+            Math.abs(ball.vy) > 0.035
+        )
     );
 
+    // Nur beim tatsächlichen Übergang von Bewegung zu Stillstand
+    // den Stoß einmal auswerten.
+    if (shotWasInProgress && !shotInProgress) {
+        finishShot();
+    }
+
     updateStatus();
+}
+  function finishShot() {
+    const cueBallPocketed = turnPocketedBalls.some(
+        ball => ball.type === "cue"
+    );
+
+    const objectBallsPocketed = turnPocketedBalls.filter(
+        ball => ball.type !== "cue" && ball.number !== 8
+    );
+
+    // Vorläufige Foul-Erkennung:
+    // keine Objektkugel zuerst getroffen oder Weiße versenkt.
+    foulThisTurn = !firstContactBall || cueBallPocketed;
+
+    if (foulThisTurn) {
+        currentPlayer = currentPlayer === 1 ? 2 : 1;
+        ballInHand = true;
+        turnMessage = "Foul! Spieler " + currentPlayer + " ist am Zug.";
+    } else if (objectBallsPocketed.length > 0) {
+        turnMessage =
+            "Spieler " + currentPlayer +
+            " bleibt am Tisch.";
+    } else {
+        currentPlayer = currentPlayer === 1 ? 2 : 1;
+        turnMessage = "Spieler " + currentPlayer + " ist am Zug.";
+    }
+
+    // Versenkte Kugeln dieses Stoßes für den nächsten Stoß löschen
+    turnPocketedBalls = [];
+
+    firstContactBall = null;
 }
 
 /* =========================================
@@ -1254,47 +1294,28 @@ STATUS UND RENDERING
 ========================================= */
 
 function updateStatus() {
-const remaining = balls.filter(ball =>
-ball.active && ball.type !== "cue"
-).length;
+    const remaining = balls.filter(ball =>
+        ball.active && ball.type !== "cue"
+    ).length;
 
-if (cueBall && !cueBall.active) return;
+    const playerText = "Spieler " + currentPlayer;
 
-statusText.textContent = shotInProgress
-? "OOZ BALL · Kugeln in Bewegung · Übrig: " + remaining
-: "OOZ BALL · Bereit · Objektkugeln: " + remaining;
-}
+    if (gameOver) {
+        statusText.textContent = turnMessage || "Spiel beendet";
+        return;
+    }
 
-function draw() {
-ctx.clearRect(0, 0, W, H);
-ctx.fillText("kugeln: " + balls.length, 50, 50);
+    if (shotInProgress) {
+        statusText.textContent =
+            "OOZ BALL · " + playerText +
+            " · Kugeln in Bewegung · Übrig: " + remaining;
+        return;
+    }
 
-for (const ball of balls) {
-drawBall(ball);
-}
-
-drawAim();
-if (ballInHand && cueBall && cueBall.active) {
-ctx.save();
-ctx.font = "32px sans-serif";
-ctx.textAlign = "center";
-ctx.textBaseline = "middle";
-ctx.save();
-
-ctx.font = "bold 34px Arial";
-ctx.textAlign = "center";
-ctx.textBaseline = "middle";
-
-ctx.shadowColor = "#ffd700";
-ctx.shadowBlur = 12;
-ctx.fillStyle = "#ffd700";
-
-ctx.fillText("👆", cueBall.x, cueBall.y - cueBall.radius - 25);
-
-ctx.shadowBlur = 0;
-ctx.restore();
-ctx.restore();
-}
+    statusText.textContent = turnMessage
+        ? "OOZ BALL · " + turnMessage + " · Übrig: " + remaining
+        : "OOZ BALL · " + playerText +
+          " ist am Zug · Objektkugeln: " + remaining;
 }
 
 /* =========================================
@@ -1430,6 +1451,8 @@ cueDirY = dy / distance;
 
 firstContactBall = null;
 foulThisTurn = false;
+turnPocketedBalls = [];
+turnMessage = "";
 
 const power = Math.min(distance, MAX_DRAG) / MAX_DRAG;
 const strength = Math.max(1, power * MAX_POWER);
