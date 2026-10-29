@@ -1257,37 +1257,133 @@ function updatePhysics() {
 
     updateStatus();
 }
-  function finishShot() {
-    const cueBallPocketed = turnPocketedBalls.some(
-        ball => ball.type === "cue"
-    );
+ function finishShot() {
+const cueBallPocketed = turnPocketedBalls.some(
+ball => ball.type === "cue"
+);
 
-    const objectBallsPocketed = turnPocketedBalls.filter(
-        ball => ball.type !== "cue" && ball.number !== 8
-    );
+const eightBallPocketed = turnPocketedBalls.some(
+ball => ball.number === 8
+);
 
-    // Vorläufige Foul-Erkennung:
-    // keine Objektkugel zuerst getroffen oder Weiße versenkt.
-    foulThisTurn = !firstContactBall || cueBallPocketed;
+const objectBallsPocketed = turnPocketedBalls.filter(
+ball => ball.type !== "cue" && ball.number !== 8
+);
 
-    if (foulThisTurn) {
-        currentPlayer = currentPlayer === 1 ? 2 : 1;
-        ballInHand = true;
-        turnMessage = "Foul! Spieler " + currentPlayer + " ist am Zug.";
-    } else if (objectBallsPocketed.length > 0) {
-        turnMessage =
-            "Spieler " + currentPlayer +
-            " bleibt am Tisch.";
-    } else {
-        currentPlayer = currentPlayer === 1 ? 2 : 1;
-        turnMessage = "Spieler " + currentPlayer + " ist am Zug.";
-    }
+const otherPlayer = currentPlayer === 1 ? 2 : 1;
 
-    // Versenkte Kugeln dieses Stoßes für den nächsten Stoß löschen
-    turnPocketedBalls = [];
+// Prüfen, ob die eigene Kugelgruppe bereits festgelegt ist
+const group = playerGroups[currentPlayer];
 
-    firstContactBall = null;
+// Prüfen, ob der erste Kontakt regelgerecht war
+let wrongFirstContact = false;
+
+if (!firstContactBall) {
+wrongFirstContact = true;
+} else if (group !== null) {
+const ownBallsRemaining = balls.some(ball =>
+ball.active &&
+ball.type !== "cue" &&
+ball.number !== 8 &&
+(
+group === "solid"
+? ball.number >= 1 && ball.number <= 7
+: ball.number >= 9 && ball.number <= 15
+)
+);
+
+if (
+ownBallsRemaining &&
+firstContactBall.type !== group
+) {
+wrongFirstContact = true;
 }
+
+if (
+ownBallsRemaining &&
+firstContactBall.number === 8
+) {
+wrongFirstContact = true;
+}
+} else if (firstContactBall.number === 8) {
+wrongFirstContact = true;
+}
+
+foulThisTurn = cueBallPocketed || wrongFirstContact;
+
+// Die schwarze 8 entscheidet über das Spielende
+if (eightBallPocketed) {
+const currentGroup = playerGroups[currentPlayer];
+
+const ownBallsRemaining = currentGroup !== null &&
+balls.some(ball =>
+ball.active &&
+ball.type !== "cue" &&
+ball.number !== 8 &&
+(
+currentGroup === "solid"
+? ball.number >= 1 && ball.number <= 7
+: ball.number >= 9 && ball.number <= 15
+)
+);
+
+if (!foulThisTurn && !ownBallsRemaining) {
+gameOver = true;
+turnMessage = "Spieler " + currentPlayer + " gewinnt!";
+playWinSound();
+} else {
+gameOver = true;
+turnMessage = "Spieler " + otherPlayer + " gewinnt! Die schwarze 8 wurde zu früh oder mit Foul versenkt.";
+playLoseSound();
+}
+
+turnPocketedBalls = [];
+firstContactBall = null;
+updateStatus();
+return;
+}
+
+// Bei einem Foul wechselt der Spieler und erhält Ball-in-Hand
+if (foulThisTurn) {
+currentPlayer = otherPlayer;
+ballInHand = true;
+turnMessage = "Foul! Spieler " + currentPlayer + " ist am Zug.";
+} else {
+// Kugelgruppen beim ersten gültigen Versenken festlegen
+if (playerGroups[1] === null && objectBallsPocketed.length > 0) {
+const firstPocketed = objectBallsPocketed[0];
+
+if (firstPocketed.type === "solid") {
+playerGroups[currentPlayer] = "solid";
+playerGroups[otherPlayer] = "stripe";
+} else if (firstPocketed.type === "stripe") {
+playerGroups[currentPlayer] = "stripe";
+playerGroups[otherPlayer] = "solid";
+}
+}
+
+// Prüfen, ob eine Kugel der eigenen Gruppe versenkt wurde
+const currentGroup = playerGroups[currentPlayer];
+
+const pocketedOwnBall = currentGroup !== null &&
+objectBallsPocketed.some(ball =>
+ball.type === currentGroup
+);
+
+if (pocketedOwnBall) {
+turnMessage = "Spieler " + currentPlayer + " bleibt am Tisch.";
+} else {
+currentPlayer = otherPlayer;
+turnMessage = "Spieler " + currentPlayer + " ist am Zug.";
+}
+}
+
+turnPocketedBalls = [];
+firstContactBall = null;
+updateStatus();
+}
+
+
 
 /* =========================================
 STATUS UND RENDERING
@@ -1375,6 +1471,16 @@ function playBumperSound() {
 function playPocketSound() {
     SOUND.POCKET.currentTime = 0;
     SOUND.POCKET.play().catch(() => {});
+
+  function playWinSound() {
+SOUND.WIN.currentTime = 0;
+SOUND.WIN.play().catch(() => {});
+}
+
+function playLoseSound() {
+SOUND.LOSE.currentTime = 0;
+SOUND.LOSE.play().catch(() => {});
+}
 }
 
 function pointerDown(event) {
